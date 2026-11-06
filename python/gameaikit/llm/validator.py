@@ -29,7 +29,8 @@ Every rule has a code, so the two validators -- this one and `ai_llm`'s
   R6  an intent the game did not declare
   R7  an argument that is not empty and not one of its intent's values
   R8  a speech that is empty, or longer than SPEECH_LIMIT characters
-  R9  a speech with a line break, or another control character, in it
+  R9  a speech with a line break (a line or paragraph separator too), or
+      another control character (C0, DEL or C1), in it
   R10 a speech with markup in it
   R11 a speech that contains one of the game's secrets
 
@@ -59,16 +60,25 @@ SPEECH_LIMIT = 280
 # HTML and BBCode brackets, Markdown's emphasis and code.
 MARKUP = "<>[]*`"
 
+# U+2028 and U+2029, the line and paragraph separators. Not control
+# characters, and line breaks all the same: Unicode's line breaking (UAX #14)
+# makes each a mandatory break. R9 refuses them with the C1 controls (T129).
+LINE_SEPARATORS = "\u2028\u2029"
+
 # The speech as a pattern, for the schema a constraining runtime is handed:
-# one to SPEECH_LIMIT characters, none of them MARKUP, a control character, a
-# quote or a backslash. llama.cpp turns a pattern into a grammar over the
-# string's JSON text, escapes and all, so a class without the quote and the
-# backslash is the one spelling that means the same there and in JSON
-# Schema, which reads the decoded string. It also drops `maxLength` when a
-# pattern is present, so the length is in the pattern too (T116,
-# docs/local-llm/server.md). The guard loses the straight quote; the
-# validator still admits one (R10 is the check, not this).
-SPEECH_PATTERN = r'^[^"\\<>\[\]*`\x00-\x1F\x7F]{1,%d}$' % SPEECH_LIMIT
+# one to SPEECH_LIMIT characters, none of them MARKUP, a control character
+# (C0, DEL or C1), a line separator, a quote or a backslash. llama.cpp turns
+# a pattern into a grammar over the string's JSON text, escapes and all, so a
+# class without the quote and the backslash is the one spelling that means
+# the same there and in JSON Schema, which reads the decoded string. It also
+# drops `maxLength` when a pattern is present, so the length is in the
+# pattern too (T116, docs/local-llm/server.md). The guard loses the straight
+# quote; the validator still admits one (R10 is the check, not this). The
+# separators go in as the characters themselves, not as a `\u2028` escape:
+# Godot's RegEx (PCRE2) refuses that escape, and every reader of the
+# pattern takes the character (T129).
+SPEECH_PATTERN = (r'^[^"\\<>\[\]*`\x00-\x1F\x7F-\x9F' + LINE_SEPARATORS
+                  + r']{1,%d}$') % SPEECH_LIMIT
 
 # How deep objects and lists may nest. A reply is one flat object; past
 # this, Godot's parser and Python's give up at different depths, so both
@@ -177,7 +187,7 @@ def why_speech_is_wrong(speech: str, secrets: tuple[str, ...]) -> str:
     """R8 to R11, on one line of speech. The game's fallback is held to them too."""
     if not speech or len(speech) > SPEECH_LIMIT:
         return f"R8 the speech is {len(speech)} characters; 1 to {SPEECH_LIMIT} are allowed"
-    if any(ord(character) < 32 or ord(character) == 127 for character in speech):
+    if any(_is_control_or_line_break(character) for character in speech):
         return "R9 the speech is more than one line, or has a control character"
     if any(character in MARKUP for character in speech):
         return f"R10 the speech has markup in it, one of {MARKUP}"
@@ -186,6 +196,17 @@ def why_speech_is_wrong(speech: str, secrets: tuple[str, ...]) -> str:
         if secret.translate(ASCII_LOWER) in lowered:
             return "R11 the speech gives away one of the game's secrets"
     return ""
+
+
+def _is_control_or_line_break(character: str) -> bool:
+    """A control character, or a line or paragraph separator: R9's test.
+
+    Unicode's Cc is U+0000 to U+001F and U+007F to U+009F, NEXT LINE among
+    them. Each of these would break the line a game shows, or put an
+    invisible code in it.
+    """
+    code = ord(character)
+    return code < 32 or 127 <= code <= 159 or character in LINE_SEPARATORS
 
 
 def why_declaration_is_wrong(declaration: Declaration) -> str:

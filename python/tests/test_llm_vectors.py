@@ -9,6 +9,7 @@ through `LlmValidator`; `make test-llm-vectors` runs both halves.
 import json
 import pathlib
 import re
+import unicodedata
 import unittest
 
 from gameaikit.llm import validator
@@ -114,6 +115,26 @@ class TheVectors(unittest.TestCase):
             speech = json.loads(case["raw"], strict=False)["speech"]
             with self.subTest(case["why"]):
                 self.assertIsNone(re.fullmatch(validator.SPEECH_PATTERN, speech))
+
+    def test_r9_refuses_what_unicode_calls_a_control_or_a_separator_and_nothing_else(self) -> None:
+        # Derived from Unicode's own table, not from the validator's ranges
+        # (T129): a control (Cc) breaks or hides something, and a line or
+        # paragraph separator (Zl, Zp) is a line break. Every other code
+        # point is left to the other rules, and the pattern turns these
+        # away too. Surrogates are not characters a speech can hold.
+        refused = 0
+        for code in range(0x110000):
+            if 0xD800 <= code <= 0xDFFF:
+                continue
+            speech = f"Halt{chr(code)}there"
+            is_r9 = validator.why_speech_is_wrong(speech, ()).startswith("R9")
+            breaks_the_line = unicodedata.category(chr(code)) in ("Cc", "Zl", "Zp")
+            self.assertEqual(is_r9, breaks_the_line, hex(code))
+            if breaks_the_line:
+                refused += 1
+                self.assertIsNone(re.fullmatch(validator.SPEECH_PATTERN, speech), hex(code))
+        # 65 controls (32 C0, DEL, 32 C1) and the two separators.
+        self.assertEqual(refused, 67)
 
 
 if __name__ == "__main__":

@@ -2,9 +2,9 @@
 
 <!-- doc-meta
 half_life: tool
-verified_on: 2026-11-05
+verified_on: 2026-11-06
 tier: 3
-source: https://github.com/ggml-org/llama.cpp/releases/tag/b11960 ; https://github.com/ggml-org/llama.cpp/releases/tag/v0.8.0 ; https://github.com/ggml-org/llama.cpp/blob/b11960/tools/server/README.md ; https://github.com/ggml-org/llama.cpp/blob/b11960/tools/server/server-common.cpp ; https://github.com/ggml-org/llama.cpp/blob/b11960/LICENSE ; https://github.com/ggml-org/llama.cpp/blob/b11960/grammars/README.md ; https://github.com/ggml-org/llama.cpp/blob/b11960/common/json-schema-to-grammar.cpp
+source: https://github.com/ggml-org/llama.cpp/releases/tag/b11960 ; https://github.com/ggml-org/llama.cpp/releases/tag/v0.8.0 ; https://github.com/ggml-org/llama.cpp/blob/b11960/tools/server/README.md ; https://github.com/ggml-org/llama.cpp/blob/b11960/tools/server/server-common.cpp ; https://github.com/ggml-org/llama.cpp/blob/b11960/LICENSE ; https://github.com/ggml-org/llama.cpp/blob/b11960/grammars/README.md ; https://github.com/ggml-org/llama.cpp/blob/b11960/common/json-schema-to-grammar.cpp ; https://github.com/ggml-org/llama.cpp/blob/b11960/src/llama-grammar.cpp
 invalidated_if: tools/llm/runtime.json pins another build, or the server's README at the pinned tag changes what it says about --port, --reasoning, --offline, response_format or a schema's pattern
 teaches: none
 -->
@@ -161,6 +161,40 @@ is unchanged, because a runtime may ignore the schema.
 Sources, opened 2026-11-05:
 <https://github.com/ggml-org/llama.cpp/blob/b11960/grammars/README.md>;
 <https://github.com/ggml-org/llama.cpp/blob/b11960/common/json-schema-to-grammar.cpp>.
+
+### The line separators and the C1 controls (T129)
+
+T129 added the C1 controls, U+0080 to U+009F, and the line and paragraph
+separators, U+2028 and U+2029, to R9 and to the pattern's class:
+`\x7F-\x9F`, then the two separators as the characters themselves. Before
+relying on the server to read them, the source at `b11960` was read again on
+2026-11-06. Nothing was measured against a model.
+
+- `common/json-schema-to-grammar.cpp` copies a class into the grammar as
+  it is written. An escape must be one `gbnf_escape_length` knows: `\x`
+  with two hex digits, `\u` with four, `\U` with eight, or one of
+  `\t \r \n \\ \" \[ \] \-`. Any other character, a separator's three
+  UTF-8 bytes included, is copied byte by byte. None of those bytes is a
+  `]` or a `\`, so the class still ends where it should.
+- `src/llama-grammar.cpp` then parses each member with `parse_char`. It
+  reads `\x9F` with `parse_hex` as code point 0x9F, and a character
+  written as itself with `decode_utf8` as its code point. The text the
+  model generates is decoded the same way, to code points, before the
+  class is checked. So `\x7F-\x9F` is the range of code points 0x7F to
+  0x9F, and U+2028 is U+2028, not three bytes.
+- The model cannot write the escape `\u2028` either: the backslash is
+  already out of the class, so the separator can only be written raw,
+  and the class refuses that.
+- The separators are written as characters, not as `\u2028`, because
+  Godot's `RegEx` (PCRE2) refuses that escape. Measured on 4.7.2:
+  `RegEx.compile("^[^\\u2028]$")` fails with "PCRE2 does not support \F,
+  \L, \l, \N{name}, \U, or \u". PCRE2's `\x{2028}` compiles there, but
+  Python's `re` and the converter do not read it. The character itself
+  means the same to all of them, and to JSON Schema.
+
+Sources, opened 2026-11-06:
+<https://github.com/ggml-org/llama.cpp/blob/b11960/common/json-schema-to-grammar.cpp>;
+<https://github.com/ggml-org/llama.cpp/blob/b11960/src/llama-grammar.cpp>.
 
 ## Nothing in `$HOME` {#home}
 

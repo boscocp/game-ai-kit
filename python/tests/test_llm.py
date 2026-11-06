@@ -94,13 +94,14 @@ class TheSchema(unittest.TestCase):
         # the limit; and it reads the JSON text, so the quote and the
         # backslash stay out (T116, docs/local-llm/server.md).
         plain = ("Evening. State your business.", "Não, senhor.", "H" * validator.SPEECH_LIMIT,
-                 "You're not on the list.")
+                 "You're not on the list.", "Evening,\u00a0sir.")
         for speech in plain:
             with self.subTest(speech):
                 self.assertIsNotNone(re.fullmatch(validator.SPEECH_PATTERN, speech))
         marked = [f"Halt {character} there." for character in validator.MARKUP]
         marked += ["", "H" * (validator.SPEECH_LIMIT + 1), "Two\nlines", 'He said "no".',
-                   "a \\ b", "Evening.\x7f"]
+                   "a \\ b", "Evening.\x7f", "Evening.\x85", "Two\u2028lines",
+                   "Two\u2029lines"]
         for speech in marked:
             with self.subTest(speech):
                 self.assertIsNone(re.fullmatch(validator.SPEECH_PATTERN, speech))
