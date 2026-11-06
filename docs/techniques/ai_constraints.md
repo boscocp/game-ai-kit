@@ -143,8 +143,9 @@ far from cover, one walled off). The knobs:
 
 ### What to copy {#copy}
 
-One folder: `godot/addons/ai_constraints/`. It needs nothing else, not even
-`ai_core`. Wave function collapse is two of its files, `wave_collapse.gd`
+Two folders: `godot/addons/ai_constraints/` and the kernel,
+`godot/addons/ai_core/`, whose `GakXorshift` gives the seeded draws that
+order the ties (T135; the addon used to carry a copy). Wave function collapse is two of its files, `wave_collapse.gd`
 and `tile_grid.gd`, and needs the solver's. Open the project once, or run `godot --headless --import`, so
 Godot registers its classes. The Python twin is `gameaikit.constraints`.
 

@@ -12,7 +12,9 @@
     "python/tests/test_constraints_collapse.py",
     "python/tests/test_constraints_vectors.py"
   ],
-  "depends_on": [],
+  "depends_on": [
+    "ai_core"
+  ],
   "gates": [
     "test-constraints-vectors"
   ]

@@ -1,10 +1,10 @@
-"""Marsaglia's 32-bit xorshift, as `ai_constraints/constraint_draws.gd` writes it.
+"""The seeded draws of `ai_constraints/constraint_draws.gd`, in Python.
 
-The same dozen lines as T86's generator for Monte Carlo search, T91's for
-the particle filter and T99's for the bandit. Since T109 that generator is
-the kernel's, `ai_core`, with a Python twin in the kernel's package, which
-this addon may use; T95 copied it before, and folding the copy in is T135.
-Seeded with 1, the first draw is 270369.
+The numbers come from `gameaikit.core.Xorshift`, the kernel's Marsaglia
+xorshift, as the GDScript's come from `GakXorshift`. T95 had copied the
+generator here before T109 moved it to the kernel; T135 folded the copy in.
+What stays is this addon's own: a choice among `count`, and a Fisher-Yates
+shuffle. Seeded with 1, the first draw is 270369.
 
 `ConstraintSolver` draws only to shuffle: once, before it searches, the
 variables and then each domain, so that a tie between equal choices goes the
@@ -15,26 +15,20 @@ collapses, from a second generator with the same seed.
 
 from __future__ import annotations
 
-#: Every value is kept to 32 bits, as Marsaglia's generator is defined.
-MASK = 0xFFFFFFFF
-#: A state of zero would stay zero forever, so a seed of zero starts here.
-SEED_FOR_ZERO = 1
+from gameaikit.core.xorshift import SEED_FOR_ZERO, Xorshift
+
+__all__ = ["SEED_FOR_ZERO", "ConstraintDraws"]
 
 
 class ConstraintDraws:
-    """A seeded generator that `constraint_draws.gd` repeats draw for draw."""
+    """Seeded draws that `constraint_draws.gd` repeats draw for draw."""
 
     def __init__(self, from_seed: int = SEED_FOR_ZERO) -> None:
-        self._state = from_seed & MASK
-        if self._state == 0:
-            self._state = SEED_FOR_ZERO
+        self._numbers = Xorshift(from_seed)
 
     def next(self) -> int:
-        """The next number, between 1 and 2^32 - 1."""
-        self._state ^= (self._state << 13) & MASK
-        self._state ^= self._state >> 17
-        self._state ^= (self._state << 5) & MASK
-        return self._state
+        """The next number, between 1 and 2^32 - 1, from the kernel's generator."""
+        return self._numbers.next()
 
     def index(self, count: int) -> int:
         """One of `count` choices; no draw is spent when there is only one."""
