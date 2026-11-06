@@ -3,6 +3,71 @@
 The index. One row per task; the task file holds everything needed to do it.
 The topmost `## Resuming after` section is the next session's prompt.
 
+## Resuming after 2026-11-06, waves 144 to 149 merged
+
+**Where it stopped -- read first.** Six waves ran in parallel, as the
+owner asked ("Faz as 6 em paralelo"), each in its own worktree, each
+reviewed by a fresh context, findings applied on its branch:
+
+- **144 T142**, the first page says what is true today (#95). The
+  glossary's allowlist now holds the pt-BR card's own title.
+- **145 T136**, the guard's last line is shown whole (#96). A single
+  exchange taller than the label shows its bottom.
+- **146 T138**, the RTS frees what it made, at exit (#100). Reviewed
+  twice. The leak was scripts, not instances; a typed return is the
+  observed trigger, the mechanism unknown, and two squad scripts leak too:
+  T146. The first version opened an exception in invariant 7's net for
+  a GDScript `OS.execute`; it was dropped, and `scripts/check_exit_leaks.py`
+  runs the child under a deadline, refusing a leak, an engine error, a
+  scene that loads no script and a missing one.
+- **147 T134**, a belief that ends a game still going on (#99). The
+  belief was right: the searcher's own shot had won, and `BlueTurn` asked
+  the next piece before the match checked for a winner. The duel now
+  fails any match where a searcher held on a game it believed over.
+- **148 T135**, `ConstraintDraws` draws from `GakXorshift` (#98); `index`
+  is the kernel's, only the shuffle is the addon's.
+- **149 T145**, the employer scan reads every branch's messages (#97).
+  The review found two holes and both are closed with planted cases: a
+  message git cannot re-encode crashed the gate, and an even-length
+  latin-1 file passed (UTF-16 was tried before latin-1).
+
+Main is effce37. #94 (the previous section) merged by the owner's word.
+
+**What went wrong in the batch.**
+
+- Six waves at once ran three full `make check`s together: load 26 on
+  12 cores. `test-rts-budget` failed once under it and passed alone.
+  Timing gates do not survive a crowded machine; run the full checks of
+  a batch one at a time, or rerun a timing failure alone before reading
+  it.
+- Waves cut from the same base conflicted on `tasks/STATUS.md` at merge,
+  twice; each rebased and kept every row.
+- A cold `--import` crashed with exit 139 in one review: T148.
+
+**The owner's decisions, 2026-11-06.**
+
+- **Order of work:** open the repository and publish first (T143, T144,
+  T147); then only the three new techniques (T113, T114, T115); every
+  follow-up last, and a new finding goes to the end of the queue.
+- T112's list "as recommended": ADR 0023 accepted (done here); a
+  repository description and topics, at opening; more names in the term
+  list, by the owner; Kenney's pages and `kenney_racing-pack.zip`, by the
+  owner in a browser.
+- The merged remote branches are deleted, and auto-delete turned on, at
+  opening, not before.
+- The commit email stays `adalbertobosco@gmail.com`; no no-reply.
+- T144 follows the owner's public repository desk-panel (task file
+  updated).
+
+**Manual checks waiting:** T136 (`make demo-talk`, live, three long
+answers: is the newest line whole?), T138 (play the RTS, close: no
+`leaked`, no `still in use`), T133 (SIGSTOP the server mid-turn).
+
+**Next.** T143, T144 and T147 together. T143 changes the `Makefile` and
+runs all of `make check`; T144 and T147 are documents. T143 and T144 both
+touch the README: T144 rebases. Then the owner opens the repository and
+publishes. Then T113, T114 and T115.
+
 ## Resuming after 2026-11-06, wave 143 merged (T112)
 
 **Where it stopped -- read first.** T112, the review before the
@@ -1412,6 +1477,8 @@ review.
 | T144 | Contributing, for someone outside the waves | todo | from T112's finding 6: `CONTRIBUTING.md` for a fork's pull request, keeping pt-BR in step, issue and PR templates, `SECURITY.md`; the code of conduct is the owner's choice |
 | T145 | The employer scan reads every branch's messages | done | wave 149: from T112's finding 9; `check_no_employer_refs.py` reads messages and identities with `git log --all`, as it reads the blobs (776 commits here, 366 along HEAD), one commit at a time, and an E2 finding names its commit (12 hex digits) beside the term; planted: a term only in a message on a branch HEAD does not reach, passed by the old gate (exit 0), exit 3 now, and the finding must name that commit; exit codes unchanged |
 | T146 | Every demo closes without an exit leak | todo | from the review of PR #100 (wave 146, finding 3): `check_exit_leaks.py` over every scene in `check_demos.py`'s list; `squad_ruleset.gd` and `squad_map_words.gd` leak 18/17 when loaded first; the engine mechanism of T138's leak is not identified |
+| T147 | A publishing guide, checked against the stores | todo | the owner, 2026-11-06: open and publish before anything else; read the Asset Library's and PyPI's current rules (is an entry a commit archive, not an uploaded zip? is `gameaikit` free?), then `docs/howto/publish.md`; the upload stays the owner's (ADR 0009) |
+| T148 | A cold import that crashes is explained, or survived | todo | signal 11 on a cold `--import` at 4.7.2, seen in waves 140, 142 and 147's review, a rerun passing each time; measure first, a bounded retry with a planted case only if it is the engine's |
 
 ---
 

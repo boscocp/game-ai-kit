@@ -1,6 +1,6 @@
 # T144 — Contributing, for someone outside the waves
 
-Size: M · Prereqs: T112, T142 · Files: `CONTRIBUTING.md`, `.github/ISSUE_TEMPLATE/`, `.github/pull_request_template.md`, `SECURITY.md`, `README.md`, `README.pt-BR.md`
+Size: M · Prereqs: T112, T142 · Files: `CONTRIBUTING.md`, `.github/ISSUE_TEMPLATE/`, `.github/pull_request_template.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `CODEOWNERS`, `README.md`, `README.pt-BR.md`
 
 ## Goal
 
@@ -29,9 +29,16 @@ and no `SECURITY.md`.
   `docs/techniques/glossary.pt-BR.md`; `make lint-translations-docs` and
   `make lint-glossary` hold it. A contributor who writes only one language
   says so, and the twin is a follow-up, not a refusal.
-- **The code of conduct is the owner's choice** (Contributor Covenant,
-  or another). This task adds the file the owner names, as written by its
-  authors, and nothing of its own.
+- **Modelled on the owner's public repository desk-panel** (the owner,
+  2026-11-06: "Quanto às questões de contribuição podemos seguir o modelo
+  do meu repo desk-panel"). Its `CODE_OF_CONDUCT.md` (the Contributor
+  Covenant, as its authors wrote it), `CONTRIBUTING.md`, `SECURITY.md`,
+  `CODEOWNERS`, `.github/ISSUE_TEMPLATE/` (bug, feature, `config.yml`)
+  and `.github/PULL_REQUEST_TEMPLATE.md` are the shape to follow; the
+  content is this kit's: tiers, demos and addons, both languages. Nothing
+  of desk-panel's own (its devices, its server) is copied.
+- **The code of conduct** is desk-panel's, the same version, unchanged,
+  with this repository's contact.
 - **`SECURITY.md`** says where to report a vulnerability privately
   (GitHub's private reporting, once the repository is public) and that
   the scope is the kit's code, not the games' balance.
