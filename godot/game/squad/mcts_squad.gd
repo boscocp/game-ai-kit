@@ -112,7 +112,7 @@ func _work_per_frame() -> int:
 
 func _start_search(root: SquadSearchGame.Position) -> void:
 	_search = MonteCarloSearch.new(_game, root, _decision_seed(), exploration(), playout_limit())
-	_left = iterations
+	_left = iterations if _clock_msec == 0 else UNLIMITED
 
 
 func _search_more(count: int) -> void:

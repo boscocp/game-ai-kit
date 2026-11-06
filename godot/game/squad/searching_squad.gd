@@ -34,6 +34,8 @@ extends BlueController
 ## How much work a share of the wall clock is, in `think_for`: one unit --
 ## an iteration, a position -- between two looks at the clock.
 const CLOCK_SHARE: int = 1
+## The budget a search has under `think_for`: none but the clock.
+const UNLIMITED: int = 1 << 30
 
 static var _starting: Array[Unit] = []
 
@@ -66,9 +68,9 @@ func spread_over_frames() -> void:
 
 
 ## T88's duel's way of running it: every decision searched for
-## `milliseconds` of the wall clock, whatever that buys on this machine.
-## The answers then depend on the machine and its load: a measurement, never
-## a replay.
+## `milliseconds` of the wall clock, whatever that buys on this machine --
+## the budget in work is lifted. The answers then depend on the machine and
+## its load: a measurement, never a replay.
 func think_for(milliseconds: int) -> void:
 	_clock_msec = maxi(milliseconds, 1)
 
@@ -259,7 +261,7 @@ func _begin(believed: BoardState, unit_id: int, phase: int) -> void:
 		while Time.get_ticks_usec() < deadline and _has_work_left():
 			_search_more(CLOCK_SHARE)
 	else:
-		_search_more(_per_frame if _per_frame > 0 else 1 << 30)
+		_search_more(_per_frame if _per_frame > 0 else UNLIMITED)
 	_show()
 
 

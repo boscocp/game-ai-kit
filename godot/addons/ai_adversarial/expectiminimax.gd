@@ -91,9 +91,9 @@ func _init(game: GakAdversarialGame, state: RefCounted, deepest: int = DEEPEST) 
 ## clock, so the same calls give the same answer on any machine -- the
 ## caller decides how many fit in its frame, as with `MonteCarloSearch.step`.
 func step(positions: int) -> AdversarialResult:
-	var left: int = positions
-	while left > 0 and not _complete:
-		left -= _advance()
+	var stop_at: int = _positions_in_all + positions
+	while _positions_in_all < stop_at and not _complete:
+		_advance()
 	return _finished
 
 
@@ -134,8 +134,8 @@ func is_complete() -> bool:
 # outcome of the move under way still to look at, look at it: score it if
 # the search stops there, or go down into it. With none, the move is
 # finished; with no move left, the position is, and its value goes up to
-# the one above. Returns the positions it looked at: 1 or 0.
-func _advance() -> int:
+# the one above. A step counts one position at most.
+func _advance() -> void:
 	var top: Visit = _stack.back()
 	if top.outcome < top.outcomes.size():
 		var next: RefCounted = top.outcomes[top.outcome]["state"]
@@ -144,16 +144,15 @@ func _advance() -> int:
 		else:
 			_stack.push_back(_visit_of(next, top.depth + 1))
 		_count_position()
-		return 1
+		return
 	_finish_move(top)
 	if top.move < top.actions.size():
-		return 0
+		return
 	_stack.pop_back()
 	if _stack.is_empty():
 		_finish_depth(top)
 	else:
 		_add_outcome(_stack.back(), top.value)
-	return 0
 
 
 # The outcome under way at `visit` is worth `value`: its chance times that

@@ -527,6 +527,15 @@ measure-squad-mcts: import ## T87: MCTS against the weighed enemy from each seat
 	@$(GODOT) --headless --path godot -s res://test/squad/squad_mcts_measure.gd \
 		-- $(or $(ITERATIONS),1000) $(or $(GAMES),100) $(or $(FIRST),0)
 
+.PHONY: test-squad-duel
+check: test-squad-duel
+test-squad-duel: import ## T88: expectiminimax and MCTS on spec/squad/duel.json's 30 positions at 50, 200 and 1,000 ms, then seeded matches a seat (GAMES=4 MS=50 FIRST=1; ~3 min; GAMES=100 for the page's table)
+	@# Prints a measurement; fails only on what no load excuses: an answer
+	@# not the position's, a budget that finished nothing, a longer budget
+	@# that searched less, a match with no end or a lost decision.
+	@$(GODOT) --headless --path godot -s res://test/squad/squad_duel_runner.gd \
+		-- $(CURDIR)/spec/squad/duel.json $(or $(GAMES),4) $(or $(MS),50) $(or $(FIRST),1)
+
 .PHONY: test-infiltration
 test-infiltration: import ## The infiltration level's guards: help heard, the search shared, quiet and loud, the arbiter, the halving, every decision on the overlay, portable (T70)
 	@$(GODOT) --headless --path godot -s res://test/infiltration/infiltration_properties.gd

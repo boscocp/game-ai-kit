@@ -16,7 +16,7 @@
   "round_limit": 20,
   "search": {"exploration": 0.5, "playout_limit": 8, "iterations": 1000, "iterations_per_frame": 4},
   "evaluation": {"health": 0.6, "cover": 0.2, "flanked": 0.2},
-  "expectiminimax": {"positions": 10000, "positions_per_frame": 40, "deepest": 8},
+  "expectiminimax": {"positions": 5000, "positions_per_frame": 20, "deepest": 8},
   "squad": ["runner", "shield", "mortar", "wader"],
   "pieces": {
     "runner": {"aim": 65, "defence": 10, "damage": 3, "health": 8, "action": 4, "range": 5, "sight": 6},

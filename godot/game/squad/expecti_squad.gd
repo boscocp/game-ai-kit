@@ -118,7 +118,7 @@ func _work_per_frame() -> int:
 func _start_search(root: SquadSearchGame.Position) -> void:
 	_root = root
 	_search = ExpectiminimaxSearch.new(_game, root, int(search_rules()["deepest"]))
-	_left = positions
+	_left = positions if _clock_msec == 0 else UNLIMITED
 
 
 func _search_more(count: int) -> void:

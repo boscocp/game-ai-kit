@@ -1,13 +1,14 @@
 {
   "module": "squad",
   "kind": "example",
-  "about": "The XCOM-style mode of the tactical game (T84, T85): a second ruleset on the tactical state and map -- two actions, the shot, cover, flanking and fog by side -- with its own roster, its first enemy that weighs, its enemy that searches (T87, Monte Carlo tree search), what the scene shows of it, and the Python twins of the shot and of the game the search reads.",
+  "about": "The XCOM-style mode of the tactical game (T84, T85): a second ruleset on the tactical state and map -- two actions, the shot, cover, flanking and fog by side -- with its own roster, its first enemy that weighs, its enemy that searches by sampling (T87, Monte Carlo tree search) and the one that works out the odds (T88, expectiminimax, with a hand-written evaluation), the duel between them, what the scene shows of it, and the Python twins of the shot, of the game the searches read and of the evaluation.",
   "owns": [
     "godot/game/squad/",
     "godot/test/squad/",
     "spec/squad/",
     "spec/vectors/squad/",
     "python/gameaikit/squad/",
+    "python/tests/test_squad_duel.py",
     "python/tests/test_squad_search.py",
     "python/tests/test_squad_vectors.py",
     "godot/locale/squad.csv",
@@ -23,6 +24,7 @@
     "tactical"
   ],
   "gates": [
+    "test-squad-duel",
     "test-squad-match",
     "test-squad-search-vectors",
     "test-squad-vectors"
