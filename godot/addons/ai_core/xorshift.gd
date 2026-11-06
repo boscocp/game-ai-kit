@@ -10,8 +10,9 @@
 ## draw is 270369.
 ##
 ## It lives in `ai_core` because Monte Carlo search, the particle filter, the
-## bandit and the maze's ghosts all draw from it, and each had copied it for
-## want of a shared place (ADR 0021, amended by T109). It decides nothing:
+## bandit, the maze's ghosts and the constraint solver all draw from it, and
+## each had copied it for want of a shared place (ADR 0021, amended by T109;
+## the solver's copy folded in by T135). It decides nothing:
 ## which draw means what is the caller's business.
 ##
 ## GDScript's `int` is 64 bits, so every shift to the left is cut back to 32

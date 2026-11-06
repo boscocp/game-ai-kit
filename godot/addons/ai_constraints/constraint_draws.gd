@@ -6,9 +6,10 @@
 ## twin in the other language. The numbers come from `GakXorshift`, the
 ## kernel's Marsaglia xorshift (`ai_core`, which invariant 2 lets every addon
 ## use); T95 had written a copy of it here before T109 moved it to the
-## kernel, and T135 folded the copy in. What this class adds is the
-## addon's own: a choice among `count`, and a Fisher-Yates shuffle. Seeded
-## with 1, its first draw is 270369, as the kernel's is.
+## kernel, and T135 folded the copy in. A number and a choice among
+## `count` are the kernel's, passed through; only the Fisher-Yates shuffle
+## is this addon's own. Seeded with 1, its first draw is 270369, as the
+## kernel's is.
 ##
 ## `ConstraintSolver` draws only to shuffle, once, before it searches: the
 ## variables, then each domain. Every later tie goes to whichever came first
@@ -42,12 +43,10 @@ func next() -> int:
 	return _numbers.next()
 
 
-## One of `count` choices, 0 to `count` - 1. A draw is spent only when there
-## is a choice: with one, the answer is 0 and the generator does not move.
+## One of `count` choices, 0 to `count` - 1, by the kernel's rule: a draw is
+## spent only when there is a choice, so both languages agree on a forced one.
 func index(count: int) -> int:
-	if count <= 1:
-		return 0
-	return next() % count
+	return _numbers.index(count)
 
 
 ## A copy of `items` in Fisher and Yates's order: from the last place down to

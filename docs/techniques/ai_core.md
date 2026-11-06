@@ -33,14 +33,14 @@ same numbers, without depending on another addon (invariant 2, ADR 0021).
   draws the same numbers in both languages -- which Godot's
   `RandomNumberGenerator` and Python's `random` cannot promise.
   `spec/vectors/core/` holds the two to one another. It decides nothing;
-  Monte Carlo search, the particle filter, the bandit and the maze's ghosts
-  each say what a draw means (T109).
+  Monte Carlo search, the particle filter, the bandit, the maze's ghosts
+  and the constraint solver each say what a draw means (T109).
 
 ## When you need it {#when}
 
 Copy `godot/addons/ai_core/` with any addon whose page says so -- today
-`ai_search`, `ai_perception`, `ai_rts_core`, and `ai_adversarial` and
-`ai_bandit` for the generator. An addon that neither reasons about a grid
+`ai_search`, `ai_perception`, `ai_rts_core`, and `ai_adversarial`,
+`ai_bandit` and `ai_constraints` for the generator. An addon that neither reasons about a grid
 nor draws seeded numbers (`ai_steering`, `ai_behaviour`) does not need it.
 
 ## When not to use it {#when-not}

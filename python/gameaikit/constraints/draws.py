@@ -3,8 +3,8 @@
 The numbers come from `gameaikit.core.Xorshift`, the kernel's Marsaglia
 xorshift, as the GDScript's come from `GakXorshift`. T95 had copied the
 generator here before T109 moved it to the kernel; T135 folded the copy in.
-What stays is this addon's own: a choice among `count`, and a Fisher-Yates
-shuffle. Seeded with 1, the first draw is 270369.
+A number and a choice among `count` are the kernel's, passed through; only
+the Fisher-Yates shuffle is this addon's own. Seeded with 1, the first draw is 270369.
 
 `ConstraintSolver` draws only to shuffle: once, before it searches, the
 variables and then each domain, so that a tie between equal choices goes the
@@ -31,10 +31,8 @@ class ConstraintDraws:
         return self._numbers.next()
 
     def index(self, count: int) -> int:
-        """One of `count` choices; no draw is spent when there is only one."""
-        if count <= 1:
-            return 0
-        return self.next() % count
+        """One of `count` choices, by the kernel's rule: no draw for only one."""
+        return self._numbers.index(count)
 
     def shuffle(self, items: list) -> list:
         """A copy of `items` in Fisher and Yates's order: from the last place
