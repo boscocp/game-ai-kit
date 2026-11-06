@@ -51,3 +51,18 @@ make lint-tasks lint-status
   one after the other. Shares `spec/llm/` with no open task. Its
   test folder is also in T121's Files (`godot/test/`), and `python/tests/`
   in T113's, T114's and T115's.
+- The pattern holds U+2028 and U+2029 as the characters, not as the
+  escape `\u2028`: measured on 4.7.2, Godot's `RegEx` (PCRE2) refuses
+  `\u` in a pattern, PCRE2's `\x{2028}` is read by neither Python's `re`
+  nor llama.cpp's converter, and the character means the same to all of
+  them and to JSON Schema. The source files write it as an escape of
+  their own language (`"\u2028"`), so no invisible character is in them.
+- The converter's reading was read at `b11960`, not measured: the class
+  is copied as written, `llama-grammar.cpp`'s `parse_char` reads `\x9F`
+  and a raw character each as one code point, and generated text is
+  decoded to code points before the class is checked
+  (`docs/local-llm/server.md`).
+- Planted, one at a time: the old R9 in each twin (Python: 13 failures;
+  Godot: 6 vectors), and the old pattern in each (Python: 7 failures;
+  gdUnit: the committed-schema test).
+- Done in wave 141.

@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: structure
-verified_on: 2026-10-29
+verified_on: 2026-11-06
 tier: 1
 source: https://github.com/boscocp/game-ai-kit
 invalidated_if: the reply's shape or the recording format changes
@@ -22,7 +22,12 @@ arguments belong to which intent.
 Since T116, `speech` carries a `pattern` (`LlmValidator.SPEECH_PATTERN`,
 `gameaikit.llm.validator.SPEECH_PATTERN`). It says what R8 to R10 check:
 one to 280 characters, with no line break or other control character, and
-no markup. The schema still cannot say that a speech holds no secret, and a
+no markup. Since T129 a control character is all of Unicode's (C0, DEL
+and the C1 range, U+0080 to U+009F), and a line break includes U+2028
+and U+2029, the line and paragraph separators. The file writes those two
+as JSON escapes, so the pattern it decodes to holds the characters
+themselves: Godot's `RegEx` refuses a ` ` in a pattern, and every
+reader of this one takes the character. The schema still cannot say that a speech holds no secret, and a
 runtime may ignore it, which is why the validator checks every reply anyway.
 
 The pattern is **stricter than the validator** in one place: it also leaves

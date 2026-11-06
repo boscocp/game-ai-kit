@@ -23,7 +23,8 @@
 ##   R6  an intent the game did not declare
 ##   R7  an argument that is not empty and not one of its intent's values
 ##   R8  a speech that is empty, or longer than SPEECH_LIMIT characters
-##   R9  a speech with a line break, or another control character
+##   R9  a speech with a line break (a line or paragraph separator
+##       too), or another control character (C0, DEL or C1)
 ##   R10 a speech with markup in it
 ##   R11 a speech that contains one of the game's secrets
 ##
@@ -45,16 +46,26 @@ const SPEECH_LIMIT: int = 280
 ## What a RichTextLabel or a chat model's Markdown would read as formatting.
 const MARKUP: String = "<>[]*`"
 
+## U+2028 and U+2029, the line and paragraph separators. Not control
+## characters, and line breaks all the same: Unicode's line breaking
+## (UAX #14) makes each a mandatory break. R9 refuses them with the C1
+## controls (T129).
+const LINE_SEPARATORS: String = "\u2028\u2029"
+
 ## The speech as a pattern, for the schema a constraining runtime is handed:
-## one to SPEECH_LIMIT characters, none of them MARKUP, a control character,
-## a quote or a backslash. llama.cpp turns a pattern into a grammar over the
-## string's JSON text, escapes and all, so a class without the quote and
-## the backslash is the one spelling that means the same there and in JSON
-## Schema, which reads the decoded string. It also drops `maxLength` when a
-## pattern is present, so the length is in the pattern too (T116,
-## docs/local-llm/server.md). The guard loses the straight quote; the
-## validator still admits one (R10 is the check, not this).
-const SPEECH_PATTERN: String = "^[^\"\\\\<>\\[\\]*`\\x00-\\x1F\\x7F]{1,%d}$" % SPEECH_LIMIT
+## one to SPEECH_LIMIT characters, none of them MARKUP, a control character
+## (C0, DEL or C1), a line separator, a quote or a backslash. llama.cpp
+## turns a pattern into a grammar over the string's JSON text, escapes and
+## all, so a class without the quote and the backslash is the one spelling
+## that means the same there and in JSON Schema, which reads the decoded
+## string. It also drops `maxLength` when a pattern is present, so the length
+## is in the pattern too (T116, docs/local-llm/server.md). The guard loses
+## the straight quote; the validator still admits one (R10 is the check, not
+## this). The separators go in as the characters themselves, not as a
+## `\u2028` escape: Godot's RegEx (PCRE2) refuses that escape, and every
+## reader of the pattern takes the character (T129).
+const SPEECH_PATTERN: String = (
+	"^[^\"\\\\<>\\[\\]*`\\x00-\\x1F\\x7F-\\x9F" + LINE_SEPARATORS + "]{1,%d}$") % SPEECH_LIMIT
 
 ## How deep objects and lists may nest. A reply is one flat object; past
 ## this, Godot's parser and Python's give up at different depths, so both
@@ -160,9 +171,8 @@ func why_speech_is_wrong(speech: String) -> String:
 	if speech.is_empty() or speech.length() > SPEECH_LIMIT:
 		return "R8 the speech is %d characters; 1 to %d are allowed" % [
 			speech.length(), SPEECH_LIMIT]
-	for index: int in speech.length():
-		var code: int = speech.unicode_at(index)
-		if code < 32 or code == 127:
+	for character: String in speech:
+		if _is_control_or_line_break(character):
 			return "R9 the speech is more than one line, or has a control character"
 	for character: String in MARKUP:
 		if speech.contains(character):
@@ -170,6 +180,14 @@ func why_speech_is_wrong(speech: String) -> String:
 	if gives_away_a_secret(speech):
 		return "R11 the speech gives away one of the game's secrets"
 	return ""
+
+
+# A control character -- Unicode's Cc, U+0000 to U+001F and U+007F to
+# U+009F, NEXT LINE among them -- or a line or paragraph separator. Each
+# would break the line a game shows, or put an invisible code in it.
+static func _is_control_or_line_break(character: String) -> bool:
+	var code: int = character.unicode_at(0)
+	return code < 32 or (code >= 127 and code <= 159) or LINE_SEPARATORS.contains(character)
 
 
 ## True when `text` contains one of the game's secrets, whatever the case
