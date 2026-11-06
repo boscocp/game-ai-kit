@@ -22,7 +22,10 @@ rule is about code -- and refuses the plain ways round it:
       or as a node in a scene or resource. The one file outside the addon
       allowed `HTTPRequest` (and `HTTPClient`'s constants) is
       `godot/test/ai_llm/http_frame_probe.gd`, which measures it with threads
-      off as well as on -- by its path, not its folder.
+      off as well as on -- by its path, not its folder. The one allowed
+      `OS.execute` is `godot/test/rts/rts_exit.gd` (T138), by its path too:
+      it runs the engine on the RTS scene and reads what that prints at
+      exit, which no process can read of itself.
   V2  a model's text read, or a reply made, outside the door:
       `LlmReply.new`, an alias of `LlmReply` (`const Made := LlmReply`), or a
       load of `llm_reply.gd` by path or by its uid, anywhere but
@@ -120,6 +123,10 @@ PROBE_MAY_USE = {"HTTPRequest", "HTTPClient"}
 # once with the process's id, and the server it starts runs beside the game.
 STARTER = ADDON / "llm_local_server.gd"
 STARTER_MAY_RUN = {"create_process"}
+# The one file outside the addon that runs a program (T138): Godot itself, on
+# a scene, to read the leaks it prints at exit. A test, never game code.
+EXIT_READER = pathlib.Path("godot/test/rts/rts_exit.gd")
+EXIT_READER_MAY_RUN = {"execute"}
 
 # Third-party GDScript this project does not author.
 VENDORED_DIRS = {"gdUnit4"}
@@ -171,6 +178,7 @@ class Source:
     is_validator: bool
     is_probe: bool
     is_starter: bool
+    is_exit_reader: bool
     code: list[str]          # comments and strings blanked
     uncommented: list[str]   # comments removed, strings kept
 
@@ -232,6 +240,7 @@ def read_source(path: pathlib.Path, root: pathlib.Path) -> Source:
         is_validator=relative == VALIDATOR,
         is_probe=relative == PROBE,
         is_starter=relative == STARTER,
+        is_exit_reader=relative == EXIT_READER,
         code=[strip_line(line, blank_strings=True) for line in lines],
         uncommented=[strip_line(line, blank_strings=False) for line in lines],
     )
@@ -243,7 +252,7 @@ def check_file(source: Source, reply_uid: str) -> list[str]:
     for number, (code, text) in enumerate(zip(source.code, source.uncommented), start=1):
         place = f"{source.label}:{number}"
         if not source.in_addon:
-            findings += reaching_a_model(place, code, source.is_probe)
+            findings += reaching_a_model(place, code, source.is_probe, source.is_exit_reader)
             findings += reading_the_model(place, code, text)
         if not source.is_validator:
             findings += making_a_reply(place, code, text, reply_uid)
@@ -253,13 +262,13 @@ def check_file(source: Source, reply_uid: str) -> list[str]:
     return findings
 
 
-def reaching_a_model(place: str, code: str, is_probe: bool) -> list[str]:
+def reaching_a_model(place: str, code: str, is_probe: bool, is_exit_reader: bool) -> list[str]:
     """V1, on one line outside the addon."""
     findings = [f"V1 {place} uses {found} outside ai_llm; "
                 "a model's text must arrive through a GakLlmRuntime"
                 for found in NETWORK_RE.findall(code)
                 if not (is_probe and found in PROBE_MAY_USE)]
-    if PROCESS_RE.search(code):
+    if any(not (is_exit_reader and found in EXIT_READER_MAY_RUN) for found in PROCESS_RE.findall(code)):
         findings.append(f"V1 {place} runs another program outside ai_llm; "
                         "a model's text must arrive through a GakLlmRuntime")
     return findings
@@ -451,6 +460,9 @@ SOUND_ADDON = {
     "godot/test/ai_llm/http_frame_probe.gd": (
         "extends SceneTree\n\n\nfunc _init() -> void:\n"
         "\tvar request := HTTPRequest.new()\n\trequest.use_threads = false\n"),
+    "godot/test/rts/rts_exit.gd": (
+        "extends SceneTree\n\n\nfunc _init() -> void:\n"
+        "\tvar code: int = OS.execute(OS.get_executable_path(), [\"--headless\"], [], true)\n"),
     "godot/addons/ai_llm/llm_local_server.gd": (
         "class_name LlmLocalServer\nextends Node\n\nvar pid: int = -1\n\n\n"
         "func _start() -> void:\n\tpid = OS.create_process(\"scripts/llm\", [\"serve\"])\n\n\n"
@@ -565,6 +577,12 @@ PLANTED = [
     ("a process killed in _notification, which also runs during play",
      {STARTER_FILE: SOUND_ADDON[STARTER_FILE]
       + "\n\nfunc _notification(_what: int) -> void:\n\tOS.kill(pid)\n"}, "V3"),
+    ("the exit reader's OS.execute in another test file",
+     {"godot/test/rts/rts_exit_copy.gd": "extends SceneTree\n\n\nfunc _init() -> void:\n"
+      "\tOS.execute(OS.get_executable_path(), [], [], true)\n"}, "V1"),
+    ("the exit reader starting a process rather than running one",
+     {"godot/test/rts/rts_exit.gd": "extends SceneTree\n\n\nfunc _init() -> void:\n"
+      "\tvar pid: int = OS.create_process(\"scripts/llm\", [\"serve\"])\n"}, "V1"),
     ("a game script that starts a server itself",
      _game("\tvar pid: int = OS.create_process(\"scripts/llm\", [\"serve\"])\n"), "V1"),
     ("a semaphore in the addon", _in_addon("\tvar gate := Semaphore.new()\n\tgate.wait()\n"), "V3"),
