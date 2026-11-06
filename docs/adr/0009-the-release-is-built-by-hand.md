@@ -15,7 +15,8 @@ having no install step.
 `scripts/release.py` writes every artifact itself, with `zipfile`:
 
 - an addon zip has one top folder named after the addon, with the root
-  `LICENSE` and `NOTICE` and a `VERSION` file beside the code;
+  `LICENSE` and `NOTICE` and a `VERSION` file beside the code (changed in
+  T149, below);
 - the wheel is a pure `py3-none-any` zip with `METADATA`, `WHEEL` and
   `RECORD` written out, and the attribution in `.dist-info/licenses/`, where
   PEP 639 puts it;

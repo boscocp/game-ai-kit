@@ -73,7 +73,7 @@ What the release step takes from it:
   when the owner publishes (ADR 0009, revisited), and is not done yet.
 - The zips `make release` writes already have the layout the page
   recommends: one top folder that unzips into `addons/<name>/`, with the
-  licence, NOTICE and a readme inside it.
+  licence, NOTICE and a readme inside it. (Changed in T149, below.)
 - The page says nothing about tests or `plugin.cfg`, and asks that script
   warnings be fixed or suppressed. Tests never ship: `release.py` refuses a
   gdUnit4 suite inside an addon folder.

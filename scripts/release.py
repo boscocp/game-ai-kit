@@ -594,7 +594,9 @@ def check_the_store_installs_into_addons(root: pathlib.Path) -> list[str]:
     """
     failures = []
     addons = shipped_addons(REPO)
-    for archive in quiet_build(REPO, root / "store")[:-1]:
+    built = quiet_build(REPO, root / "store")
+    for archive in (path for path in built if path.suffix == ".zip"
+                    and path.name.startswith(("ai_", KIT))):
         with zipfile.ZipFile(archive) as bundle:
             names = bundle.namelist()
         owners = addons if archive.name.startswith(KIT) else [archive.name.split("-")[0]]
@@ -884,6 +886,7 @@ def check_stale_artifacts(root: pathlib.Path) -> list[str]:
     release = root / "stale"
     quiet_build(REPO, release)
     stale = [release / "dist" / "ai_search-0.0.1.zip",
+             release / "dist" / f"{KIT}-0.0.1.zip",
              release / "dist" / f"{PACKAGE}-0.0.1-py3-none-any.whl"]
     for path in stale:
         path.write_bytes(b"stale")

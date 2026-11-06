@@ -303,6 +303,9 @@ def addon_places(paths: list[pathlib.PurePosixPath],
     land in the project beside the addons, and is refused (L11). An archive
     with no `addons/` at its top keeps the older rule: one place, its root or
     its one top folder -- the exported game's zip is laid out that way.
+    So this gate does not hold the `addons/` layout itself: an old
+    `ai_search/` zip still passes here. `release.py`'s self-test holds it,
+    through the store installer's rule.
     """
     if not any(path.parts[0] == ADDONS for path in paths):
         return {"at its root or in its top folder": attributed_files(paths, counted)}, []

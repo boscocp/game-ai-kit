@@ -200,7 +200,8 @@ wave 153.
    `scripts/release.py`, the archive rules in `scripts/check_license.py`
    (which look for LICENSE and NOTICE at the root or in the one top
    folder), `make library-check`, the README each zip carries and their
-   planted cases: larger than this wave, so it is T149's.
+   planted cases: larger than this wave, so it was T149's, and is done
+   there.
 2. **One store asset for the whole kit.** One zip holding `addons/ai_core/`
    and every technique; the person unticks, in the installer, what they do
    not want. The reasons: one entry, one page and one version to maintain
