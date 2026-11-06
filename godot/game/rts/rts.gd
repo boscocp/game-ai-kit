@@ -124,17 +124,17 @@ func restart() -> void:
 	var level: Difficulty = RtsLevels.presets()[level_index]
 	computer = RtsCommander.new(RtsScenario.EAST, level, SEED * 7, planner)
 	stand_in = QueueSide.new(RtsScenario.WEST, level, SEED * 11)
-	var sides: Dictionary = {RtsScenario.EAST: _clocked(computer)}
+	var sides: Dictionary = {}
+	_thinking.clock = _seat(sides, computer)
 	_meter.sides = {RtsScenario.EAST: computer}
 	if watching:
-		sides[RtsScenario.WEST] = _clocked(stand_in)
+		_seat(sides, stand_in)
 		_meter.sides[RtsScenario.WEST] = stand_in
 	played = RtsMatch.new(world, SEED, sides)
 	_view.world = world
 	_view.selected.clear()
 	_view.placing = ""
 	_thinking.side = computer
-	_thinking.clock = sides[RtsScenario.EAST] as RtsHumanClock
 	last_refusal = ""
 	_kept = false
 	paused = true
@@ -163,9 +163,21 @@ func _physics_process(_delta: float) -> void:
 		_refresh()
 
 
-# `side` as it plays: under the human clock when K has put it on.
-func _clocked(side: RtsSide) -> GakRtsController:
-	return RtsHumanClock.at(side, RtsHumanClock.knob_values()) if human_clock else side
+# `side` put in `sides` at its seat as it plays: under the human clock when
+# K has put it on, bare otherwise. Returns the clock, or null without one.
+#
+# Typed by the clock, never by the port the clock and the side share
+# (`GakRtsController`): measured on 4.7.2, this script is the first the
+# demo compiles, and a signature here naming that port before anything had
+# loaded it left 15 scripts alive at exit -- "21 ObjectDB instances were
+# leaked", "15 resources still in use" (T138, `make test-rts-exit`).
+func _seat(sides: Dictionary, side: RtsSide) -> RtsHumanClock:
+	if not human_clock:
+		sides[side.side] = side
+		return null
+	var clock: RtsHumanClock = RtsHumanClock.at(side, RtsHumanClock.knob_values())
+	sides[side.side] = clock
+	return clock
 
 
 # A match you played to its end, written to `recordings_folder` once, when

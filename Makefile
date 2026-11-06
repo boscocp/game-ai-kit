@@ -658,6 +658,13 @@ test-mcts-budget: import ## A frame's step of MCTS, 100 iterations of the dice r
 test-rts-match: import ## A whole RTS match ends the same way twice, inside its frame budget, and the commander beats the queues alone (T20)
 	@$(GODOT) --headless --path godot -s res://test/rts/rts_match.gd
 
+.PHONY: test-rts-exit
+check: test-rts-exit
+test-rts-exit: import ## The RTS, run and closed, leaks nothing at exit, and a planted leak is seen (T138)
+	@# Through godot_checked.py: a SCRIPT ERROR in the runner would otherwise
+	@# end it at "0 failure(s)" with a check skipped (CLAUDE.md's trap).
+	@$(PYTHON) scripts/godot_checked.py res://test/rts/rts_exit.gd
+
 .PHONY: rts-measure
 rts-measure: import ## Slow (minutes): the commander vs the queues, STRIPS vs HTN, each level vs the next, the seat's bias (T20)
 	@$(GODOT) --headless --path godot -s res://test/rts/rts_measure.gd
