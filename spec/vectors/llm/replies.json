@@ -436,9 +436,9 @@
     },
     {
       "why": "U+00A0, NO-BREAK SPACE, the first character past the C1 controls: a space that keeps two words on one line, which a French or pt-BR line may hold. Accepted.",
-      "raw": "{\"speech\": \"Evening, sir.\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "raw": "{\"speech\": \"Evening,\u00a0sir.\", \"intent\": \"greet\", \"argument\": \"\"}",
       "accepted": {
-        "speech": "Evening, sir.",
+        "speech": "Evening,\u00a0sir.",
         "intent": "greet",
         "argument": ""
       }
@@ -485,18 +485,18 @@
     },
     {
       "why": "U+200A, HAIR SPACE, the character just before the zero-width family: a visible space (Zs), not a format control. Accepted.",
-      "raw": "{\"speech\": \"Evening, sir.\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "raw": "{\"speech\": \"Evening,\u200asir.\", \"intent\": \"greet\", \"argument\": \"\"}",
       "accepted": {
-        "speech": "Evening, sir.",
+        "speech": "Evening,\u200asir.",
         "intent": "greet",
         "argument": ""
       }
     },
     {
       "why": "U+202F, NARROW NO-BREAK SPACE, just after the bidirectional overrides: the space a French line puts before `?`. Accepted.",
-      "raw": "{\"speech\": \"Vraiment ?\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "raw": "{\"speech\": \"Vraiment\u202f?\", \"intent\": \"greet\", \"argument\": \"\"}",
       "accepted": {
-        "speech": "Vraiment ?",
+        "speech": "Vraiment\u202f?",
         "intent": "greet",
         "argument": ""
       }

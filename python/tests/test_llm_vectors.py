@@ -158,17 +158,22 @@ class TheVectors(unittest.TestCase):
     def test_the_format_controls_are_the_vectors_runs_and_unicodes_cf(self) -> None:
         # The validator names its runs by hand, and so does LlmValidator; both
         # are compared to the vector's. The vector's are compared here to
-        # Unicode's own Cf, on the version it names: an older table (Python
-        # 3.12 has 15.0) may lack a character a newer one added, so it is
-        # skipped there rather than read as a disagreement.
+        # Unicode's own Cf: exactly, on the version the vector names. On
+        # another table -- CI's Python 3.12 has 15.0 -- a character a newer
+        # version added is unassigned (Cn) there, so the check is weaker:
+        # every Cf on this table is in the runs, and every code point in the
+        # runs is Cf or still unassigned here.
         version, codes = format_controls_of_the_vector()
         runs = load_vector()["format_controls"]["runs"]
         self.assertEqual(validator.FORMAT_CONTROLS,
                          tuple((int(first, 16), int(last, 16)) for first, last in runs))
-        if unicodedata.unidata_version != version:
-            self.skipTest(f"Unicode {unicodedata.unidata_version} here, the runs are {version}")
         cf = [code for code in range(0x110000) if unicodedata.category(chr(code)) == "Cf"]
-        self.assertEqual(codes, cf)
+        if unicodedata.unidata_version == version:
+            self.assertEqual(codes, cf)
+            return
+        self.assertLessEqual(set(cf), set(codes))
+        for code in codes:
+            self.assertIn(unicodedata.category(chr(code)), ("Cf", "Cn"), hex(code))
 
 
 if __name__ == "__main__":

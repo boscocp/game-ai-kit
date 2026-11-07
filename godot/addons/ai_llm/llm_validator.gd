@@ -102,12 +102,12 @@ const FORMAT_CLASS: String = (
 ## JSON text, escapes and all, so a class without the quote and the
 ## backslash is the one spelling that means the same there and in JSON
 ## Schema, which reads the decoded string. It also drops `maxLength` when a
-## pattern is present, so the length is in the pattern too (T116, docs/local-llm/server.md). The guard loses
-## the straight quote; the validator still admits one (R10 is the check, not
-## this). The separators go in as the characters themselves, not as a
-## `\u2028` escape: Godot's RegEx (PCRE2) refuses that escape, and every
-## reader of the pattern takes the character (T129). The format controls go
-## in the same way (T139).
+## pattern is present, so the length is in the pattern too (T116,
+## docs/local-llm/server.md). The guard loses the straight quote; the
+## validator still admits one (R10 is the check, not this). The separators
+## go in as the characters themselves, not as a `\u2028` escape: Godot's
+## RegEx (PCRE2) refuses that escape, and every reader of the pattern takes
+## the character (T129). The format controls go in the same way (T139).
 const SPEECH_PATTERN: String = (
 	"^[^\"\\\\<>\\[\\]*`\\x00-\\x1F\\x7F-\\x9F" + LINE_SEPARATORS + FORMAT_CLASS
 	+ "]{1,%d}$") % SPEECH_LIMIT

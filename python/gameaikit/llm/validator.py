@@ -100,17 +100,17 @@ FORMAT_CONTROLS = (
 
 # The speech as a pattern, for the schema a constraining runtime is handed:
 # one to SPEECH_LIMIT characters, none of them MARKUP, a control character
-# (C0, DEL or C1), a line separator, a format control, a quote or a backslash. llama.cpp turns
-# a pattern into a grammar over the string's JSON text, escapes and all, so a
-# class without the quote and the backslash is the one spelling that means
-# the same there and in JSON Schema, which reads the decoded string. It also
-# drops `maxLength` when a pattern is present, so the length is in the
-# pattern too (T116, docs/local-llm/server.md). The guard loses the straight
-# quote; the validator still admits one (R10 is the check, not this). The
-# separators go in as the characters themselves, not as a `\u2028` escape:
-# Godot's RegEx (PCRE2) refuses that escape, and every reader of the
-# pattern takes the character (T129). The format controls go in the same way,
-# each run as `first-last` (T139).
+# (C0, DEL or C1), a line separator, a format control, a quote or a
+# backslash. llama.cpp turns a pattern into a grammar over the string's JSON
+# text, escapes and all, so a class without the quote and the backslash is
+# the one spelling that means the same there and in JSON Schema, which reads
+# the decoded string. It also drops `maxLength` when a pattern is present,
+# so the length is in the pattern too (T116, docs/local-llm/server.md). The
+# guard loses the straight quote; the validator still admits one (R10 is the
+# check, not this). The separators go in as the characters themselves, not
+# as a `\u2028` escape: Godot's RegEx (PCRE2) refuses that escape, and every
+# reader of the pattern takes the character (T129). The format controls go
+# in the same way, each run as `first-last` (T139).
 FORMAT_CLASS = "".join(chr(first) if first == last else f"{chr(first)}-{chr(last)}"
                        for first, last in FORMAT_CONTROLS)
 SPEECH_PATTERN = (r'^[^"\\<>\[\]*`\x00-\x1F\x7F-\x9F' + LINE_SEPARATORS + FORMAT_CLASS
