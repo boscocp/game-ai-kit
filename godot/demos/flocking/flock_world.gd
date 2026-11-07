@@ -11,7 +11,11 @@
 ## The numbers are Shiffman's, from Processing's "Flocking" example (the one
 ## *The Nature of Code* builds in chapter 6): a top speed of 2 pixels a frame
 ## and a force of 0.03 pixels a frame each frame, at 60 frames a second;
-## sight 50, too close 25, separation weighed 1.5.
+## sight 50, too close 25, separation weighed 1.5. And Shiffman steers a
+## frame at a time: his desired velocity minus the velocity is the force,
+## clamped, every frame. Here that is a `time_to_target` of one frame, not
+## the library's default second -- with a second, measured, the flock flies
+## at 76 of its 120 and agrees on a heading less (review of wave 157).
 class_name FlockWorld
 extends RefCounted
 
@@ -29,13 +33,15 @@ const LOOK_AHEAD: float = 60.0
 const AVOID_WEIGHT: float = 3.0
 const OBSTACLE_RADIUS: float = 28.0
 const DT: float = 1.0 / 60.0
+## The time alignment and cohesion are given to turn: one frame, as Shiffman's.
+const TIME_TO_TARGET: float = DT
 ## The flock's own weights; a switched-off rule's goes to zero.
 const WEIGHTS: Array[float] = [1.5, 1.0, 1.0]
 ## The rules' names, in `Flock.Rule` order: also the words the demo shows.
 const RULES: Array[String] = ["separation", "alignment", "cohesion"]  # shown through tr()
 
 var boids: Array[SteeringVehicle] = []
-var flock := Flock.new(TOO_CLOSE, 1.0, PackedFloat64Array(WEIGHTS))
+var flock := Flock.new(TOO_CLOSE, TIME_TO_TARGET, PackedFloat64Array(WEIGHTS))
 ## Which of the three rules count, in `Flock.Rule` order.
 var rules_on: Array[bool] = [true, true, true]
 var obstacles: Array[Vector2] = []
@@ -44,6 +50,9 @@ var watched: int = 0
 ## What the watched boid decided on the last step: the neighbours it
 ## counted, by index, and its three forces and avoid's, unweighted.
 var counted := PackedInt32Array()
+## Where every boid was when they decided: the snapshot the forces above
+## were worked out from, which the drawing uses, not where the step left them.
+var decided_at := PackedVector2Array()
 var forces: Array[Vector2] = [Vector2.ZERO, Vector2.ZERO, Vector2.ZERO, Vector2.ZERO]
 var steps: int = 0
 var _grid := NeighbourGrid.new(SIGHT)
@@ -102,6 +111,7 @@ func decide() -> Array[Vector2]:
 	for boid: SteeringVehicle in boids:
 		points.append(boid.position)
 	_grid.fill(points)
+	decided_at = points
 	var avoid := AvoidBehaviour.new(obstacles, _radii(), LOOK_AHEAD)
 	var weights: PackedFloat64Array = weights_now()
 	var pushes: Array[Vector2] = []
@@ -128,15 +138,21 @@ func watch_next() -> void:
 	decide()
 
 
-## The middle of the watched boid's neighbours, as cohesion steers at it;
-## its own place when it counts nobody.
+## The middle of the watched boid's neighbours when it decided, as cohesion
+## steered at it; its own place then when it counted nobody.
 func centre_seen() -> Vector2:
 	if counted.is_empty():
-		return boids[watched].position
+		return decided_at[watched]
 	var total := Vector2.ZERO
 	for index: int in counted:
-		total += boids[index].position
+		total += decided_at[index]
 	return total / counted.size()
+
+
+## How many distances the grid measured in the last step's queries, against
+## the naive search's n(n - 1).
+func distances_measured() -> int:
+	return _grid.distances
 
 
 func _vehicles(indices: PackedInt32Array) -> Array[SteeringVehicle]:

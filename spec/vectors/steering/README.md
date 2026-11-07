@@ -92,7 +92,12 @@ handed (`position`, `velocity`), the `separation_radius`, optional
 small flock flying: `boids`, one `max_speed` and `max_force` for all, and at
 each sampled step every boid's `positions` and `velocities`. Every boid is
 handed the whole flock, itself included, which each rule must skip, and
-every force is worked out from one snapshot before any boid moves.
+every force is worked out from one snapshot before any boid moves. Of the
+three skips, this pins alignment's: a boid counting its own heading would
+fly a different line. Separation's and cohesion's skips change nothing
+here: a boid at no distance from itself has no direction to push, and
+counting itself moves the centre towards it but not the direction to that
+centre. So `flock_test.gd`'s self-only flock pins those two.
 
 | file | what it pins |
 |---|---|
@@ -100,7 +105,7 @@ every force is worked out from one snapshot before any boid moves.
 | `two-close-on-one-side-are-clamped` | two pushes of 0.75 adding past the limit, and two headings that cancel, so alignment asks for nothing |
 | `nobody-in-sight` | no neighbour: every rule, and the flock, asks for nothing |
 | `far-neighbours-only-pull` | weights 0, 2, 0 and a `time_to_target` of 0.5: only alignment counts, twice |
-| `four-boids-flying` | four boids from four headings fly one way by step 240, at about half their top speed |
+| `four-boids-flying` | four boids from four headings fly one way by step 240, at about half their top speed -- the default second's time constant, which the demo shortens to a frame |
 
 `make test-steering-vectors` runs both folders on the GDScript side, the
 flock's through `scripts/godot_checked.py`; `python/tests/test_steering_flock.py`

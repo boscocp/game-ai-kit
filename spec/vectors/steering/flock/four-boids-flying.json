@@ -1,7 +1,7 @@
 {
  "name": "four-boids-flying",
  "shape": "steps",
- "why": "Four boids, every one seeing every other in id order, all forces worked out from one snapshot before any moves. Started apart and heading four ways, by step 240 they fly one way, each about 3.1 from its nearest, a little inside the separation radius of 4, and at about half their top speed: alignment asks for top speed, and cohesion's seek of a centre that flies with them asks to shed the velocity, so the two settle halfway.",
+ "why": "Four boids, every one seeing every other in id order, all forces worked out from one snapshot before any moves. Started apart and heading four ways, by step 240 they fly one way, each about 3.1 from its nearest, a little inside the separation radius of 4, and at about half their top speed. That is the default time_to_target of a second, which the vectors keep: with so slow a time constant, cohesion's seek of a centre that flies with them asks to shed the velocity while alignment asks for top speed, and the two settle halfway. The flocking demo turns in a frame, as Shiffman's example does, and flies at top speed.",
  "boids": [
   {
    "position": [

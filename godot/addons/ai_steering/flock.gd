@@ -31,7 +31,9 @@ var cohesion: CohesionBehaviour
 ## that must choose between keeping up and not colliding should not collide.
 ## Set once, when the flock is made: these are a designer's numbers, not a
 ## model's, and a caller that switches a rule off mid-game passes its own
-## weights to `Steering.combined`, as the flocking demo does.
+## weights to `Steering.combined`, as the flocking demo does. Keep it so:
+## `scripts/check_no_training.py`'s N3 net refuses any assignment to
+## `.weights` in GDScript, a fitted model's or not.
 var weights: PackedFloat64Array
 
 

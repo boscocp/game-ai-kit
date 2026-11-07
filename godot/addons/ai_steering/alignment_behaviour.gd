@@ -4,8 +4,9 @@
 ## its velocity's direction, not its speed -- is added; the sum's direction
 ## at top speed is the velocity wanted, and the force is what turns the
 ## vehicle's velocity into it (`Steering.towards_velocity`, as seek's is).
-## Headings rather than velocities, so a slow neighbour counts as much as a
-## fast one and the flock keeps flying instead of agreeing to stop.
+## Each heading is a unit vector, so a slow neighbour weighs as much as a
+## fast one. And the velocity wanted is at top speed, so the flock keeps
+## flying instead of agreeing to stop.
 ## Neighbours that are still, or whose headings cancel exactly, give it
 ## nothing to align with, and it asks for nothing. O(neighbours).
 ##

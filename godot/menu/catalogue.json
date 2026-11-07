@@ -166,7 +166,7 @@
         {"technique": "avoid", "part": "swerves from a clicked obstacle, added to the three with three times the weight of alignment"}
       ],
       "controls": "1, 2 and 3 switch separation, alignment and cohesion; click drops an obstacle; Tab watches the next boid; space pauses, . one step, R again",
-      "watch": "The white boid's three arrows -- red away from the too close, blue towards their heading, green towards their middle -- and the yellow lines to the neighbours it counted. Switch one rule off and see what it was doing: without cohesion they spread, without separation they pile up.",
+      "watch": "The white boid's three arrows -- red away from the too close, blue towards their heading, green towards their middle -- and the yellow lines to the neighbours it counted. Switch one rule off and see what it was doing: without separation they pile up, without alignment they mill about, without cohesion the flocks loosen.",
       "docs": "docs/concepts/steering.md"
     },
     {

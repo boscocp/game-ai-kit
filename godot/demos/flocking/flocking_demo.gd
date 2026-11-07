@@ -11,7 +11,8 @@
 ## What is drawn is the watched boid's decision, as invariant 13 asks: its
 ## sight and its too-close circle, a line to each neighbour it counted, and
 ## its three forces in three colours -- avoid's in a fourth when something is
-## ahead -- before they move it.
+## ahead -- drawn from where everyone was when it decided, the step that
+## decision has just moved it by being one sixtieth of a second's flight.
 class_name FlockingDemo
 extends Node2D
 
@@ -72,6 +73,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if click != null and click.pressed and click.button_index == MOUSE_BUTTON_LEFT:
 		if Rect2(MARGIN, FlockWorld.SIZE).has_point(click.position):
 			world.place_obstacle(click.position - MARGIN)
+			queue_redraw()
 		return
 	var key := event as InputEventKey
 	if key == null or not key.is_pressed() or key.echo:
@@ -142,14 +144,16 @@ func _draw() -> void:
 
 
 # Its sight and too-close circles, a line to each neighbour it counted, the
-# point cohesion steers at, and its forces as arrows.
+# point cohesion steers at, and its forces as arrows -- all where everyone
+# was when it decided (`FlockWorld.decided_at`), the snapshot the forces
+# came from, not where that decision has since moved them.
 func _draw_what_the_watched_one_sees() -> void:
 	var watched: SteeringVehicle = world.boids[world.watched]
-	var at: Vector2 = MARGIN + watched.position
+	var at: Vector2 = MARGIN + world.decided_at[world.watched]
 	draw_arc(at, FlockWorld.SIGHT, 0.0, TAU, 48, SIGHT_COLOUR, 1.0)
 	draw_arc(at, FlockWorld.TOO_CLOSE, 0.0, TAU, 32, FORCE_COLOURS[Flock.Rule.SEPARATION] * Color(1, 1, 1, 0.5), 1.0)
 	for index: int in world.counted:
-		draw_line(at, MARGIN + world.boids[index].position, SIGHT_COLOUR, 1.0)
+		draw_line(at, MARGIN + world.decided_at[index], SIGHT_COLOUR, 1.0)
 		_draw_boid(world.boids[index], NEIGHBOUR_COLOUR, 1.0)
 	if not world.counted.is_empty():
 		draw_circle(MARGIN + world.centre_seen(), 3.0, FORCE_COLOURS[Flock.Rule.COHESION])

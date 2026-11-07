@@ -4,7 +4,8 @@
 `derive.py` beside them, which imports nothing from this repository: one
 boid with its neighbours and the forces the three rules give it, and a small
 flock flying, every boid handed the whole flock -- itself included, which
-each rule must skip. `godot/test/ai_steering/flock_vector.gd` reads the same
+each rule must skip. The flying vector pins alignment's skip; the
+self-only test below pins separation's and cohesion's. `godot/test/ai_steering/flock_vector.gd` reads the same
 files; both check against the file, never against each other.
 """
 

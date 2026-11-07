@@ -890,6 +890,11 @@ demo-steering: import ## Four vehicles: seek, arrive, pursue, seek with avoid, e
 demo-flocking: import ## A hundred boids from three rules: 1-3 switch separation, alignment, cohesion; click an obstacle, Tab the next boid, space pauses, . one step, R again
 	@$(GODOT) --path godot res://demos/flocking/flocking_demo.tscn
 
+.PHONY: measure-flocking
+measure-flocking: import ## T150: the flocking demo flown ten seconds with each rule off in turn -- the table on docs/concepts/steering.md
+	@# A measurement, not in make check; seeded, so the same on any machine.
+	@$(PYTHON) scripts/godot_checked.py res://test/demo_flocking/flocking_table.gd
+
 .PHONY: demo-racing
 demo-racing: import ## Race an AI in the same car: arrows/WASD drive, 1-3 the AI, R again, P pause, Tab watch the three AIs
 	@$(GODOT) --path godot res://demos/racing/racing_demo.tscn

@@ -53,9 +53,11 @@ class Separation:
 
 @dataclasses.dataclass
 class Alignment:
-    """Towards the direction of the neighbours' added headings, at top
-    speed -- headings, not velocities, so the flock keeps flying. Nothing
-    when they are still or cancel exactly. `time_to_target` is seek's knob."""
+    """Towards the direction of the neighbours' added headings. Each
+    heading is a unit vector, so a slow neighbour weighs as much as a fast
+    one; the velocity wanted is at top speed, so the flock keeps flying.
+    Nothing when they are still or cancel exactly. `time_to_target` is
+    seek's knob."""
 
     time_to_target: float = 1.0
     neighbours: list[Vehicle] = dataclasses.field(default_factory=list)
@@ -105,7 +107,10 @@ class Flock:
     `weights` are in the order separation, alignment, cohesion, set when the
     flock is made; separation weighs most by default, as in Shiffman's
     flocking example (*The Nature of Code*). A weight of zero switches a
-    rule off.
+    rule off. Set at construction and never assigned after, as on the
+    GDScript side, where `check_no_training.py`'s N3 net refuses any
+    assignment to `.weights` -- a caller that switches rules mid-game passes
+    its own weights to `combined`.
     """
 
     def __init__(self, too_close: float, time_to_target: float = 1.0,

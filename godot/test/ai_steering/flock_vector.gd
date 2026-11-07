@@ -10,7 +10,8 @@
 #   * "steps": a small flock flying, every boid handed the whole flock --
 #     itself included, which each rule must skip -- every force worked out
 #     from one snapshot before any boid moves; at each sampled step, where
-#     each boid is and how it moves.
+#     each boid is and how it moves. This pins alignment's self-skip; the
+#     self-only flock in `flock_test.gd` pins separation's and cohesion's.
 #
 # The tolerance is `SteeringVector.TOLERANCE`, sized for 32-bit floats.
 class_name FlockVector

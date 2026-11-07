@@ -6,7 +6,10 @@
 ## point is in its cell or one of the eight around it. Filling is O(n); a
 ## query looks at nine cells, about O(neighbours) when the points are spread
 ## out. The naive answer -- every point against every other -- is O(n^2):
-## 9,900 distances a step for a hundred boids, against a few hundred here.
+## 9,900 distances a step for a hundred boids. Here, measured on the
+## demo's flock, 1,622 at the start and 1,836 ten seconds in (`make
+## measure-flocking`) -- and the more the boids bunch, the closer it comes
+## to the naive count: 2,944 with separation off (docs/concepts/steering.md).
 ##
 ## The answer comes in index order, whatever the order of the cells, so two
 ## runs from one start hand every rule the same neighbours in the same order
@@ -25,6 +28,9 @@ const AROUND: Array[Vector2i] = [Vector2i(-1, -1), Vector2i(0, -1), Vector2i(1, 
 
 ## The side of a cell, never smaller than the radius asked about.
 var cell_size: float
+## How many distances the queries since the last `fill` have measured: the
+## cost the page compares with the naive search's.
+var distances: int = 0
 # The indices in each cell, in the order they were filed.
 var _cells: Dictionary = {}
 
@@ -36,6 +42,7 @@ func _init(side: float) -> void:
 ## Files every point by its index, forgetting the last filling.
 func fill(points: PackedVector2Array) -> void:
 	_cells.clear()
+	distances = 0
 	for index: int in range(points.size()):
 		var cell: Vector2i = _cell_of(points[index])
 		if not _cells.has(cell):
@@ -50,7 +57,9 @@ func near(points: PackedVector2Array, index: int, radius: float) -> PackedInt32A
 	var found := PackedInt32Array()
 	var centre: Vector2i = _cell_of(points[index])
 	for offset: Vector2i in AROUND:
-		found.append_array(_near_in(_cells.get(centre + offset, PackedInt32Array()), points, index, radius))
+		var candidates: PackedInt32Array = _cells.get(centre + offset, PackedInt32Array())
+		distances += candidates.size()
+		found.append_array(_near_in(candidates, points, index, radius))
 	found.sort()
 	return found
 
