@@ -110,6 +110,5 @@ is anyone there? guard {guard}: {chance},tem alguém aí? guarda {guard}: {chanc
 last change: none yet,última mudança: nenhuma ainda
 "last change: {sign} seen, {before} to {after}","última mudança: {sign} visto, de {before} para {after}"
 "last change: {sign} not seen, {before} to {after}","última mudança: {sign} não visto, de {before} para {after}"
-a door left open (F opens or shuts one),uma porta deixada aberta (F abre ou fecha uma)
 F: open the door,F: abrir a porta
 F: shut the door,F: fechar a porta

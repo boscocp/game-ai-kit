@@ -483,8 +483,9 @@ On screen, under the radar: "is anyone there?" and the belief as a bar,
 the tick at 0.3; the radio's chance of a fault; each sign seen or not, with
 what it did to the belief -- the belief with all of it, less the belief
 without that sign -- the one that moved it most marked `>`; and the last
-change, which sign and the belief before and after. The legend's orange is
-a door left open; the corner says when F can open or shut one.
+change, which sign and the belief before and after. A door left open is
+orange and swung out; the corner says when F can open or shut one. The
+legend has no line for it: one more line ran it past the window's gutter.
 
 ## The kit's own numbers
 

@@ -115,7 +115,6 @@ func _show_legend() -> void:
 		[InfiltrationDrawing.EMPTIED, tr("white square: guesses its sight just cleared")],
 		[InfiltrationDrawing.SPOT, tr("the spot it was given to search; grey: searched")],
 		[InfiltrationDrawing.SOUND, tr("a sound's reach along the level")],
-		[DoorDrawing.OPEN, tr("a door left open (F opens or shuts one)")],
 	])
 	_pad.add_to(_legend)
 
