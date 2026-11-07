@@ -1,5 +1,6 @@
 ## What a guard's eyes give it on the infiltration level: its look at the
-## player, the cells it would have seen a hidden body in, and the bodies.
+## player, the cells it would have seen a hidden body in, the bodies, and
+## the doors (T115).
 ##
 ## The look is T69's: the guard type's `VisionShape` at the player's
 ## distance and angle; each of the player's three body points -- their
@@ -23,6 +24,9 @@
 ## blocked and a low one clear. Then cast to every point.
 class_name GuardEyes
 extends RefCounted
+
+## The height on a door a guard's eye looks at, in metres: its middle.
+const DOOR_MIDDLE: float = 1.0
 
 
 ## The guard's look at the player, as T69's percept: nothing of where the
@@ -96,6 +100,16 @@ static func seen_cells_by_line(guard: InfiltrationGuard, level: InfiltrationLeve
 ## and a clear line to it.
 static func sees_body(guard: InfiltrationGuard, level: InfiltrationLevel, rules: InfiltrationRules, place: Vector2) -> bool:
 	return would_see(guard, level, rules, place)
+
+
+## True when this guard sees the door at `place`: in one of its zones, with
+## a clear line to the door's middle. A door is tall and pale, so the light
+## and a hiding place's cover are not read (T115).
+static func sees_door(guard: InfiltrationGuard, level: InfiltrationLevel, rules: InfiltrationRules, place: Vector2) -> bool:
+	var offset: Vector2 = place - guard.position
+	if guard.type.vision.zone_at(offset.length(), angle_off(guard.facing, offset)) == -1:
+		return false
+	return level.arena.clear_line(guard.eye(level.arena, rules), level.arena.above(place, DOOR_MIDDLE))
 
 
 static func _reach(type: GuardType) -> float:

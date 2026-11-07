@@ -4,7 +4,8 @@
 ##
 ## Keys: WASD walk (relative to the camera), the mouse turns the camera, C
 ## crouches, Z lies prone, Shift sprints, G throws a distraction where the
-## crosshair points, E takes down a guard from behind, a click shoots. 1
+## crosshair points, E takes down a guard from behind, F opens or shuts
+## the door within reach (T115), a click shoots. 1
 ## cycles the belief (off, grid, particles), 2-4 switch the coordinator,
 ## the arbiter and the accumulator; 5
 ## the off-screen halving; 6 the director (T90), which starts the level
@@ -13,6 +14,10 @@
 ## starts again, P pauses, Space one decision while paused. K how a
 ## generated level is made (T95): drawn and tested, solved by the constraint
 ## solver, or solved with the solver's work replayed over the screen.
+##
+## The watched guard's intruder network (T115) is drawn under the radar:
+## whether it believes anyone is there, which sign says so, and the last
+## sign that changed its mind (`SuspicionView`).
 ##
 ## The camera's frustum says which guards are on screen, for the halving.
 extends Node3D
@@ -45,6 +50,8 @@ var _pending := PlayerIntent.new()
 var _pad := PadAsKeys.new()
 ## The director's strip, under the radar.
 var _strip := DirectorStrip.new()
+## The watched guard's intruder network, under the strip.
+var _suspicion := SuspicionView.new()
 ## The solved level the generation view replays; null when it was drawn.
 var solved: LevelConstraints
 ## The last level the solver made, kept by its seed so that N and a second
@@ -76,6 +83,9 @@ func _ready() -> void:
 	_strip.position = Vector2(964, 220)
 	_strip.size = Vector2(300, 90)
 	$Interface.add_child(_strip)
+	_suspicion.position = Vector2(964, 318)
+	_suspicion.size = Vector2(300, 112)
+	$Interface.add_child(_suspicion)
 	_generation.position = Vector2(300, 120)
 	_generation.size = Vector2(660, 420)
 	_generation.visible = false
@@ -137,7 +147,9 @@ func decision_overlay() -> Dictionary:
 		var record: Dictionary = world.decisions.get(guard.id, {})
 		guards.append({"phase": guard.mind.phase_name(), "awareness": guard.aware(), "action": guard.action,
 			"scores": record.get("scores", []), "role": guard.role, "spot": guard.spot,
-			"heard_help": world.time - guard.help_heard_at <= 15.0, "certainty": guard.percept.sight.certainty})
+			"heard_help": world.time - guard.help_heard_at <= 15.0, "certainty": guard.percept.sight.certainty,
+			"intruder": guard.suspicion.belief, "signs": guard.suspicion.asked,
+			"lead": guard.suspicion.lead})
 	return {"time": world.time, "guards": guards, "off_screen_halving": rules.off_screen_halving,
 		"switches": {"belief": rules.use_belief, "particles": rules.use_particles, "coordinator": rules.use_coordinator,
 			"arbiter": rules.use_arbiter, "accumulator": rules.use_accumulator, "director": rules.use_director},
@@ -201,6 +213,8 @@ func _key(keycode: Key) -> void:
 			_pending.throw_at = _aim_point()
 		KEY_E:
 			_pending.takedown = true
+		KEY_F:
+			_pending.use_door = true
 		KEY_ESCAPE:
 			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		_:
@@ -246,6 +260,7 @@ func _new_world() -> void:
 	_hud.world = world
 	_hud.camera = _camera
 	_strip.world = world
+	_suspicion.world = world
 	_radar.world = world
 
 
@@ -339,6 +354,9 @@ func _show() -> void:
 	_radar.queue_redraw()
 	_strip.thinking = _thinking
 	_strip.queue_redraw()
+	_suspicion.watched = _watched
+	_suspicion.thinking = _thinking
+	_suspicion.queue_redraw()
 	_panel.text = InfiltrationText.panel(world, _watched) if _thinking else InfiltrationWords.level(world.level.name)
 	if _awaited != -1:
 		_panel.text = tr("solving level {seed}: this one plays until it is ready").format({seed = _awaited}) + "\n" + _panel.text
