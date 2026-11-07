@@ -101,7 +101,8 @@ class TheSchema(unittest.TestCase):
         marked = [f"Halt {character} there." for character in validator.MARKUP]
         marked += ["", "H" * (validator.SPEECH_LIMIT + 1), "Two\nlines", 'He said "no".',
                    "a \\ b", "Evening.\x7f", "Evening.\x85", "Two\u2028lines",
-                   "Two\u2029lines"]
+                   "Two\u2029lines", "Soft\u00adhyphen", "owl\u200d-eyes", "Back\u202ewards",
+                   "Tagged\U000e0041"]
         for speech in marked:
             with self.subTest(speech):
                 self.assertIsNone(re.fullmatch(validator.SPEECH_PATTERN, speech))

@@ -150,7 +150,7 @@
       "file": {
         "models": {
           "only": {
-            "kind": "random_forest",
+            "kind": "boosted_trees",
             "features": [
               "one"
             ],
@@ -392,6 +392,1197 @@
         }
       },
       "refused": "M6"
+    },
+    {
+      "why": "A decision tree (T113): a word tested by equality, a number by a threshold, and leaves that count. It publishes no weights and needs none.",
+      "file": {
+        "models": {
+          "reads": {
+            "kind": "tree",
+            "features": [
+              "distance",
+              "health"
+            ],
+            "classes": [
+              "high",
+              "low"
+            ],
+            "nodes": [
+              {
+                "feature": "distance",
+                "is": "close",
+                "yes": 1,
+                "no": 2
+              },
+              {
+                "counts": {
+                  "low": 3
+                }
+              },
+              {
+                "feature": "health",
+                "at_most": 2.5,
+                "yes": 3,
+                "no": 4
+              },
+              {
+                "counts": {
+                  "high": 2,
+                  "low": 1
+                }
+              },
+              {
+                "counts": {
+                  "high": 4
+                }
+              }
+            ]
+          }
+        }
+      },
+      "loads": [
+        "reads"
+      ],
+      "extra": []
+    },
+    {
+      "why": "A tree beside a weighted model in one file: each kind is held to its own fields.",
+      "file": {
+        "models": {
+          "reads": {
+            "kind": "tree",
+            "features": [
+              "distance",
+              "health"
+            ],
+            "classes": [
+              "high",
+              "low"
+            ],
+            "nodes": [
+              {
+                "feature": "distance",
+                "is": "close",
+                "yes": 1,
+                "no": 2
+              },
+              {
+                "counts": {
+                  "low": 3
+                }
+              },
+              {
+                "feature": "health",
+                "at_most": 2.5,
+                "yes": 3,
+                "no": 4
+              },
+              {
+                "counts": {
+                  "high": 2,
+                  "low": 1
+                }
+              },
+              {
+                "counts": {
+                  "high": 4
+                }
+              }
+            ]
+          },
+          "chance": {
+            "kind": "logistic",
+            "features": [
+              "one"
+            ],
+            "weights": [
+              1.0
+            ],
+            "bias": 0.0
+          }
+        }
+      },
+      "loads": [
+        "chance",
+        "reads"
+      ],
+      "extra": []
+    },
+    {
+      "why": "A tree with no nodes field: a model of kind tree is asked for its own fields, not a weighted model's.",
+      "file": {
+        "models": {
+          "reads": {
+            "kind": "tree",
+            "features": [
+              "distance",
+              "health"
+            ],
+            "classes": [
+              "high",
+              "low"
+            ]
+          }
+        }
+      },
+      "refused": "M4"
+    },
+    {
+      "why": "A tree with weights and no classes: weights are not what a tree publishes.",
+      "file": {
+        "models": {
+          "reads": {
+            "kind": "tree",
+            "features": [
+              "distance",
+              "health"
+            ],
+            "nodes": [
+              {
+                "feature": "distance",
+                "is": "close",
+                "yes": 1,
+                "no": 2
+              },
+              {
+                "counts": {
+                  "low": 3
+                }
+              },
+              {
+                "feature": "health",
+                "at_most": 2.5,
+                "yes": 3,
+                "no": 4
+              },
+              {
+                "counts": {
+                  "high": 2,
+                  "low": 1
+                }
+              },
+              {
+                "counts": {
+                  "high": 4
+                }
+              }
+            ],
+            "weights": [
+              1.0,
+              1.0
+            ],
+            "bias": 0.0
+          }
+        }
+      },
+      "refused": "M4"
+    },
+    {
+      "why": "A tree whose answers are not named: a leaf's counts would mean nothing.",
+      "file": {
+        "models": {
+          "reads": {
+            "kind": "tree",
+            "features": [
+              "distance",
+              "health"
+            ],
+            "classes": [],
+            "nodes": [
+              {
+                "feature": "distance",
+                "is": "close",
+                "yes": 1,
+                "no": 2
+              },
+              {
+                "counts": {
+                  "low": 3
+                }
+              },
+              {
+                "feature": "health",
+                "at_most": 2.5,
+                "yes": 3,
+                "no": 4
+              },
+              {
+                "counts": {
+                  "high": 2,
+                  "low": 1
+                }
+              },
+              {
+                "counts": {
+                  "high": 4
+                }
+              }
+            ]
+          }
+        }
+      },
+      "refused": "M11"
+    },
+    {
+      "why": "An answer named twice: two classes a leaf cannot tell apart.",
+      "file": {
+        "models": {
+          "reads": {
+            "kind": "tree",
+            "features": [
+              "distance",
+              "health"
+            ],
+            "classes": [
+              "high",
+              "high"
+            ],
+            "nodes": [
+              {
+                "feature": "distance",
+                "is": "close",
+                "yes": 1,
+                "no": 2
+              },
+              {
+                "counts": {
+                  "low": 3
+                }
+              },
+              {
+                "feature": "health",
+                "at_most": 2.5,
+                "yes": 3,
+                "no": 4
+              },
+              {
+                "counts": {
+                  "high": 2,
+                  "low": 1
+                }
+              },
+              {
+                "counts": {
+                  "high": 4
+                }
+              }
+            ]
+          }
+        }
+      },
+      "refused": "M11"
+    },
+    {
+      "why": "A tree with an empty list of nodes: no root to start a walk from.",
+      "file": {
+        "models": {
+          "reads": {
+            "kind": "tree",
+            "features": [
+              "distance",
+              "health"
+            ],
+            "classes": [
+              "high",
+              "low"
+            ],
+            "nodes": []
+          }
+        }
+      },
+      "refused": "M12"
+    },
+    {
+      "why": "A node that is both a test and a leaf: which one a walk does there would be a guess.",
+      "file": {
+        "models": {
+          "reads": {
+            "kind": "tree",
+            "features": [
+              "distance",
+              "health"
+            ],
+            "classes": [
+              "high",
+              "low"
+            ],
+            "nodes": [
+              {
+                "feature": "distance",
+                "is": "close",
+                "yes": 1,
+                "no": 2
+              },
+              {
+                "counts": {
+                  "low": 3
+                },
+                "feature": "distance"
+              },
+              {
+                "feature": "health",
+                "at_most": 2.5,
+                "yes": 3,
+                "no": 4
+              },
+              {
+                "counts": {
+                  "high": 2,
+                  "low": 1
+                }
+              },
+              {
+                "counts": {
+                  "high": 4
+                }
+              }
+            ]
+          }
+        }
+      },
+      "refused": "M12"
+    },
+    {
+      "why": "A node that is a word, not an object.",
+      "file": {
+        "models": {
+          "reads": {
+            "kind": "tree",
+            "features": [
+              "distance",
+              "health"
+            ],
+            "classes": [
+              "high",
+              "low"
+            ],
+            "nodes": [
+              "leaf"
+            ]
+          }
+        }
+      },
+      "refused": "M12"
+    },
+    {
+      "why": "A test with both `is` and `at_most`: two questions in one node.",
+      "file": {
+        "models": {
+          "reads": {
+            "kind": "tree",
+            "features": [
+              "distance",
+              "health"
+            ],
+            "classes": [
+              "high",
+              "low"
+            ],
+            "nodes": [
+              {
+                "feature": "distance",
+                "is": "close",
+                "yes": 1,
+                "no": 2,
+                "at_most": 1.0
+              },
+              {
+                "counts": {
+                  "low": 3
+                }
+              },
+              {
+                "feature": "health",
+                "at_most": 2.5,
+                "yes": 3,
+                "no": 4
+              },
+              {
+                "counts": {
+                  "high": 2,
+                  "low": 1
+                }
+              },
+              {
+                "counts": {
+                  "high": 4
+                }
+              }
+            ]
+          }
+        }
+      },
+      "refused": "M12"
+    },
+    {
+      "why": "A test with no `no`: half the rows would have nowhere to go.",
+      "file": {
+        "models": {
+          "reads": {
+            "kind": "tree",
+            "features": [
+              "distance",
+              "health"
+            ],
+            "classes": [
+              "high",
+              "low"
+            ],
+            "nodes": [
+              {
+                "feature": "distance",
+                "is": "close",
+                "yes": 1
+              },
+              {
+                "counts": {
+                  "low": 3
+                }
+              },
+              {
+                "feature": "health",
+                "at_most": 2.5,
+                "yes": 3,
+                "no": 4
+              },
+              {
+                "counts": {
+                  "high": 2,
+                  "low": 1
+                }
+              },
+              {
+                "counts": {
+                  "high": 4
+                }
+              }
+            ]
+          }
+        }
+      },
+      "refused": "M12"
+    },
+    {
+      "why": "A test about a feature the tree does not list: a row is read by the names it publishes.",
+      "file": {
+        "models": {
+          "reads": {
+            "kind": "tree",
+            "features": [
+              "distance",
+              "health"
+            ],
+            "classes": [
+              "high",
+              "low"
+            ],
+            "nodes": [
+              {
+                "feature": "corner",
+                "is": "close",
+                "yes": 1,
+                "no": 2
+              },
+              {
+                "counts": {
+                  "low": 3
+                }
+              },
+              {
+                "feature": "health",
+                "at_most": 2.5,
+                "yes": 3,
+                "no": 4
+              },
+              {
+                "counts": {
+                  "high": 2,
+                  "low": 1
+                }
+              },
+              {
+                "counts": {
+                  "high": 4
+                }
+              }
+            ]
+          }
+        }
+      },
+      "refused": "M13"
+    },
+    {
+      "why": "A threshold that is a word.",
+      "file": {
+        "models": {
+          "reads": {
+            "kind": "tree",
+            "features": [
+              "distance",
+              "health"
+            ],
+            "classes": [
+              "high",
+              "low"
+            ],
+            "nodes": [
+              {
+                "feature": "distance",
+                "is": "close",
+                "yes": 1,
+                "no": 2
+              },
+              {
+                "counts": {
+                  "low": 3
+                }
+              },
+              {
+                "feature": "health",
+                "at_most": "low",
+                "yes": 3,
+                "no": 4
+              },
+              {
+                "counts": {
+                  "high": 2,
+                  "low": 1
+                }
+              },
+              {
+                "counts": {
+                  "high": 4
+                }
+              }
+            ]
+          }
+        }
+      },
+      "refused": "M13"
+    },
+    {
+      "why": "A word test against a number: `is` compares words only.",
+      "file": {
+        "models": {
+          "reads": {
+            "kind": "tree",
+            "features": [
+              "distance",
+              "health"
+            ],
+            "classes": [
+              "high",
+              "low"
+            ],
+            "nodes": [
+              {
+                "feature": "distance",
+                "is": 3,
+                "yes": 1,
+                "no": 2
+              },
+              {
+                "counts": {
+                  "low": 3
+                }
+              },
+              {
+                "feature": "health",
+                "at_most": 2.5,
+                "yes": 3,
+                "no": 4
+              },
+              {
+                "counts": {
+                  "high": 2,
+                  "low": 1
+                }
+              },
+              {
+                "counts": {
+                  "high": 4
+                }
+              }
+            ]
+          }
+        }
+      },
+      "refused": "M13"
+    },
+    {
+      "why": "A child that points back at its parent: a walk that never ends. Every child comes after its parent.",
+      "file": {
+        "models": {
+          "reads": {
+            "kind": "tree",
+            "features": [
+              "distance",
+              "health"
+            ],
+            "classes": [
+              "high",
+              "low"
+            ],
+            "nodes": [
+              {
+                "feature": "distance",
+                "is": "close",
+                "yes": 0,
+                "no": 2
+              },
+              {
+                "counts": {
+                  "low": 3
+                }
+              },
+              {
+                "feature": "health",
+                "at_most": 2.5,
+                "yes": 3,
+                "no": 4
+              },
+              {
+                "counts": {
+                  "high": 2,
+                  "low": 1
+                }
+              },
+              {
+                "counts": {
+                  "high": 4
+                }
+              }
+            ]
+          }
+        }
+      },
+      "refused": "M14"
+    },
+    {
+      "why": "A child past the last node.",
+      "file": {
+        "models": {
+          "reads": {
+            "kind": "tree",
+            "features": [
+              "distance",
+              "health"
+            ],
+            "classes": [
+              "high",
+              "low"
+            ],
+            "nodes": [
+              {
+                "feature": "distance",
+                "is": "close",
+                "yes": 1,
+                "no": 2
+              },
+              {
+                "counts": {
+                  "low": 3
+                }
+              },
+              {
+                "feature": "health",
+                "at_most": 2.5,
+                "yes": 3,
+                "no": 5
+              },
+              {
+                "counts": {
+                  "high": 2,
+                  "low": 1
+                }
+              },
+              {
+                "counts": {
+                  "high": 4
+                }
+              }
+            ]
+          }
+        }
+      },
+      "refused": "M14"
+    },
+    {
+      "why": "A child halfway between two nodes.",
+      "file": {
+        "models": {
+          "reads": {
+            "kind": "tree",
+            "features": [
+              "distance",
+              "health"
+            ],
+            "classes": [
+              "high",
+              "low"
+            ],
+            "nodes": [
+              {
+                "feature": "distance",
+                "is": "close",
+                "yes": 1.5,
+                "no": 2
+              },
+              {
+                "counts": {
+                  "low": 3
+                }
+              },
+              {
+                "feature": "health",
+                "at_most": 2.5,
+                "yes": 3,
+                "no": 4
+              },
+              {
+                "counts": {
+                  "high": 2,
+                  "low": 1
+                }
+              },
+              {
+                "counts": {
+                  "high": 4
+                }
+              }
+            ]
+          }
+        }
+      },
+      "refused": "M14"
+    },
+    {
+      "why": "A leaf counting an answer the tree does not name.",
+      "file": {
+        "models": {
+          "reads": {
+            "kind": "tree",
+            "features": [
+              "distance",
+              "health"
+            ],
+            "classes": [
+              "high",
+              "low"
+            ],
+            "nodes": [
+              {
+                "feature": "distance",
+                "is": "close",
+                "yes": 1,
+                "no": 2
+              },
+              {
+                "counts": {
+                  "throw": 2
+                }
+              },
+              {
+                "feature": "health",
+                "at_most": 2.5,
+                "yes": 3,
+                "no": 4
+              },
+              {
+                "counts": {
+                  "high": 2,
+                  "low": 1
+                }
+              },
+              {
+                "counts": {
+                  "high": 4
+                }
+              }
+            ]
+          }
+        }
+      },
+      "refused": "M15"
+    },
+    {
+      "why": "A leaf counting half a row.",
+      "file": {
+        "models": {
+          "reads": {
+            "kind": "tree",
+            "features": [
+              "distance",
+              "health"
+            ],
+            "classes": [
+              "high",
+              "low"
+            ],
+            "nodes": [
+              {
+                "feature": "distance",
+                "is": "close",
+                "yes": 1,
+                "no": 2
+              },
+              {
+                "counts": {
+                  "low": 3
+                }
+              },
+              {
+                "feature": "health",
+                "at_most": 2.5,
+                "yes": 3,
+                "no": 4
+              },
+              {
+                "counts": {
+                  "high": 2.5
+                }
+              },
+              {
+                "counts": {
+                  "high": 4
+                }
+              }
+            ]
+          }
+        }
+      },
+      "refused": "M15"
+    },
+    {
+      "why": "A leaf counting minus one row.",
+      "file": {
+        "models": {
+          "reads": {
+            "kind": "tree",
+            "features": [
+              "distance",
+              "health"
+            ],
+            "classes": [
+              "high",
+              "low"
+            ],
+            "nodes": [
+              {
+                "feature": "distance",
+                "is": "close",
+                "yes": 1,
+                "no": 2
+              },
+              {
+                "counts": {
+                  "low": 3
+                }
+              },
+              {
+                "feature": "health",
+                "at_most": 2.5,
+                "yes": 3,
+                "no": 4
+              },
+              {
+                "counts": {
+                  "high": 2,
+                  "low": 1
+                }
+              },
+              {
+                "counts": {
+                  "high": -1
+                }
+              }
+            ]
+          }
+        }
+      },
+      "refused": "M15"
+    },
+    {
+      "why": "A leaf that saw no rows: no answer is likelier than another there, and the walk would end in nothing.",
+      "file": {
+        "models": {
+          "reads": {
+            "kind": "tree",
+            "features": [
+              "distance",
+              "health"
+            ],
+            "classes": [
+              "high",
+              "low"
+            ],
+            "nodes": [
+              {
+                "feature": "distance",
+                "is": "close",
+                "yes": 1,
+                "no": 2
+              },
+              {
+                "counts": {
+                  "low": 0
+                }
+              },
+              {
+                "feature": "health",
+                "at_most": 2.5,
+                "yes": 3,
+                "no": 4
+              },
+              {
+                "counts": {
+                  "high": 2,
+                  "low": 1
+                }
+              },
+              {
+                "counts": {
+                  "high": 4
+                }
+              }
+            ]
+          }
+        }
+      },
+      "refused": "M15"
+    },
+    {
+      "why": "A random forest (T114): its trees share its features and classes, each tree's nodes as a tree's are. A tree that is a single leaf is a tree too.",
+      "file": {
+        "models": {
+          "votes": {
+            "kind": "forest",
+            "features": [
+              "distance",
+              "health"
+            ],
+            "classes": [
+              "high",
+              "low"
+            ],
+            "trees": [
+              [
+                {
+                  "feature": "distance",
+                  "is": "close",
+                  "yes": 1,
+                  "no": 2
+                },
+                {
+                  "counts": {
+                    "low": 3
+                  }
+                },
+                {
+                  "counts": {
+                    "high": 1
+                  }
+                }
+              ],
+              [
+                {
+                  "counts": {
+                    "high": 2,
+                    "low": 1
+                  }
+                }
+              ]
+            ]
+          }
+        }
+      },
+      "loads": [
+        "votes"
+      ],
+      "extra": []
+    },
+    {
+      "why": "A forest with no `trees` field: which fields a model must have depends on its kind.",
+      "file": {
+        "models": {
+          "votes": {
+            "kind": "forest",
+            "features": [
+              "distance",
+              "health"
+            ],
+            "classes": [
+              "high",
+              "low"
+            ]
+          }
+        }
+      },
+      "refused": "M4"
+    },
+    {
+      "why": "A forest whose answers are named twice: the vote would count one answer under two names.",
+      "file": {
+        "models": {
+          "votes": {
+            "kind": "forest",
+            "features": [
+              "distance",
+              "health"
+            ],
+            "classes": [
+              "high",
+              "high"
+            ],
+            "trees": [
+              [
+                {
+                  "feature": "distance",
+                  "is": "close",
+                  "yes": 1,
+                  "no": 2
+                },
+                {
+                  "counts": {
+                    "low": 3
+                  }
+                },
+                {
+                  "counts": {
+                    "high": 1
+                  }
+                }
+              ],
+              [
+                {
+                  "counts": {
+                    "high": 2,
+                    "low": 1
+                  }
+                }
+              ]
+            ]
+          }
+        }
+      },
+      "refused": "M11"
+    },
+    {
+      "why": "A forest of no trees: nobody votes, and every answer would be nothing.",
+      "file": {
+        "models": {
+          "votes": {
+            "kind": "forest",
+            "features": [
+              "distance",
+              "health"
+            ],
+            "classes": [
+              "high",
+              "low"
+            ],
+            "trees": []
+          }
+        }
+      },
+      "refused": "M16"
+    },
+    {
+      "why": "A forest one of whose trees has no nodes: a voter with nothing to walk.",
+      "file": {
+        "models": {
+          "votes": {
+            "kind": "forest",
+            "features": [
+              "distance",
+              "health"
+            ],
+            "classes": [
+              "high",
+              "low"
+            ],
+            "trees": [
+              [
+                {
+                  "feature": "distance",
+                  "is": "close",
+                  "yes": 1,
+                  "no": 2
+                },
+                {
+                  "counts": {
+                    "low": 3
+                  }
+                },
+                {
+                  "counts": {
+                    "high": 1
+                  }
+                }
+              ],
+              []
+            ]
+          }
+        }
+      },
+      "refused": "M16"
+    },
+    {
+      "why": "A forest whose second tree points back at its root: each tree's nodes are held to a tree's rules, in every tree, not only the first.",
+      "file": {
+        "models": {
+          "votes": {
+            "kind": "forest",
+            "features": [
+              "distance",
+              "health"
+            ],
+            "classes": [
+              "high",
+              "low"
+            ],
+            "trees": [
+              [
+                {
+                  "feature": "distance",
+                  "is": "close",
+                  "yes": 1,
+                  "no": 2
+                },
+                {
+                  "counts": {
+                    "low": 3
+                  }
+                },
+                {
+                  "counts": {
+                    "high": 1
+                  }
+                }
+              ],
+              [
+                {
+                  "feature": "distance",
+                  "is": "close",
+                  "yes": 1,
+                  "no": 0
+                },
+                {
+                  "counts": {
+                    "low": 3
+                  }
+                },
+                {
+                  "counts": {
+                    "high": 1
+                  }
+                }
+              ]
+            ]
+          }
+        }
+      },
+      "refused": "M14"
     }
   ]
 }

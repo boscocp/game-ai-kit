@@ -24,7 +24,8 @@
 ##   R7  an argument that is not empty and not one of its intent's values
 ##   R8  a speech that is empty, or longer than SPEECH_LIMIT characters
 ##   R9  a speech with a line break (a line or paragraph separator
-##       too), or another control character (C0, DEL or C1)
+##       too), another control character (C0, DEL or C1), or a format
+##       control (Unicode's Cf: zero-width, bidirectional, soft hyphen)
 ##   R10 a speech with markup in it
 ##   R11 a speech that contains one of the game's secrets
 ##
@@ -52,20 +53,64 @@ const MARKUP: String = "<>[]*`"
 ## controls (T129).
 const LINE_SEPARATORS: String = "\u2028\u2029"
 
+## Unicode's format controls, category Cf as Unicode 16.0 lists it, each run
+## as its first and last code point. Invisible, and not harmless: an override
+## reverses the rest of the line on screen, and a zero-width joiner inside a
+## secret hides it from R11. R9 refuses them (T139). Named by range here and
+## in `gameaikit.llm.validator`, so neither twin leans on a Unicode table the
+## other lacks; spec/vectors/llm/replies.json holds the list both are
+## compared to. The price: an emoji joined by U+200D, and a Persian line that
+## needs U+200C, are refused too.
+const FORMAT_CONTROLS: Array = [
+	[0x00AD, 0x00AD],  # soft hyphen
+	[0x0600, 0x0605],  # Arabic number signs
+	[0x061C, 0x061C],  # Arabic letter mark, a bidirectional mark
+	[0x06DD, 0x06DD],  # Arabic end of ayah
+	[0x070F, 0x070F],  # Syriac abbreviation mark
+	[0x0890, 0x0891],  # Arabic pound and piastre marks above
+	[0x08E2, 0x08E2],  # Arabic disputed end of ayah
+	[0x180E, 0x180E],  # Mongolian vowel separator
+	[0x200B, 0x200F],  # zero-width space, non-joiner and joiner; LRM, RLM
+	[0x202A, 0x202E],  # bidirectional embeddings and overrides
+	[0x2060, 0x2064],  # word joiner, invisible operators
+	[0x2066, 0x206F],  # bidirectional isolates, deprecated format characters
+	[0xFEFF, 0xFEFF],  # zero-width no-break space, the byte-order mark
+	[0xFFF9, 0xFFFB],  # interlinear annotation
+	[0x110BD, 0x110BD],  # Kaithi number sign
+	[0x110CD, 0x110CD],  # Kaithi number sign above
+	[0x13430, 0x1343F],  # Egyptian hieroglyph format controls
+	[0x1BCA0, 0x1BCA3],  # shorthand format controls
+	[0x1D173, 0x1D17A],  # musical beams, ties and slurs
+	[0xE0001, 0xE0001],  # language tag
+	[0xE0020, 0xE007F],  # tag characters
+]
+
+## FORMAT_CONTROLS as members of a pattern's class, each run `first-last`,
+## written as escapes the script turns into the characters themselves. A
+## constant cannot be built by a loop, so this is the list spelled a second
+## time; llm_test.gd builds it from FORMAT_CONTROLS and compares.
+const FORMAT_CLASS: String = (
+	"\u00AD\u0600-\u0605\u061C\u06DD\u070F\u0890-\u0891\u08E2\u180E"
+	+ "\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u206F\uFEFF\uFFF9-\uFFFB"
+	+ "\U0110BD\U0110CD\U013430-\U01343F\U01BCA0-\U01BCA3\U01D173-\U01D17A"
+	+ "\U0E0001\U0E0020-\U0E007F")
+
 ## The speech as a pattern, for the schema a constraining runtime is handed:
 ## one to SPEECH_LIMIT characters, none of them MARKUP, a control character
-## (C0, DEL or C1), a line separator, a quote or a backslash. llama.cpp
-## turns a pattern into a grammar over the string's JSON text, escapes and
-## all, so a class without the quote and the backslash is the one spelling
-## that means the same there and in JSON Schema, which reads the decoded
-## string. It also drops `maxLength` when a pattern is present, so the length
-## is in the pattern too (T116, docs/local-llm/server.md). The guard loses
-## the straight quote; the validator still admits one (R10 is the check, not
-## this). The separators go in as the characters themselves, not as a
-## `\u2028` escape: Godot's RegEx (PCRE2) refuses that escape, and every
-## reader of the pattern takes the character (T129).
+## (C0, DEL or C1), a line separator, a format control, a quote or a
+## backslash. llama.cpp turns a pattern into a grammar over the string's
+## JSON text, escapes and all, so a class without the quote and the
+## backslash is the one spelling that means the same there and in JSON
+## Schema, which reads the decoded string. It also drops `maxLength` when a
+## pattern is present, so the length is in the pattern too (T116,
+## docs/local-llm/server.md). The guard loses the straight quote; the
+## validator still admits one (R10 is the check, not this). The separators
+## go in as the characters themselves, not as a `\u2028` escape: Godot's
+## RegEx (PCRE2) refuses that escape, and every reader of the pattern takes
+## the character (T129). The format controls go in the same way (T139).
 const SPEECH_PATTERN: String = (
-	"^[^\"\\\\<>\\[\\]*`\\x00-\\x1F\\x7F-\\x9F" + LINE_SEPARATORS + "]{1,%d}$") % SPEECH_LIMIT
+	"^[^\"\\\\<>\\[\\]*`\\x00-\\x1F\\x7F-\\x9F" + LINE_SEPARATORS + FORMAT_CLASS
+	+ "]{1,%d}$") % SPEECH_LIMIT
 
 ## How deep objects and lists may nest. A reply is one flat object; past
 ## this, Godot's parser and Python's give up at different depths, so both
@@ -172,8 +217,8 @@ func why_speech_is_wrong(speech: String) -> String:
 		return "R8 the speech is %d characters; 1 to %d are allowed" % [
 			speech.length(), SPEECH_LIMIT]
 	for character: String in speech:
-		if _is_control_or_line_break(character):
-			return "R9 the speech is more than one line, or has a control character"
+		if _is_refused_by_r9(character):
+			return "R9 the speech is more than one line, or has a control or format character"
 	for character: String in MARKUP:
 		if speech.contains(character):
 			return "R10 the speech has markup in it, one of %s" % MARKUP
@@ -182,12 +227,18 @@ func why_speech_is_wrong(speech: String) -> String:
 	return ""
 
 
-# A control character -- Unicode's Cc, U+0000 to U+001F and U+007F to
-# U+009F, NEXT LINE among them -- or a line or paragraph separator. Each
-# would break the line a game shows, or put an invisible code in it.
-static func _is_control_or_line_break(character: String) -> bool:
+# R9's test: a control character -- Unicode's Cc, U+0000 to U+001F and
+# U+007F to U+009F, NEXT LINE among them -- a line or paragraph separator,
+# or a format control (FORMAT_CONTROLS). Each would break the line a game
+# shows, or put an invisible code in it.
+static func _is_refused_by_r9(character: String) -> bool:
 	var code: int = character.unicode_at(0)
-	return code < 32 or (code >= 127 and code <= 159) or LINE_SEPARATORS.contains(character)
+	if code < 32 or (code >= 127 and code <= 159) or LINE_SEPARATORS.contains(character):
+		return true
+	for run: Array in FORMAT_CONTROLS:
+		if code >= run[0] and code <= run[1]:
+			return true
+	return false
 
 
 ## True when `text` contains one of the game's secrets, whatever the case

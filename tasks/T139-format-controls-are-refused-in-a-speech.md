@@ -1,6 +1,6 @@
 # T139 — Format controls are refused in a speech
 
-Size: S · Prereqs: T129 · Files: `godot/addons/ai_llm/`, `python/gameaikit/llm/`, `spec/vectors/llm/`, `godot/test/ai_llm/`, `python/tests/`, `docs/techniques/`
+Size: S · Prereqs: T129 · Files: `godot/addons/ai_llm/`, `python/gameaikit/llm/`, `spec/vectors/llm/`, `spec/llm/`, `godot/test/ai_llm/`, `python/tests/`, `docs/techniques/`, `docs/local-llm/server.md`
 
 ## Goal
 
@@ -48,3 +48,40 @@ None: nothing on screen changes for a reply that passes.
 - Write the characters into vectors from a script, never through an
   editing tool, and check with `grep -P` (STATUS 2026-11-06: T129's raw
   separators).
+- Done in wave 161. Cf is taken from Unicode 16.0 (Python 3.14's
+  table): 21 runs, 170 code points, from U+00AD to U+E007F. Both twins
+  hold them as `FORMAT_CONTROLS`, and `replies.json` holds them as
+  `format_controls.runs`; both suites compare their list to it, and
+  Python's compares it to `unicodedata` when that table is 16.0 (skipped
+  on 3.12's 15.0, not read as a disagreement). GDScript cannot build a
+  constant in a loop, so its `FORMAT_CLASS` spells the runs a second
+  time, and `llm_test.gd` builds it from `FORMAT_CONTROLS` and compares.
+- Unassigned code points inside a block (U+2065) are not refused: the
+  list is Cf as it stands, not the blocks. A later Unicode that adds a
+  format control is a change made on purpose in five places:
+  `FORMAT_CONTROLS` and `FORMAT_CLASS` in `llm_validator.gd`,
+  `FORMAT_CONTROLS` in `validator.py`, `format_controls.runs` in
+  `replies.json`, and the pattern in `spec/llm/reply.schema.json`. The
+  suites compare each of them to the vector's runs.
+- `llm_validator.gd` is 385 lines of the 400 an addon file may have.
+- The price, written into both comments: an emoji sequence joined by
+  U+200D, a subdivision flag (tag characters) and a Persian line that
+  needs U+200C are refused too.
+- Ten vectors, written by a script with `chr()` and checked with
+  `grep -P` (no raw format control in any changed file): zero-width
+  joiner inside a secret, zero-width space, the right-to-left override,
+  a bidirectional isolate, the soft hyphen, U+FEFF inside a speech, a
+  tag character raw and as a surrogate-pair escape -- all R9 -- and U+200A
+  and U+202F accepted. Re-dumping the file also turned the raw BOM and
+  raw DEL two older cases held into escapes; they decode to the same
+  cases.
+- Planted, one at a time: the old validators in both twins (8 vectors
+  red in each); R9 skipping the runs in Python (17 failures) and in
+  GDScript (8 vectors, the gdUnit vector test); `FORMAT_CLASS` losing
+  U+E0001 (gdUnit, 2 failures); R9 refusing the unassigned U+2065 in
+  either twin (each one's sweep).
+- For T140 (review of wave 161, finding 1): R9's test is
+  `LlmValidator._is_refused_by_r9(character)`, underscore-private, and
+  `_is_refused_by_r9` in `validator.py`. T140 makes the GDScript one
+  public (`is_refused_in_speech(character)`, say, with a doc comment)
+  for `HttpRuntime._error_of`, and renames the Python twin in step.
