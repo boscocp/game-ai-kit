@@ -14,6 +14,7 @@
     "botmatch",
     "checkers",
     "demo_behaviour",
+    "demo_flocking",
     "demo_racing",
     "demo_search",
     "demo_steering",

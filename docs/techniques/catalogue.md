@@ -25,6 +25,7 @@ A row per demo, a column per technique; each mark links the technique's page, an
 | [Four searches](#demo-search) |  |  |  |  |  |  |  |  |  |  |  | [●](ai_search.md) |  |  |  |  |  |  |  |
 | [Stealth](#demo-stealth) |  |  |  |  | [●](ai_fuzzy.md) |  |  |  | [●](ai_perception.md) |  |  | [●](ai_search.md) |  |  |  |  |  |  |  |
 | [Steering](#demo-steering) |  |  |  |  |  |  |  |  |  |  |  |  | [●](ai_steering.md) |  |  |  |  |  |  |
+| [Flocking](#demo-flocking) |  |  |  |  |  |  |  |  |  |  |  |  | [●](ai_steering.md) |  |  |  |  |  |  |
 | [Racing](#demo-racing) |  |  |  |  |  |  |  |  |  |  |  |  | [●](ai_steering.md) |  |  |  |  |  | [●](racing_driver.md) |
 | [Racing in 3D](#demo-racing3d) |  |  |  |  |  |  |  |  |  |  |  |  | [●](ai_steering.md) |  |  |  |  |  | [●](racing_driver.md) |
 | [Infiltration](#demo-infiltration) |  |  |  | [●](ai_constraints.md) | [●](ai_fuzzy.md) |  |  |  | [●](ai_perception.md) |  |  | [●](ai_search.md) |  | [●](ai_teamwork.md) | [●](ai_utility.md) |  |  |  |  |
@@ -57,6 +58,9 @@ A row per demo, a column per technique; each mark links the technique's page, an
 - <a id="demo-steering"></a>**Steering**, `make demo-steering` -- like the enemies of an action game chasing and stopping, one force at a time.
   - keys: click moves a target; space pauses; . one step.
   - techniques: ● [ai_steering](ai_steering.md) (seek, arrive, pursue, avoid).
+- <a id="demo-flocking"></a>**Flocking**, `make demo-flocking` -- like the birds and fish of a nature game, or a swarm of space bugs, moving as one.
+  - keys: 1-3 switch separation, alignment, cohesion; click an obstacle; Tab the next boid.
+  - techniques: ● [ai_steering](ai_steering.md) (flocking, avoid).
 - <a id="demo-racing"></a>**Racing**, `make demo-racing` -- like Micro Machines, seen from above, the AI in the same car as yours.
   - keys: 1-3 the AI's level; Tab watches the three AIs race.
   - techniques: ● [ai_steering](ai_steering.md) (seek); ● [The racing driver](racing_driver.md) (pure pursuit, speed profile).
@@ -108,7 +112,7 @@ A row per demo, a column per technique; each mark links the technique's page, an
 - <a id="ai_planning"></a>[ai_planning](ai_planning.md) -- the steps to a goal nobody wrote down. Watch it in: ● [`make demo-rts`](#demo-rts) (STRIPS over PDDL); ● [`make demo-tactical`](#demo-tactical) (STRIPS over PDDL).
 - <a id="ai_rts_core"></a>[ai_rts_core](ai_rts_core.md) -- many units, one frame. Watch it in: ● [`make demo-rts`](#demo-rts) (flow fields).
 - <a id="ai_search"></a>[ai_search](ai_search.md) -- finding a route. Watch it in: ● [`make demo-skirmish`](#demo-skirmish) (A*); ● [`make demo-search`](#demo-search) (BFS, DFS, Dijkstra, A*); ● [`make demo-stealth`](#demo-stealth) (A*); ● [`make demo-infiltration`](#demo-infiltration) (A*); ● [`make demo-botmatch`](#demo-botmatch) (A*); ● [`make demo-behaviour`](#demo-behaviour).
-- <a id="ai_steering"></a>[ai_steering](ai_steering.md) -- which way to push, and how hard. Watch it in: ● [`make demo-steering`](#demo-steering) (seek, arrive, pursue, avoid); ● [`make demo-racing`](#demo-racing) (seek); ● [`make demo-racing3d`](#demo-racing3d) (PID controller, heat line).
+- <a id="ai_steering"></a>[ai_steering](ai_steering.md) -- which way to push, and how hard. Watch it in: ● [`make demo-steering`](#demo-steering) (seek, arrive, pursue, avoid); ● [`make demo-flocking`](#demo-flocking) (flocking, avoid); ● [`make demo-racing`](#demo-racing) (seek); ● [`make demo-racing3d`](#demo-racing3d) (PID controller, heat line).
 - <a id="ai_teamwork"></a>[ai_teamwork](ai_teamwork.md) -- a team that shares the work. Watch it in: ● [`make demo-infiltration`](#demo-infiltration) (a shared search, role arbiter); ● [`make demo-botmatch`](#demo-botmatch) (tactical positions with claims, team commander over influence, squad confidence and retreat in waves).
 - <a id="ai_utility"></a>[ai_utility](ai_utility.md) -- weighing every option at once. Watch it in: ● [`make demo-infiltration`](#demo-infiltration) (utility-weighed actions); ● [`make demo-botmatch`](#demo-botmatch) (utility-weighed actions); ● [`make demo-tactical`](#demo-tactical) (utility-weighed actions).
 - <a id="menace"></a>[MENACE](menace.md) -- the matchbox machine that learns noughts and crosses. Watch it in: ● [`make demo-tictactoe`](#demo-tictactoe) (MENACE's matchboxes).

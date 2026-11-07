@@ -21,6 +21,7 @@
     "arrive": {"name": "arrive", "evidence": ["ArriveBehaviour"]},
     "pursue": {"name": "pursue", "evidence": ["PursueBehaviour"]},
     "avoid": {"name": "obstacle avoidance", "evidence": ["AvoidBehaviour"]},
+    "flocking": {"name": "flocking: separation, alignment and cohesion", "evidence": ["Flock", "SeparationBehaviour", "AlignmentBehaviour", "CohesionBehaviour"]},
     "pure-pursuit": {"name": "pure pursuit: steer at a point down the line", "evidence": ["RacingDriver", "RaceDriver3D"]},
     "speed-profile": {"name": "a speed profile, braked for backwards from the corners", "evidence": ["RacingTrack", "RaceDriver3D"]},
     "pid-control": {"name": "a PID controller: push from the error now, summed, and changing", "evidence": ["PidController"]},
@@ -153,6 +154,19 @@
       ],
       "controls": "click in an arena to move its cross; space pauses, . steps one sixtieth of a second, R starts again",
       "watch": "The orange arrow -- the force the behaviour asks for -- against the blue one, where the vehicle is going: seek's never shrinks at the cross, arrive's turns to brake as it enters its circle.",
+      "docs": "docs/concepts/steering.md"
+    },
+    {
+      "target": "demo-flocking",
+      "title": "Flocking: a hundred boids from three rules",
+      "scene": "res://demos/flocking/flocking_demo.tscn",
+      "decides": "Which way each boid pushes, every frame, from only the neighbours it can see -- no boid knows there is a flock.",
+      "techniques": [
+        {"technique": "flocking", "part": "three forces from the neighbours in sight: away from the too close, towards their heading, towards their middle; 1, 2 and 3 switch each off"},
+        {"technique": "avoid", "part": "swerves from a clicked obstacle, added to the three with three times the weight of alignment"}
+      ],
+      "controls": "1, 2 and 3 switch separation, alignment and cohesion; click drops an obstacle; Tab watches the next boid; space pauses, . one step, R again",
+      "watch": "The white boid's three arrows -- red away from the too close, blue towards their heading, green towards their middle -- and the yellow lines to the neighbours it counted. Switch one rule off and see what it was doing: without cohesion they spread, without separation they pile up.",
       "docs": "docs/concepts/steering.md"
     },
     {

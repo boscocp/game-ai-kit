@@ -2,12 +2,12 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-10-26
+verified_on: 2026-11-06
 tier: 2
 source: https://www.red3d.com/cwr/steer/gdc99/ ; book:Ian Millington, "AI for Games", 3rd edition, CRC Press, 2019 -- chapter 3 on movement
-invalidated_if: the kit's SteeringVehicle, SteeringBehaviour or Steering.combined signatures change, or the demos that use them are renamed
+invalidated_if: the kit's SteeringVehicle, SteeringBehaviour, Steering.combined or Flock signatures change, or the demos that use them are renamed
 teaches: steering
-translation_of: cd67fb721fe8ee0e32012c54d0f24d038b939ddd642c0b5c2b761e024edcfe1e
+translation_of: 9c84225376dfe46f4bb179d3a2d17b5322ee359e37361748c4b21b7013a050d8
 -->
 
 > English: [ai_steering.md](ai_steering.md). Os termos que ficam em inglês
@@ -19,7 +19,9 @@ Não para onde ir -- isso é uma busca ou uma decisão acima dele -- mas como
 chegar lá num espaço contínuo, um quadro por vez: a força a aplicar agora.
 *Seek*, *arrive*, *pursue* e *avoid* transformam "onde eu estou, e onde
 aquilo está" numa força nunca maior do que o veículo consegue aplicar, e
-`Steering.combined` soma várias com pesos. As demos de corrida acrescentam um
+`Steering.combined` soma várias com pesos. `Flock` são os *boids* de
+Reynolds: *separation*, *alignment* e *cohesion* sobre os vizinhos que cada
+*boid* recebe, e aparece um bando sem líder. As demos de corrida acrescentam um
 controlador PID e a *heat line* do Melder. O livro: Reynolds, *Steering
 Behaviors for Autonomous Characters* (GDC 1999); Millington, *AI for Games*,
 capítulo 3.
@@ -31,7 +33,8 @@ aderência: aí os comportamentos continuam dizendo para onde ir, e o modelo do
 carro diz como. Paredes, corredores e muitos obstáculos juntos: o *avoid* só
 conhece círculos, e dois deles empurrando em sentidos opostos deixam o
 veículo travado -- ali a resposta é um *flow field* ou uma malha de
-navegação.
+navegação. Um grupo que precisa chegar em ordem ou manter uma formação: um
+bando não tem lugares nem líder, então siga um caminho ou um líder.
 
 ## Onde ver funcionando {#watch}
 
@@ -39,6 +42,11 @@ navegação.
   com *avoid*. A seta **laranja** é o que o comportamento pede, a **azul** é
   para onde o veículo está indo: quando discordam, ele está prestes a virar.
   **Clique** move um alvo, **espaço** pausa, **.** avança um quadro.
+- `make demo-flocking` -- cem *boids*. **1**, **2** e **3** ligam e
+  desligam *separation*, *alignment* e *cohesion*; as três forças do *boid*
+  branco são desenhadas em **vermelho**, **azul** e **verde**, com linhas
+  **amarelas** até os vizinhos que ele contou. **Clique** põe um obstáculo,
+  **Tab** observa o próximo *boid*.
 - `make demo-racing` -- o piloto faz *seek* num ponto à frente na linha de
   corrida; **1-3** escolhem a IA, **Tab** assiste às três. `make demo-racing3d`
   esterça com o controlador PID (**1**) e a *heat line* (**2**).
@@ -58,6 +66,9 @@ importam:
 | tempo até o alvo | `SeekBehaviour.new(target, seconds)`, e o mesmo último argumento de `ArriveBehaviour` e `PursueBehaviour` | o quão rápido a velocidade vira a desejada -- uma constante de tempo: cerca de dois terços da diferença se fecham nesses segundos. O padrão do *seek* e do *pursue* é 1, o do *arrive* 0,1; um carro numa linha quer cerca de 0,1. Mantenha-o com vários quadros de duração, ou ele oscila ([por quê, em inglês](../concepts/steering.md)) |
 | antecipação | `PursueBehaviour` `max_prediction`, `AvoidBehaviour` `look_ahead` | o quanto ele adivinha à frente, ou procura obstáculos |
 | pesos | `Steering.combined(vehicle, forces, weights)` | quanto cada comportamento conta quando vários falam |
+| perto demais | `Flock.new(radius)`, `SeparationBehaviour.new(radius)` | dentro dele um vizinho empurra o *boid* para longe, com todo o `max_force` no contato e nada na borda |
+| pesos do bando | `Flock.new(radius, seconds, weights)`, *separation*, *alignment*, *cohesion* | 1,5, 1 e 1 por padrão, definidos uma vez; um peso zero desliga uma regra. O 1-3 da demo passa os próprios pesos ao `Steering.combined` |
+| visão | sua: quem você passa para `Flock.see(neighbours)` | a demo passa todo *boid* a menos de 50 (perto demais é 25), achado pelo `godot/demos/flocking/neighbour_grid.gd` |
 
 ## No seu projeto {#your-project}
 
@@ -114,9 +125,20 @@ física própria -- um `CharacterBody2D` -- mantenha o veículo como o ponto
 sobre o qual os comportamentos raciocinam, e copie a velocidade dele para
 `velocity` antes do `move_and_slide()`.
 
+Um bando é um `Flock` e a sua busca de vizinhos. Antes de pedir a força de um
+*boid*, passe para ele os *boids* que ele enxerga, numa ordem fixa, com
+`flock.see(neighbours)`; as três regras nunca os procuram. Cada *boid* contra
+todos os outros é O(n^2), bom para algumas dezenas; uma grade de células da
+largura do raio de visão, como o `NeighbourGrid` da demo, é cerca de O(n).
+Calcule a força de todos antes de mover qualquer um, e duas execuções a
+partir do mesmo começo concordam.
+
 ## Para ir mais fundo {#deeper}
 
 - Por que o *seek* nunca para e o *arrive* para (em inglês):
   [concepts/steering.md](../concepts/steering.md).
+- As três forças do bando calculadas à mão, e o que cada regra faz quando é
+  desligada (em inglês): [concepts/steering.md](../concepts/steering.md),
+  "Flocking".
 - Pilotar um carro numa pista (em inglês):
   [concepts/racing-ai.md](../concepts/racing-ai.md).

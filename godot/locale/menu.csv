@@ -64,6 +64,12 @@ breaks a task into steps and carries on down the method it chose,divide uma tare
 "seek that brakes inside a circle round the cross, so it stops on it","o seek que freia dentro de um círculo em volta da cruz, e assim para em cima dela"
 "seek aimed at where the running dot will be, never more than a second ahead","o seek mirado no lugar onde o ponto em fuga vai estar, nunca mais de um segundo à frente"
 "swerves from the first obstacle on the stretch ahead, added to seek with twice its weight","desvia do primeiro obstáculo no trecho à frente, somado ao seek com o dobro do peso"
+Flocking: a hundred boids from three rules,Flocking: cem boids a partir de três regras
+"Which way each boid pushes, every frame, from only the neighbours it can see -- no boid knows there is a flock.","Para que lado cada boid empurra, a cada quadro, só a partir dos vizinhos que ele enxerga -- nenhum boid sabe que existe um bando."
+"three forces from the neighbours in sight: away from the too close, towards their heading, towards their middle; 1, 2 and 3 switch each off","três forças a partir dos vizinhos à vista: longe de quem está perto demais, para onde eles apontam, para o meio deles; 1, 2 e 3 desligam cada uma"
+"swerves from a clicked obstacle, added to the three with three times the weight of alignment","desvia de um obstáculo clicado, somado às três com o triplo do peso do alignment"
+"1, 2 and 3 switch separation, alignment and cohesion; click drops an obstacle; Tab watches the next boid; space pauses, . one step, R again","1, 2 e 3 ligam e desligam separation, alignment e cohesion; o clique põe um obstáculo; Tab observa o próximo boid; espaço pausa, . um passo, R recomeça"
+"The white boid's three arrows -- red away from the too close, blue towards their heading, green towards their middle -- and the yellow lines to the neighbours it counted. Switch one rule off and see what it was doing: without cohesion they spread, without separation they pile up.","As três setas do boid branco -- vermelha para longe de quem está perto demais, azul para onde eles apontam, verde para o meio deles -- e as linhas amarelas até os vizinhos que ele contou. Desligue uma regra e veja o que ela fazia: sem cohesion eles se espalham, sem separation eles se amontoam."
 Racing: you against an AI in the same car,Corrida: você contra uma IA no mesmo carro
 "Where the AI steers and how fast it dares to go, every frame -- in the same car as yours, so if it is faster it drives better, never a better car.","Para onde a IA esterça e quão rápido ela ousa ir, a cada quadro -- no mesmo carro que o seu, então se ela é mais rápida é porque pilota melhor, nunca porque tem um carro melhor."
 "arrows or WASD drive; 1-3 choose the AI and start again; R again, P pause, . one step while paused; Tab watches the three AIs race (1-3 follow one, A alone)","setas ou WASD dirigem; 1-3 escolhem a IA e recomeçam; R recomeça, P pausa, . um passo com o jogo pausado; Tab assiste às três IAs correndo (1-3 seguem uma, A sozinha)"
@@ -171,6 +177,7 @@ seek,seek
 arrive,arrive
 pursue,pursue
 obstacle avoidance,desvio de obstáculos
+"flocking: separation, alignment and cohesion","flocking: separation, alignment e cohesion"
 pure pursuit: steer at a point down the line,pure pursuit: mirar num ponto mais adiante na linha
 "a speed profile, braked for backwards from the corners","um perfil de velocidade, com a frenagem calculada de trás para a frente a partir das curvas"
 "a PID controller: push from the error now, summed, and changing","um controlador PID: empurrar pelo erro de agora, pelo acumulado e pelo quanto ele muda"
