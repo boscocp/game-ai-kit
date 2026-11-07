@@ -31,8 +31,8 @@ The book: Russell and Norvig, *AIMA*, chapter 19.
 
 ## When not to use it {#when-not}
 
-A hidden layer, or a structure other than one weight per feature or one
-tree -- these classes cannot hold it. A single tree, deep, on few rows: it
+A hidden layer, or a structure other than one weight per feature, one
+tree, or trees voting -- these classes cannot hold it. A single tree, deep, on few rows: it
 learns the rows rather than the player: on the fighting game's few
 recordings no deeper tree does better on fights it never saw, and the
 n-gram beats them all
@@ -40,7 +40,8 @@ n-gram beats them all
 trees voting is the usual answer. A forest when the reason must be
 readable -- its reason is a tally -- or to rescue features that say
 little: it steadies the guess and adds nothing, and on those recordings
-its steadiest guess is the commonest action
+its steadiest guess is the commonest action -- the published forest
+answers "step in" on 129 of 133 held-out decisions
 ([concepts/learning.md](../concepts/learning.md#a-random-forest)). Features that
 matter only together ("a low kick when close, unless cornered"): these
 models add, so the product has to be written in as a feature of its own.

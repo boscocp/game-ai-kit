@@ -1996,7 +1996,7 @@ SOUND_FOREST = {
 
 def _self_test_the_opponent_forest(root: pathlib.Path) -> list[str]:
     """N18, handed a fit rather than running one: a matching forest passes; a
-    moved test in its second tree, a hand-written file, a missing one and a
+    changed count in its second tree, a hand-written file, a missing one and a
     pipeline that cannot run do not."""
     failures = []
     repo = root / "forest"

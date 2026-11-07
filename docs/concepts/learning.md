@@ -249,12 +249,20 @@ spread goes from eight points to three. That is variance taken out, which is
 what averaging many noisy guesses does, and on the training rows the
 forest also stops climbing as fast as one tree does.
 
-**It does not find what is not there.** Every forest, at every size, scores
+**It does not find what is not there.** On seed 1, every forest scores
 within a row or two of always guessing the commonest action -- one held-out
 decision is 0.75% -- and the n-gram, which reads this fight rather than
-last week's, still beats them all by eleven points. The steadiest forest,
-100 trees at depth 3, settles exactly on the floor: with the noise averaged
-out, what is left is the commonest action. Averaging removes the noise in
+last week's, beats them all by eleven points. Over five seeds, forests of 5
+or more trees never pass 21.8%. A single bootstrapped tree does reach 26.3%
+on a lucky draw, five points over the floor and still six under the
+n-gram -- and that a draw alone can move it so far is the variance lesson
+itself, not a better model. The steadiest forest, 100 trees at depth 3,
+settles exactly on the floor: with the noise averaged out, what is left is
+the commonest action. It is literally that guess: the published 25-tree
+forest answers "step in" on 129 of the 133 held-out decisions, and 100
+trees answer it on all 133, on every one of the five seeds. So a tally
+that barely moves in the demo is a forest close to the floor's constant
+guess, not a bug. Averaging removes the noise in
 the guesses; it adds no signal the six words did not hold. A forest is the
 fix for a tree that learned the rows. It is not a fix for a question the
 features cannot answer, and on these recordings that is the question.

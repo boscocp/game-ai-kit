@@ -1,5 +1,5 @@
 {
- "description": "The tree vectors' eight rows, three trees, depth 2, seed 7. Two features, so each node may look at one of them (the square root of two, rounded down), drawn at random, and each tree sees its own bootstrap: eight rows drawn with replacement. So the three trees differ from each other and from the single tree the same rows fit. Asked: a row it was fitted on; one it never saw; a number where a word is asked, where a tree whose root asks about distance abstains; and a situation where the trees disagree.",
+ "description": "The tree vectors' eight rows, three trees, depth 2, seed 7. Two features, so each node may look at one of them (the square root of two, rounded down), drawn at random, and each tree sees its own bootstrap: eight rows drawn with replacement. So the three trees differ from each other and from the single tree the same rows fit. Asked: a row it was fitted on and one it never saw, where the trees disagree; a number where a word is asked -- every root here tests health, and the trees that reach a distance test abstain there; and a situation where all three agree.",
  "rows": [
   [
    "close",

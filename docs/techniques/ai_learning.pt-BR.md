@@ -7,7 +7,7 @@ tier: 2
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 19, linear and logistic regression ; https://docs.godotengine.org/en/stable/classes/class_json.html
 invalidated_if: the kit's LearnedModel, LearnedTree, LearnedForest, ModelFile, SoftmaxModel, CaseTable or ClonedPlayer signatures change, or the demos that use them are renamed
 teaches: learning
-translation_of: 9774e8a37a9e3f8a31ac8ea43f06efa0f814e46e701aa6babc238474487341bc
+translation_of: 7b057d9afcb05beaed78ce0c499d2d58ee407ccf1c6f27b349291b29d15eff04
 -->
 
 > English: [ai_learning.md](ai_learning.md). Os termos que ficam em inglês
@@ -34,8 +34,8 @@ Norvig, *AIMA*, capítulo 19.
 
 ## Quando não usar {#when-not}
 
-Uma camada oculta, ou uma estrutura que não seja um peso por *feature* nem
-uma árvore -- estas classes não guardam isso. Uma árvore sozinha, funda,
+Uma camada oculta, ou uma estrutura que não seja um peso por *feature*, nem
+uma árvore, nem árvores votando -- estas classes não guardam isso. Uma árvore sozinha, funda,
 com poucas linhas: ela aprende as linhas e não o jogador: com as poucas
 gravações do jogo de luta nenhuma árvore mais funda acerta mais nas lutas
 que nunca viu, e o *n-gram* ganha de todas
@@ -44,7 +44,8 @@ em inglês); várias árvores votando é a resposta de costume. Uma *random
 forest* quando o motivo precisa ser legível -- o motivo dela é uma
 contagem de votos -- ou para salvar *features* que dizem pouco: ela deixa o
 palpite mais estável e não acrescenta nada, e nessas gravações o palpite
-mais estável dela é a ação mais comum
+mais estável dela é a ação mais comum -- a floresta publicada responde
+"step in" em 129 das 133 decisões separadas para teste
 ([concepts/learning.md](../concepts/learning.md#a-random-forest), em inglês).
 *Features* que só importam juntas ("um chute baixo quando perto, a não ser
 que esteja encurralado"): estes modelos somam, então o produto precisa

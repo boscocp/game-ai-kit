@@ -89,8 +89,9 @@ vectors = dict([
  fitted("three-trees", "The tree vectors' eight rows, three trees, depth 2, seed 7. Two features, so each node may look at one "
         "of them (the square root of two, rounded down), drawn at random, and each tree sees its own bootstrap: eight rows "
         "drawn with replacement. So the three trees differ from each other and from the single tree the same rows fit. "
-        "Asked: a row it was fitted on; one it never saw; a number where a word is asked, where a tree whose root asks "
-        "about distance abstains; and a situation where the trees disagree.",
+        "Asked: a row it was fitted on and one it never saw, where the trees disagree; a number where a word is asked -- "
+        "every root here tests health, and the trees that reach a distance test abstain there; and a situation where "
+        "all three agree.",
         rows, ["distance", "health"], ["high", "low", "throw"], 3, 2, 1, 7,
         [{"distance": "close", "health": 1}, {"distance": "near", "health": 3.5}, {"distance": 7, "health": 0},
          {"distance": "far", "health": 5}]),

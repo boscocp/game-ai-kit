@@ -46,7 +46,8 @@ func forest_score() -> Array[int]:
 	return tree_score()
 
 
-## True once its trees have voted on a situation: a guess to score.
+## True once it has asked its trees about a situation, even if all of them
+## abstained: a guess to score.
 func has_read() -> bool:
 	return not cast.is_empty()
 

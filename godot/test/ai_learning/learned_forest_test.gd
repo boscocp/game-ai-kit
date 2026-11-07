@@ -44,6 +44,14 @@ func test_each_tree_votes_and_the_most_votes_win() -> void:
 	assert_float(forest.shares_of(forest.tally_of(cast))["low"]).is_equal_approx(2.0 / 3.0, 0.0001)
 
 
+# A split vote's shares are of the votes cast, every answer named, the
+# unvoted ones at zero -- what the learner leans by.
+func test_a_split_vote_s_shares_are_of_the_votes_cast() -> void:
+	var forest: LearnedForest = _published().forest("votes")
+	assert_dict(forest.shares_of({"high": 1, "low": 3})).is_equal({"high": 0.25, "low": 0.75})
+	assert_dict(forest.shares_of({"low": 2})).is_equal({"high": 0.0, "low": 1.0})
+
+
 # A tree that cannot read the situation abstains: it is not counted as a
 # vote for anything, and the shares are of the votes actually cast.
 func test_a_tree_that_cannot_read_abstains() -> void:
