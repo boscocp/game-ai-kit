@@ -1,0 +1,188 @@
+{
+ "description": "Eight rows, a word and a number, depth 2, a leaf of one row allowed. The README works the root by hand: of every test, 'distance is far' leaves the two sides least mixed; below it, 'health at most 2.5'. Asked: a row it was fitted on, one it never saw, a word it never saw (it goes 'no'), a number where a word is asked (the walk stops at the root, and answers nothing), a feature missing that no test on the path asks about, one that the root asks, and a health of exactly 2.5 -- at most includes the threshold, so it goes 'yes'.",
+ "rows": [
+  [
+   "close",
+   0,
+   "throw"
+  ],
+  [
+   "close",
+   1,
+   "throw"
+  ],
+  [
+   "close",
+   5,
+   "low"
+  ],
+  [
+   "close",
+   6,
+   "low"
+  ],
+  [
+   "near",
+   0,
+   "low"
+  ],
+  [
+   "near",
+   4,
+   "low"
+  ],
+  [
+   "far",
+   0,
+   "high"
+  ],
+  [
+   "far",
+   3,
+   "high"
+  ]
+ ],
+ "max_depth": 2,
+ "min_leaf": 1,
+ "model": {
+  "kind": "tree",
+  "features": [
+   "distance",
+   "health"
+  ],
+  "classes": [
+   "high",
+   "low",
+   "throw"
+  ],
+  "nodes": [
+   {
+    "feature": "distance",
+    "is": "far",
+    "yes": 1,
+    "no": 2
+   },
+   {
+    "counts": {
+     "high": 2
+    }
+   },
+   {
+    "feature": "health",
+    "at_most": 2.5,
+    "yes": 3,
+    "no": 4
+   },
+   {
+    "counts": {
+     "low": 1,
+     "throw": 2
+    }
+   },
+   {
+    "counts": {
+     "low": 3
+    }
+   }
+  ]
+ },
+ "cases": [
+  {
+   "situation": {
+    "distance": "close",
+    "health": 1
+   },
+   "path": [
+    0,
+    2,
+    3
+   ],
+   "counts": {
+    "low": 1,
+    "throw": 2
+   },
+   "likeliest": "throw"
+  },
+  {
+   "situation": {
+    "distance": "near",
+    "health": 3.5
+   },
+   "path": [
+    0,
+    2,
+    4
+   ],
+   "counts": {
+    "low": 3
+   },
+   "likeliest": "low"
+  },
+  {
+   "situation": {
+    "distance": "corner",
+    "health": 0
+   },
+   "path": [
+    0,
+    2,
+    3
+   ],
+   "counts": {
+    "low": 1,
+    "throw": 2
+   },
+   "likeliest": "throw"
+  },
+  {
+   "situation": {
+    "distance": 7,
+    "health": 0
+   },
+   "path": [
+    0
+   ],
+   "counts": {},
+   "likeliest": ""
+  },
+  {
+   "situation": {
+    "distance": "far"
+   },
+   "path": [
+    0,
+    1
+   ],
+   "counts": {
+    "high": 2
+   },
+   "likeliest": "high"
+  },
+  {
+   "situation": {
+    "health": 1
+   },
+   "path": [
+    0
+   ],
+   "counts": {},
+   "likeliest": ""
+  },
+  {
+   "situation": {
+    "distance": "close",
+    "health": 2.5
+   },
+   "path": [
+    0,
+    2,
+    3
+   ],
+   "counts": {
+    "low": 1,
+    "throw": 2
+   },
+   "likeliest": "throw"
+  }
+ ]
+}

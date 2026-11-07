@@ -51,7 +51,7 @@ static func of(state: FightState, me: int, last: String, data: FightData) -> Dic
 		"me": condition_of(mine),
 		"distance": distance_of(mine, other, data),
 		"health": health_of(mine, other),
-		"corner": "yes" if cornered(mine, other, data) else "no",
+		"corner": "yes" if cornered(mine, other, data) else "no",  # not shown: an identifier, worded where a panel shows it
 	}
 
 

@@ -7,17 +7,21 @@
 ## `from_dictionary` is public so a test can plant each one.
 ##
 ## The format, which `gameaikit.training.model_file` writes: a JSON object
-## whose `models` maps a name to `kind`, `features`, `weights` and `bias`.
+## whose `models` maps a name to `kind`, `features`, `weights` and `bias` --
+## or, for a decision tree (T113), `kind`, `features`, `classes` and `nodes`.
 ## Anything else at the top level is the publishing game's, and is handed to
 ## it unread in `extra` -- what those fields must hold is that game's rule to
 ## check, on top of this one. Complexity: one pass over the numbers.
 ##
-## When not to use it: a model that is not one weight per feature.
+## When not to use it: a model that is neither one weight per feature nor a
+## single tree.
 class_name ModelFile
 extends RefCounted
 
 ## The fields every published model carries.
 const MODEL_FIELDS: Array[String] = ["kind", "features", "weights", "bias"]
+## The fields a published tree carries instead.
+const TREE_FIELDS: Array[String] = ["kind", "features", "classes", "nodes"]
 
 ## Why this file is unusable, or "" when it loaded. One sentence, not a list:
 ## the first thing wrong with a weights file is the thing to fix, and a screen
@@ -37,6 +41,8 @@ var extra: Dictionary = {}
 # Model name to LearnedModel. Private: `model()` is how it is read, so an
 # absent name answers null rather than whatever a dictionary lookup does.
 var _models: Dictionary = {}
+# Model name to LearnedTree, read by `tree()` for the same reason.
+var _trees: Dictionary = {}
 
 
 ## The model file at `path`, loaded and checked.
@@ -83,7 +89,11 @@ static func from_dictionary(data: Dictionary, source: String) -> ModelFile:
 	loaded.extra = data.duplicate(true)
 	loaded.extra.erase("models")
 	for name: String in data["models"]:
-		loaded._models[name] = _model_from(data["models"][name])
+		var entry: Dictionary = data["models"][name]
+		if entry["kind"] == LearnedTree.KIND:
+			loaded._trees[name] = LearnedTree.from_entry(entry)
+		else:
+			loaded._models[name] = _model_from(entry)
 	return loaded
 
 
@@ -92,15 +102,21 @@ func is_loaded() -> bool:
 	return error == ""
 
 
-## The model published under this name, or null.
+## The weighted model published under this name, or null -- null for a tree.
 func model(name: String) -> LearnedModel:
 	return _models.get(name)
 
 
-## The names this file publishes, sorted. For a report, and for a test that
-## wants to assert what is in there without knowing the order.
+## The tree published under this name, or null -- null for a weighted model.
+func tree(name: String) -> LearnedTree:
+	return _trees.get(name)
+
+
+## The names this file publishes, trees and weighted models alike, sorted.
+## For a report, and for a test that wants to assert what is in there
+## without knowing the order.
 func model_names() -> PackedStringArray:
-	var names := PackedStringArray(_models.keys())
+	var names := PackedStringArray(_models.keys() + _trees.keys())
 	names.sort()
 	return names
 
@@ -124,19 +140,94 @@ static func _why_model_is_wrong(name: String, entry: Variant) -> String:
 	# pointed out that a test asserting `contains("M4")` could not tell which
 	# of them had fired -- and a planted case that cannot name its rule is
 	# half a planted case. The numbering is identifiers, not an order.
+	# The kind is read before the other fields, because which fields a
+	# model must have depends on it: a tree has no weights to miss.
 	if not (entry is Dictionary):
 		return "M10 model `%s` is not an object" % name
-	for field: String in MODEL_FIELDS:
+	if not entry.has("kind"):
+		return "M4 model `%s` has no `kind`" % name
+	var kind: String = str(entry["kind"])
+	if not (LearnedModel.KINDS.has(kind) or kind == LearnedTree.KIND):
+		return "M5 model `%s` is of kind `%s`, which nothing here can evaluate" % [name, kind]
+	for field: String in TREE_FIELDS if kind == LearnedTree.KIND else MODEL_FIELDS:
 		if not entry.has(field):
 			return "M4 model `%s` has no `%s`" % [name, field]
-	if not LearnedModel.KINDS.has(str(entry["kind"])):
-		return "M5 model `%s` is of kind `%s`, which nothing here can evaluate" % [
-			name, entry["kind"],
-		]
 	var features: String = _why_features_are_wrong(name, entry["features"])
 	if features != "":
 		return features
+	if kind == LearnedTree.KIND:
+		return _why_tree_is_wrong(name, entry)
 	return _why_weights_are_wrong(name, entry)
+
+
+# A tree: its answers named, then every node a sound test or leaf. The
+# nodes are walked once, first to last, each checked whole before the next,
+# so the first wrong node is the one reported -- as the Python side does.
+static func _why_tree_is_wrong(name: String, entry: Dictionary) -> String:
+	var classes: Variant = entry["classes"]
+	if not (classes is Array) or (classes as Array).is_empty() or not _distinct_words(classes):
+		return "M11 tree `%s` does not name its answers: `classes` must be distinct words" % name
+	var nodes: Variant = entry["nodes"]
+	if not (nodes is Array) or (nodes as Array).is_empty():
+		return "M12 tree `%s` has no nodes" % name
+	for index: int in range(nodes.size()):
+		var where: String = "tree `%s` node %d" % [name, index]
+		var wrong: String = _why_node_is_wrong(where, index, nodes[index], entry["features"], classes, nodes.size())
+		if wrong != "":
+			return wrong
+	return ""
+
+
+# One node: a leaf with sound counts, or a test on a known feature pointing
+# forwards. Forwards only -- every child after its parent -- is what makes a
+# walk end: a file whose children point back could send it round for ever.
+static func _why_node_is_wrong(where: String, index: int, node: Variant, features: Array, classes: Array,
+		size: int) -> String:
+	if not (node is Dictionary) or node.has("counts") == node.has("feature"):
+		return "M12 %s is neither a test nor a leaf" % where
+	if node.has("counts"):
+		return _why_counts_are_wrong(where, node["counts"], classes)
+	if node.has("is") == node.has("at_most") or not node.has_all(["yes", "no"]):
+		return "M12 %s is a test without one `is` or `at_most`, and a `yes` and a `no`" % where
+	if not features.has(node["feature"]):
+		return "M13 %s asks about %s, which is not among its features" % [where, JSON.stringify(node["feature"])]
+	if node.has("is") and not (node["is"] is String):
+		return "M13 %s compares with %s, which is not a word" % [where, JSON.stringify(node["is"])]
+	if node.has("at_most") and not _is_a_number(node["at_most"]):
+		return "M13 %s compares with %s, which is not a finite number" % [where, JSON.stringify(node["at_most"])]
+	for child: Variant in [node["yes"], node["no"]]:
+		if not _is_whole(child) or not (index < float(child) and float(child) < size):
+			return "M14 %s points at %s, which is not a later node" % [where, JSON.stringify(child)]
+	return ""
+
+
+# A leaf's counts: answers the tree names, whole numbers, at least one row.
+static func _why_counts_are_wrong(where: String, counts: Variant, classes: Array) -> String:
+	if not (counts is Dictionary) or (counts as Dictionary).is_empty():
+		return "M15 %s counts nothing" % where
+	var total: float = 0.0
+	for name: Variant in counts:
+		if not classes.has(name):
+			return "M15 %s counts %s, which is not among its classes" % [where, JSON.stringify(name)]
+		if not _is_whole(counts[name]) or float(counts[name]) < 0.0:
+			return "M15 %s counts %s, which is not a whole number of rows" % [where, JSON.stringify(counts[name])]
+		total += float(counts[name])
+	return "M15 %s counts nothing" % where if total == 0.0 else ""
+
+
+# A finite number with nothing after the point: a count, or a node's index.
+static func _is_whole(value: Variant) -> bool:
+	return _is_a_number(value) and float(value) == floorf(float(value))
+
+
+# A non-empty list of words, none of them twice.
+static func _distinct_words(list: Array) -> bool:
+	var seen: Dictionary = {}
+	for item: Variant in list:
+		if not (item is String) or seen.has(item):
+			return false
+		seen[item] = true
+	return true
 
 
 # The feature names: a non-empty list of distinct strings.

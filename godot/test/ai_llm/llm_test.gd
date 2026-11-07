@@ -137,24 +137,79 @@ func test_the_speech_pattern_refuses_what_r8_r9_and_r10_refuse() -> void:
 	assert_bool(_matches_whole(pattern, "H".repeat(LlmValidator.SPEECH_LIMIT + 1))).is_false()
 
 
-func test_r9_and_the_pattern_refuse_every_control_and_line_separator() -> void:
+func test_r9_and_the_pattern_refuse_every_control_separator_and_format_control() -> void:
 	# Below U+3000 lie all 65 controls (Unicode's Cc: C0, DEL, C1) and both
-	# separators, U+2028 and U+2029 (T129). R9 refuses them and no other,
-	# and the pattern turns each of them away too. NUL is left out: a Godot
-	# String cannot hold one, so 66 are left. Python's suite derives the
-	# same set from Unicode's own table, over every code point.
+	# separators, U+2028 and U+2029 (T129); the format controls are the
+	# vector's runs (T139), each swept with a code point either side. R9
+	# refuses exactly these, and the pattern turns each of them away too. NUL
+	# is left out: a Godot String cannot hold one. Python's suite sweeps
+	# every code point, and derives controls and separators from Unicode's
+	# own table.
 	var validator: LlmValidator = _validator()
 	var pattern := RegEx.create_from_string(LlmValidator.SPEECH_PATTERN)
-	var refused: Array[int] = []
+	var expected: Dictionary = _format_codes_of_the_vector()
+	var to_sweep: Array[int] = _codes_to_sweep(expected)
 	for code: int in range(1, 0x3000):
-		if validator.why_speech_is_wrong("Halt%sthere" % char(code)).begins_with("R9"):
-			refused.append(code)
-	for code: int in refused:
-		var speech: String = "Halt%sthere" % char(code)
-		assert_bool(_matches_whole(pattern, speech)).override_failure_message("U+%04X" % code).is_false()
-	assert_int(refused.size()).is_equal(66)
-	assert_array(refused.slice(-4)).is_equal([0x9E, 0x9F, 0x2028, 0x2029])
+		if code < 32 or (code >= 127 and code <= 159) or code == 0x2028 or code == 0x2029:
+			expected[code] = true
+	var refused: int = 0
+	for code: int in to_sweep:
+		if _r9_refuses_and_the_pattern_too(validator, pattern, code, expected.has(code)):
+			refused += 1
+	# 66 controls and separators, and the 170 format controls in 21 runs.
+	assert_int(refused).is_equal(66 + 170)
 	assert_bool(_matches_whole(pattern, "Evening,\u00a0sir.")).is_true()
+	assert_bool(_matches_whole(pattern, "Evening,\u200asir.")).is_true()
+
+
+func test_the_format_controls_are_the_vectors_runs() -> void:
+	# Both validators name the runs by hand; both suites compare them to the
+	# vector's (T139). FORMAT_CLASS spells them a second time, as the
+	# pattern's class, so it is built here from the runs and compared.
+	var runs: Array = _vector()["format_controls"]["runs"]
+	var ours: Array = []
+	var spelled: String = ""
+	for run: Array in LlmValidator.FORMAT_CONTROLS:
+		ours.append(["%04X" % run[0], "%04X" % run[1]])
+		spelled += char(run[0]) if run[0] == run[1] else "%s-%s" % [char(run[0]), char(run[1])]
+	assert_array(ours).is_equal(runs)
+	assert_str(LlmValidator.FORMAT_CLASS).is_equal(spelled)
+
+
+# Whether R9 refuses `code` in a speech, asserting that it does exactly when
+# `expected` says so, and that the pattern turns away what it refuses.
+func _r9_refuses_and_the_pattern_too(validator: LlmValidator, pattern: RegEx, code: int,
+		expected: bool) -> bool:
+	var speech: String = "Halt%sthere" % char(code)
+	var is_r9: bool = validator.why_speech_is_wrong(speech).begins_with("R9")
+	assert_bool(is_r9).override_failure_message("U+%04X" % code).is_equal(expected)
+	if is_r9:
+		assert_bool(_matches_whole(pattern, speech)).override_failure_message(
+			"U+%04X" % code).is_false()
+	return is_r9
+
+
+# Every code point in the vector's format-control runs, as a set.
+func _format_codes_of_the_vector() -> Dictionary:
+	var codes: Dictionary = {}
+	for run: Array in _vector()["format_controls"]["runs"]:
+		for code: int in range((run[0] as String).hex_to_int(), (run[1] as String).hex_to_int() + 1):
+			codes[code] = true
+	return codes
+
+
+# U+0001 to U+2FFF, then every format control with the code point either
+# side of it, each code point once.
+func _codes_to_sweep(format_codes: Dictionary) -> Array[int]:
+	var seen: Dictionary = {}
+	for code: int in range(1, 0x3000):
+		seen[code] = true
+	for code: int in format_codes:
+		for near: int in [code - 1, code, code + 1]:
+			seen[near] = true
+	var codes: Array[int] = []
+	codes.assign(seen.keys())
+	return codes
 
 
 # A RegEx's `$` also matches before a final line break; the whole string must match.

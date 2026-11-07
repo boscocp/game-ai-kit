@@ -1,0 +1,86 @@
+{
+ "description": "Two tests split equally well: the first in feature order wins, so the tree is the same on every machine. And a pure node is a leaf whatever the depth allows.",
+ "rows": [
+  [
+   "a",
+   "x",
+   "yes"
+  ],
+  [
+   "a",
+   "x",
+   "yes"
+  ],
+  [
+   "b",
+   "y",
+   "no"
+  ],
+  [
+   "b",
+   "y",
+   "no"
+  ]
+ ],
+ "max_depth": 3,
+ "min_leaf": 1,
+ "model": {
+  "kind": "tree",
+  "features": [
+   "first",
+   "second"
+  ],
+  "classes": [
+   "yes",
+   "no"
+  ],
+  "nodes": [
+   {
+    "feature": "first",
+    "is": "a",
+    "yes": 1,
+    "no": 2
+   },
+   {
+    "counts": {
+     "yes": 2
+    }
+   },
+   {
+    "counts": {
+     "no": 2
+    }
+   }
+  ]
+ },
+ "cases": [
+  {
+   "situation": {
+    "first": "a",
+    "second": "y"
+   },
+   "path": [
+    0,
+    1
+   ],
+   "counts": {
+    "yes": 2
+   },
+   "likeliest": "yes"
+  },
+  {
+   "situation": {
+    "first": "b",
+    "second": "x"
+   },
+   "path": [
+    0,
+    2
+   ],
+   "counts": {
+    "no": 2
+   },
+   "likeliest": "no"
+  }
+ ]
+}

@@ -35,6 +35,12 @@ const RADIUS: float = BoardView.TILE_PIXELS * SPRITE_SCALE / 2.0
 const OUTLINE: float = 3.0
 ## The id in a cell's corner.
 const CORNER_TEXT_SIZE: int = 12
+## Where each of a piece's two numbers starts, from the cell's centre: the
+## left end of its baseline, as `draw_string` takes it. Each has a corner of
+## its own -- health top-left, id bottom-right -- and nothing else drawn on a
+## piece may sit in either (T137: a hit chance did, and read as one number).
+const HEALTH_AT: Vector2 = Vector2(-BoardView.TILE_PIXELS / 2.0 + 2.0, -BoardView.TILE_PIXELS / 2.0 + 12.0)
+const ID_AT: Vector2 = Vector2(BoardView.TILE_PIXELS / 2.0 - 14.0, BoardView.TILE_PIXELS / 2.0 - 3.0)
 ## What a spent unit's picture is multiplied by: the Advance Wars grey.
 const SPENT_TINT: Color = Color(0.45, 0.45, 0.45)
 ## Health, in the top-left corner: yellow, so it is not read as the white id.
@@ -207,6 +213,16 @@ static func legend_picture(faction: int, type_name: String) -> Texture2D:
 	return frame
 
 
+## The box `words` cover when drawn at the corner size with their baseline
+## starting at `baseline`: what a test compares to learn whether two
+## numbers in a cell would be read as one.
+static func text_box(baseline: Vector2, words: String) -> Rect2:
+	var font: Font = ThemeDB.fallback_font
+	var width: float = font.get_string_size(words, HORIZONTAL_ALIGNMENT_LEFT, -1.0, CORNER_TEXT_SIZE).x
+	var ascent: float = font.get_ascent(CORNER_TEXT_SIZE)
+	return Rect2(baseline - Vector2(0.0, ascent), Vector2(width, font.get_height(CORNER_TEXT_SIZE)))
+
+
 ## The tint a unit's picture is drawn with: none, or grey once it is spent.
 func colour_for(unit: Unit) -> Color:
 	return SPENT_TINT if unit.id in spent else Color.WHITE
@@ -230,8 +246,7 @@ static func _facing_before_walking(faction: int) -> Vector2i:
 # a fight leaves its winner wounded, and a wounded piece that looks whole is
 # the one a player sends into the next fight by mistake.
 func _draw_health(centre: Vector2, health: int) -> void:
-	var half: float = BoardView.TILE_PIXELS / 2.0
-	var corner: Vector2 = centre + Vector2(-half + 2.0, -half + 12.0)
+	var corner: Vector2 = centre + HEALTH_AT
 	var font: Font = ThemeDB.fallback_font
 	draw_string_outline(font, corner, str(health), HORIZONTAL_ALIGNMENT_LEFT, -1.0, CORNER_TEXT_SIZE, 4, Color.BLACK)
 	draw_string(font, corner, str(health), HORIZONTAL_ALIGNMENT_LEFT, -1.0, CORNER_TEXT_SIZE, HEALTH_TEXT)
@@ -240,8 +255,7 @@ func _draw_health(centre: Vector2, health: int) -> void:
 # The id, small, in the bottom-right corner of the cell, outlined so it reads
 # on any ground.
 func _draw_corner_id(centre: Vector2, unit_id: int) -> void:
-	var half: float = BoardView.TILE_PIXELS / 2.0
-	var corner: Vector2 = centre + Vector2(half - 14.0, half - 3.0)
+	var corner: Vector2 = centre + ID_AT
 	var font: Font = ThemeDB.fallback_font
 	draw_string_outline(font, corner, str(unit_id), HORIZONTAL_ALIGNMENT_LEFT, -1.0, CORNER_TEXT_SIZE, 4, Color.BLACK)
 	draw_string(font, corner, str(unit_id), HORIZONTAL_ALIGNMENT_LEFT, -1.0, CORNER_TEXT_SIZE, Color.WHITE)
