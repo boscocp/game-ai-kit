@@ -45,6 +45,12 @@ Not findings: invariant 8 (the video and its scripts live in
 `$HOME/Videos`, outside the checkout, as the task decided); the YouTube
 link was not fetched, the URL is the owner's.
 
+## What was done about them
+
+Findings 1, 2 and 4 were applied in a second commit on the branch;
+3 and 5 were left, as their verdicts say. `make check-affected
+BASE=origin/main` exited 0 again after that commit.
+
 Found after the review by the implementer: the video's end card says "MIT
 licensed", and the repository is Apache-2.0. The video is already posted;
 `tasks/STATUS.md` records it, and the local `description.txt` and edit
