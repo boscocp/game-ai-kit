@@ -5,8 +5,8 @@
 ## expensive half of machine learning is the fitting, which happened in
 ## Python. Complexity is one multiply-add per feature, so here it is four.
 ##
-## When not to use it: a model that is not one number per feature -- a tree, a
-## hidden layer, anything with structure.
+## When not to use it: a model that is not one number per feature -- a tree
+## (`LearnedTree` reads one), a hidden layer, anything with structure.
 class_name LearnedModel
 extends RefCounted
 

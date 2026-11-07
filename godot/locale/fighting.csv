@@ -130,3 +130,17 @@ trade,troca (os dois acertam)
 "never tried, so tried first","nunca tentada, então vem primeiro"
 "{pulls} pull(s), mean {mean}, bound {bound}","{pulls} tentativa(s), média {mean}, limite {bound}"
 "  last paid: {option} after {situation}, {payoff}","  último pago: {option} depois de {situation}, {payoff}"
+tree: easy,árvore: fácil
+tree: medium,árvore: médio
+tree: hard,árvore: difícil
+yes,sim
+no,não
+"  {feature} is {word}? it read {seen}: {went}","  {feature} é {word}? leu {seen}: {went}"
+"  {feature} at most {word}? it read {seen}: {went}","  {feature} no máximo {word}? leu {seen}: {went}"
+it reads you with no tree: {why},ele te lê sem árvore: {why}
+"its decision tree, right {right} of its last {last}; the n-gram beside it, {ngram_right} of {ngram_last}:","sua árvore de decisão, acertou {right} dos últimos {last}; o n-gram ao lado, {ngram_right} de {ngram_last}:"
+  has read nothing yet,  ainda não leu nada
+"  so it expects {action}, {percent}%; the n-gram expects {ngram}, {ngram_percent}%","  então espera {action}, {percent}%; o n-gram espera {ngram}, {ngram_percent}%"
+  leaf: {counts},  folha: {counts}
+"  {feature}: it read {seen}, which it cannot test -- the walk stops","  {feature}: leu {seen}, que ela não sabe testar -- o caminho para"
+the file publishes no tree named `next action`,o arquivo não publica uma árvore chamada `next action`

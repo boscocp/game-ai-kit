@@ -1,8 +1,9 @@
 """The model file: what Python publishes and the game's `ModelFile` reads.
 
 A JSON object whose `models` maps a name to `kind`, `features`, `weights`
-and `bias` -- one weight per feature, applying to raw game numbers. That is
-the whole format, and it belongs to no game. Anything else at the top level
+and `bias` -- one weight per feature, applying to raw game numbers -- or,
+for a decision tree (`kind` "tree", T113), to `kind`, `features`, `classes`
+and `nodes`. That is the whole format, and it belongs to no game. Anything else at the top level
 is the publishing game's own (the tactical board's `feature_conventions`,
 say), written here unread and checked by that game, on both sides.
 
@@ -17,13 +18,18 @@ import json
 import math
 import pathlib
 
+from . import tree
 from .models import PREDICTORS, Model
 
 #: The fields every published model carries.
 MODEL_FIELDS = ("kind", "features", "weights", "bias")
+#: The fields a published tree carries instead.
+TREE_FIELDS = ("kind", "features", "classes", "nodes")
+#: Every kind a file may publish: the weighted ones, and the tree.
+KINDS = (*PREDICTORS, tree.KIND)
 
 
-def as_json(models: dict[str, Model], generated_by: str, **fields: object) -> dict:
+def as_json(models: dict[str, Model | tree.Tree], generated_by: str, **fields: object) -> dict:
     """A model file: what wrote it, the game's own fields, then the models.
 
     In that order, so a person opening the file reads what it is before the
@@ -76,17 +82,25 @@ def why_wrong(data: dict) -> str:
 
 
 def _why_model_is_wrong(name: str, entry: object) -> str:
-    """One model: an object, every field there, and every number a number."""
+    """One model: an object, a kind this reader knows, that kind's fields, sound values.
+
+    The kind is read before the other fields, because which fields a model
+    must have depends on it: a tree has no weights to miss.
+    """
     if not isinstance(entry, dict):
         return f"M10 model `{name}` is not an object"
-    for field in MODEL_FIELDS:
+    if "kind" not in entry:
+        return f"M4 model `{name}` has no `kind`"
+    if str(entry["kind"]) not in KINDS:
+        return f"M5 model `{name}` is of kind `{entry['kind']}`, which nothing here can evaluate"
+    for field in TREE_FIELDS if entry["kind"] == tree.KIND else MODEL_FIELDS:
         if field not in entry:
             return f"M4 model `{name}` has no `{field}`"
-    if str(entry["kind"]) not in PREDICTORS:
-        return f"M5 model `{name}` is of kind `{entry['kind']}`, which nothing here can evaluate"
     features = _why_features_are_wrong(name, entry["features"])
     if features:
         return features
+    if entry["kind"] == tree.KIND:
+        return _why_tree_is_wrong(name, entry)
     weights = entry["weights"]
     if not isinstance(weights, list) or len(weights) != len(entry["features"]):
         count = len(weights) if isinstance(weights, list) else "no"
@@ -95,6 +109,69 @@ def _why_model_is_wrong(name: str, entry: object) -> str:
         if not _is_a_number(number):
             return f"M8 model `{name}` publishes {json.dumps(number)}, which is not a finite number"
     return ""
+
+
+def _why_tree_is_wrong(name: str, entry: dict) -> str:
+    """A tree: its answers named, then every node a sound test or leaf.
+
+    The nodes are walked once, first to last, each checked whole before the
+    next, so the first wrong node is the one reported, in both languages.
+    """
+    classes = entry["classes"]
+    if not isinstance(classes, list) or not classes or not all(isinstance(answer, str) for answer in classes) \
+            or len(set(classes)) != len(classes):
+        return f"M11 tree `{name}` does not name its answers: `classes` must be distinct words"
+    nodes = entry["nodes"]
+    if not isinstance(nodes, list) or not nodes:
+        return f"M12 tree `{name}` has no nodes"
+    for index, node in enumerate(nodes):
+        wrong = _why_node_is_wrong(f"tree `{name}` node {index}", index, node, entry["features"], classes, len(nodes))
+        if wrong:
+            return wrong
+    return ""
+
+
+def _why_node_is_wrong(where: str, index: int, node: object, features: list, classes: list, size: int) -> str:
+    """One node: a leaf with sound counts, or a test on a known feature pointing forwards.
+
+    Forwards only -- every child after its parent -- is what makes a walk
+    end: a file whose children point back could send it round for ever.
+    """
+    if not isinstance(node, dict) or ("counts" in node) == ("feature" in node):
+        return f"M12 {where} is neither a test nor a leaf"
+    if "counts" in node:
+        return _why_counts_are_wrong(where, node["counts"], classes)
+    if ("is" in node) == ("at_most" in node) or "yes" not in node or "no" not in node:
+        return f"M12 {where} is a test without one `is` or `at_most`, and a `yes` and a `no`"
+    if node["feature"] not in features:
+        return f"M13 {where} asks about {json.dumps(node['feature'])}, which is not among its features"
+    if "is" in node and not isinstance(node["is"], str):
+        return f"M13 {where} compares with {json.dumps(node['is'])}, which is not a word"
+    if "at_most" in node and not _is_a_number(node["at_most"]):
+        return f"M13 {where} compares with {json.dumps(node['at_most'])}, which is not a finite number"
+    for child in (node["yes"], node["no"]):
+        if not _is_whole(child) or not index < child < size:
+            return f"M14 {where} points at {json.dumps(child)}, which is not a later node"
+    return ""
+
+
+def _why_counts_are_wrong(where: str, counts: object, classes: list) -> str:
+    """A leaf's counts: answers the tree names, whole numbers, and at least one row."""
+    if not isinstance(counts, dict) or not counts:
+        return f"M15 {where} counts nothing"
+    for answer, count in counts.items():
+        if answer not in classes:
+            return f"M15 {where} counts {json.dumps(answer)}, which is not among its classes"
+        if not _is_whole(count) or count < 0:
+            return f"M15 {where} counts {json.dumps(count)}, which is not a whole number of rows"
+    if sum(counts.values()) == 0:
+        return f"M15 {where} counts nothing"
+    return ""
+
+
+def _is_whole(value: object) -> bool:
+    """A finite number with nothing after the point: a count, or an index into the nodes."""
+    return _is_a_number(value) and float(value).is_integer()
 
 
 def _why_features_are_wrong(name: str, given: object) -> str:

@@ -17,7 +17,9 @@
 ## levels learning which of their answers work against you (T99) -- and M cycles the mode: each
 ## guard has a height that gets through it. Three more modes imitate a
 ## recorded player (T18): two ghosts, which look up what the player did in
-## the situation, and the clone, a model fitted to it. P pauses, and space then plays
+## the situation, and the clone, a model fitted to it. The last three are
+## the learner's levels with a decision tree reading you instead of the
+## n-gram (T113), its path on the panel. P pauses, and space then plays
 ## one frame: the step every example offers (T21), here one frame of the
 ## resolution order, which is what a person learning frame data needs to see.
 ##
@@ -37,13 +39,16 @@ extends Node2D
 const MODES: Array[String] = ["stand", "guard standing", "guard crouching", "jab", "throw", "low kick",  # shown through tr(): FightWords.word says each mode
 		"anti-air (sees you now)", "opponent: easy", "opponent: medium", "opponent: hard", "learner: easy",  # shown through tr(): FightWords.word says each mode
 		"learner: medium", "learner: hard", "bandit: easy", "bandit: medium", "bandit: hard",  # shown through tr(): FightWords.word says each mode
-		"ghost: exact", "ghost: nearest", "clone"]  # shown through tr(): FightWords.word says each mode
+		"ghost: exact", "ghost: nearest", "clone", "tree: easy", "tree: medium", "tree: hard"]  # shown through tr(): FightWords.word says each mode
 const OPPONENT_MODE: String = "opponent: "
 ## The same levels with an n-gram behind them, learning you as you fight (T17).
 const LEARNER_MODE: String = "learner: "
 ## The same levels with a bandit in each situation, learning which of their
 ## answers pay against you (T99).
 const BANDIT_MODE: String = "bandit: "
+## The learner's levels with a decision tree, fitted on your recordings,
+## reading what you will do next (T113).
+const TREE_MODE: String = "tree: "
 ## Punches on the top row and kicks below them, as an arcade panel has them.
 const KEYS: Dictionary = {KEY_A: FightInput.LEFT, KEY_D: FightInput.RIGHT, KEY_S: FightInput.DOWN, KEY_W: FightInput.UP,
 		KEY_U: FightInput.LIGHT_PUNCH, KEY_I: FightInput.HEAVY_PUNCH, KEY_J: FightInput.LIGHT_KICK,
@@ -86,6 +91,8 @@ var opponent: FightOpponent
 var fights_begun: int = 0
 ## The recorded player the ghosts and the clone imitate, loaded once.
 var cloned: ClonedPlayer = ClonedPlayer.load_from(FightCloneOpponent.PUBLISHED_PATH)
+## The decision tree the "tree:" modes read you with, loaded once.
+var opponent_tree: ModelFile = ModelFile.load_from(FightTreeOpponent.PUBLISHED_PATH)
 ## True when the scene was opened to record, and how many fights it has kept.
 var recording: bool = OS.get_cmdline_user_args().has("--record")
 var fights_kept: int = 0
@@ -172,7 +179,7 @@ func restart() -> void:
 	_refresh()
 
 
-# A fresh opponent for an "opponent", "learner" or "bandit" mode -- a learner
+# A fresh opponent for an "opponent", "learner", "bandit" or "tree" mode -- a learner
 # with an empty table, a bandit with no bandits -- none for the others, its chances seeded by how many fights
 # have begun.
 func _seat_opponent() -> void:
@@ -187,6 +194,9 @@ func _seat_opponent() -> void:
 	elif dummy_mode.begins_with(BANDIT_MODE):
 		fights_begun += 1
 		opponent = FightBanditOpponent.new(dummy_mode.trim_prefix(BANDIT_MODE), data, fights_begun)
+	elif dummy_mode.begins_with(TREE_MODE):
+		fights_begun += 1
+		opponent = FightTreeOpponent.new(dummy_mode.trim_prefix(TREE_MODE), opponent_tree, data, fights_begun)
 	elif dummy_mode in FightCloneOpponent.SOURCES:
 		fights_begun += 1
 		opponent = FightCloneOpponent.new(dummy_mode, cloned, data, fights_begun)
@@ -267,7 +277,24 @@ func opponent_overlay() -> Dictionary:
 	var gambler := opponent as FightBanditOpponent
 	if gambler != null:
 		shown.merge(_bandit_overlay(gambler))
+	var reader := opponent as FightTreeOpponent
+	if reader != null:
+		shown.merge(_tree_overlay(reader), true)
 	return shown
+
+
+# Your situation as the tree read it, the path it took -- each test, the
+# word it read, which way it went -- the leaf's counts, and the n-gram's
+# guess beside its own. Merged over the learner's, whose `expects` it is.
+func _tree_overlay(reader: FightTreeOpponent) -> Dictionary:
+	if reader.reader == null:
+		return {"tree_path": "no tree: " + reader.refusal, "leaf": "none"}  # not shown
+	if reader.walked.is_empty():
+		return {"tree_path": "nothing read yet", "leaf": "none", "ngram_expects": reader.ngram_expected}  # not shown
+	var last: Dictionary = reader.walked.back()
+	return {"tree_path": reader.walked, "leaf": last.get("counts", "unread"),  # not shown
+			"situation_words": reader.person_situation, "ngram_expects": reader.ngram_expected,
+			"tree_score": reader.tree_score(), "ngram_score": reader.score()}
 
 
 # The bandit of the situation it last named, as it stood when it chose:
