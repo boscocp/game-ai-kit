@@ -187,7 +187,7 @@ func point_at(cell: Vector2i) -> void:
 		return
 	_cursor = cell
 	if _showing_threat and state != null and view().building().is_empty():
-		_intent.show_threat(_tint())
+		_intent.show_threat(_tint(), view().tint_is_a_chance())
 
 
 ## What the screen shows of the mode playing (T126): `ruleset`'s own view,
@@ -776,7 +776,7 @@ func _draw_what_is_seen() -> void:
 	var tinted: Dictionary[Vector2i, int] = {}
 	if _showing_threat:
 		tinted = _tint()
-	_intent.show_threat(tinted)
+	_intent.show_threat(tinted, view().tint_is_a_chance())
 
 
 # What a mode is building in place of the game (T96): the board drawn from

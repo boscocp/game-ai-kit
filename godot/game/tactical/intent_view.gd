@@ -14,7 +14,10 @@
 ##
 ## Under everything, the threat map (T48): a red tint on each cell the side
 ## not moving could strike next turn, and the number of its pieces that
-## could, so the danger a decision weighs is on the board. T hides it.
+## could, so the danger a decision weighs is on the board. T hides it. In a
+## mode whose tint is a hit chance, the chance is written with its `%` in
+## the cell's top-right corner, the one corner a piece's own numbers leave
+## free (T137): bottom-right, beside the piece's id, the two read as one.
 ##
 ## The XCOM-style mode (T85) draws four more things here. The fog: every cell
 ## the side whose view is shown cannot see, darkened, and a faded picture of
@@ -49,12 +52,21 @@ const DASH: Color = Color(1.0, 0.62, 0.15, 0.38)
 const LABEL: Color = Color.WHITE
 const LABEL_GROUND: Color = Color(0.0, 0.0, 0.0, 0.72)
 const LABEL_SIZE: int = 12
+## The threat map's count, from the cell's top-left: bottom-right, where the
+## Advance Wars mode has always drawn it.
+const COUNT_AT: Vector2 = Vector2(BoardView.TILE_PIXELS - 12.0, BoardView.TILE_PIXELS - 4.0)
+## The gap between a hit chance and the cell's right edge; its baseline is
+## the health's, on the top row (`UnitView.HEALTH_AT`).
+const CHANCE_MARGIN: float = 2.0
+## The tint's numbers, in the threat's own pale red.
+const THREAT_TEXT: Color = Color(1.0, 0.85, 0.85)
 
 var _decision: TacticalDecision
 var _state: BoardState
 var _board: BoardView
 var _plan_marks: Dictionary[Vector2i, String] = {}
 var _threat: Dictionary[Vector2i, int] = {}
+var _threat_is_chance: bool = false
 var _fog: TacticalFog
 var _dashes: Array[Vector2i] = []
 var _odds: Dictionary[Vector2i, String] = {}
@@ -70,10 +82,31 @@ func show_decision(decision: TacticalDecision, state: BoardState, board: BoardVi
 
 
 ## Tint each cell of `threat` -- `ThreatMap.of` -- and write its count;
-## empty draws none.
-func show_threat(threat: Dictionary[Vector2i, int]) -> void:
+## empty draws none. `as_chance` writes each number as a hit chance instead,
+## "55%" in the top-right corner, clear of the piece's id (T137).
+func show_threat(threat: Dictionary[Vector2i, int], as_chance: bool = false) -> void:
 	_threat = threat
+	_threat_is_chance = as_chance
 	queue_redraw()
+
+
+## What the tint writes on `cell` and where: `words`, and the left end of
+## their `baseline` on the board. One place for `_draw_threat` and for a
+## test that holds the words clear of the piece's numbers.
+func tint_label(cell: Vector2i) -> Dictionary:
+	var corner: Vector2 = _board.centre_of(cell) - Vector2(BoardView.TILE_PIXELS, BoardView.TILE_PIXELS) / 2.0
+	if not _threat_is_chance:
+		return {"words": str(_threat[cell]), "baseline": corner + COUNT_AT}
+	var words: String = "%d%%" % _threat[cell]
+	return {"words": words, "baseline": _board.centre_of(cell) + chance_at(words)}
+
+
+## Where a hit chance of `words` starts, from its cell's centre: on the
+## health's row, ending `CHANCE_MARGIN` short of the right edge, so a "100%"
+## and a "5%" both end in the same place.
+static func chance_at(words: String) -> Vector2:
+	var width: float = ThemeDB.fallback_font.get_string_size(words, HORIZONTAL_ALIGNMENT_LEFT, -1, UnitView.CORNER_TEXT_SIZE).x
+	return Vector2(BoardView.TILE_PIXELS / 2.0 - CHANCE_MARGIN - width, UnitView.HEALTH_AT.y)
 
 
 ## Tag each cell of `marks` with its plan step number; empty draws none.
@@ -132,7 +165,9 @@ func _draw() -> void:
 			draw_arc(_board.centre_of(_decision.target), RING, 0.0, TAU, 32, INTENT, WIDTH)
 
 
-# A red tint over every threatened cell, and the count in its bottom-right.
+# A red tint over every threatened cell, and its number where `tint_label`
+# puts it: a count bottom-right, a chance top-right and outlined, as the
+# piece's own numbers are, so it reads over the picture.
 func _draw_threat() -> void:
 	if _board == null:
 		return
@@ -141,7 +176,10 @@ func _draw_threat() -> void:
 	for cell: Vector2i in _threat:
 		var corner: Vector2 = _board.centre_of(cell) - Vector2(side, side) / 2.0
 		draw_rect(Rect2(corner, Vector2(side, side)), THREAT)
-		draw_string(font, corner + Vector2(side - 12.0, side - 4.0), str(_threat[cell]), HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(1.0, 0.85, 0.85))
+		var label: Dictionary = tint_label(cell)
+		if _threat_is_chance:
+			draw_string_outline(font, label["baseline"], label["words"], HORIZONTAL_ALIGNMENT_LEFT, -1, UnitView.CORNER_TEXT_SIZE, 4, Color.BLACK)
+		draw_string(font, label["baseline"], label["words"], HORIZONTAL_ALIGNMENT_LEFT, -1, UnitView.CORNER_TEXT_SIZE, THREAT_TEXT)
 
 
 # Every hidden cell darkened, and over the dark a faded picture of each enemy
