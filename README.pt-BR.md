@@ -1,5 +1,9 @@
 # game-ai-kit
 
+[![PyPI](https://img.shields.io/pypi/v/gameaikit)](https://pypi.org/project/gameaikit/)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+[![Godot 4.7](https://img.shields.io/badge/Godot-4.7-478cbf)](https://godotengine.org/)
+
 > English: [README.md](README.md). Os termos que ficam em inglês estão no
 > [glossário](docs/techniques/glossary.pt-BR.md).
 
@@ -16,8 +20,9 @@ licença, como usar um *addon* no seu projeto -- está no
 [README em inglês](README.md). O código, os nomes e os comentários ficam em
 inglês, que é o que você vai digitar.
 
-Nada foi publicado ainda, nem na Asset Store do Godot nem no PyPI; como
-isso será feito está em [docs/howto/publish.md](docs/howto/publish.md), em inglês.
+A metade em Python está no PyPI (`pip install gameaikit`); os *addons*, como
+um kit só, estão em análise na Asset Store do Godot. Como uma versão é montada
+e publicada está em [docs/howto/publish.md](docs/howto/publish.md), em inglês.
 
 ## O que o kit cobre
 
