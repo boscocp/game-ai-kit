@@ -72,6 +72,9 @@ func _draw_corner() -> void:
 	]
 	if PlayerActions.takedown_target(world) != null:
 		lines.append(tr("E: take the guard down"))
+	var door: int = PlayerActions.door_within_reach(world)
+	if door != -1:
+		lines.append(tr("F: shut the door") if world.doors_open[door] else tr("F: open the door"))
 	if world.outcome != "":
 		lines.append(tr(OUTCOMES.get(world.outcome, world.outcome)))
 	for index: int in range(lines.size()):

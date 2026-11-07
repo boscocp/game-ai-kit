@@ -1,0 +1,18 @@
+{
+  "module": "ai_bayes",
+  "kind": "technique",
+  "about": "A Bayesian network over discrete variables, tables written by hand in data, asked by exact inference by enumeration (AIMA 4th ed., fig. 13.10), and what each piece of evidence did to the answer; in GDScript and Python. The infiltration guard asks one whether there is an intruder at all (T115).",
+  "summary": "A Bayesian network: how likely something you cannot see is, from the evidence you can -- discrete variables and hand-written tables, asked exactly by enumeration, with what each piece of evidence did to the answer.",
+  "owns": [
+    "godot/addons/ai_bayes/",
+    "godot/test/ai_bayes/",
+    "spec/vectors/bayes/",
+    "python/gameaikit/bayes/",
+    "python/tests/test_bayes.py",
+    "python/tests/test_bayes_vectors.py"
+  ],
+  "depends_on": [],
+  "gates": [
+    "test-bayes-vectors"
+  ]
+}

@@ -40,6 +40,7 @@ GROUP = "gameaikit.techniques"
 KIT_MODULES = (
     "adversarial",
     "bandit",
+    "bayes",
     "constraints",
     "fuzzy",
     "llm",

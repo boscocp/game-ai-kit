@@ -31,6 +31,7 @@ func test_every_name_the_level_can_show_is_listed() -> void:
 			names.append(str(zone["name"]))
 	names.append_array(InfiltrationRules.read().stances.keys())
 	names.append_array([RoleArbiter.SHOOTER, RoleArbiter.FLANKER, "sight", "body"])
+	names.append_array(GuardSuspicion.new().network.names)
 	assert_int(names.size()).override_failure_message("read no name from the data").is_greater_equal(30)
 	for name: String in names:
 		var listed: bool = name in InfiltrationWords.SHOWN or InfiltrationWords.SAID_AS.has(name)

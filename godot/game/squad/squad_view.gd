@@ -80,6 +80,12 @@ func tint_at(state: BoardState, _side: int, cursor: Vector2i, person: int, in_ha
 	return chances
 
 
+## True: `tint_at` answers in hit chances, which the board writes "55%"
+## in a corner clear of the piece's id (T137).
+func tint_is_a_chance() -> bool:
+	return true
+
+
 ## None: this mode holds no ground.
 func points() -> Array[Vector2i]:
 	return []

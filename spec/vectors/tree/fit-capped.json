@@ -1,0 +1,111 @@
+{
+ "description": "The same rows, held back: depth 1, and no leaf under three rows. The cap is what keeps a tree from learning the rows themselves: one test, and a leaf where high and throw tie at two -- the first in classes, high, is its answer.",
+ "rows": [
+  [
+   "close",
+   0,
+   "throw"
+  ],
+  [
+   "close",
+   1,
+   "throw"
+  ],
+  [
+   "close",
+   5,
+   "low"
+  ],
+  [
+   "close",
+   6,
+   "low"
+  ],
+  [
+   "near",
+   0,
+   "low"
+  ],
+  [
+   "near",
+   4,
+   "low"
+  ],
+  [
+   "far",
+   0,
+   "high"
+  ],
+  [
+   "far",
+   3,
+   "high"
+  ]
+ ],
+ "max_depth": 1,
+ "min_leaf": 3,
+ "model": {
+  "kind": "tree",
+  "features": [
+   "distance",
+   "health"
+  ],
+  "classes": [
+   "high",
+   "low",
+   "throw"
+  ],
+  "nodes": [
+   {
+    "feature": "health",
+    "at_most": 3.5,
+    "yes": 1,
+    "no": 2
+   },
+   {
+    "counts": {
+     "high": 2,
+     "low": 1,
+     "throw": 2
+    }
+   },
+   {
+    "counts": {
+     "low": 3
+    }
+   }
+  ]
+ },
+ "cases": [
+  {
+   "situation": {
+    "distance": "close",
+    "health": 5
+   },
+   "path": [
+    0,
+    2
+   ],
+   "counts": {
+    "low": 3
+   },
+   "likeliest": "low"
+  },
+  {
+   "situation": {
+    "distance": "far",
+    "health": 0
+   },
+   "path": [
+    0,
+    1
+   ],
+   "counts": {
+    "high": 2,
+    "low": 1,
+    "throw": 2
+   },
+   "likeliest": "high"
+  }
+ ]
+}

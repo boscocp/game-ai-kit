@@ -15,7 +15,9 @@
     "python/tests/test_cloning_vectors.py",
     "godot/locale/fighting.csv",
     "godot/locale/fighting.csv.import",
-    "godot/locale/fighting.pt_BR.translation"
+    "godot/locale/fighting.pt_BR.translation",
+    "python/tests/test_opponent_tree.py",
+    "python/tests/test_opponent_forest.py"
   ],
   "depends_on": [
     "ai_bandit",
@@ -32,6 +34,8 @@
     "test-clone-report"
   ],
   "retrain": [
-    "N10"
+    "N10",
+    "N16",
+    "N18"
   ]
 }

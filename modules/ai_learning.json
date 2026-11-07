@@ -1,8 +1,8 @@
 {
   "module": "ai_learning",
   "kind": "technique",
-  "about": "Inference only: logistic and softmax models, their file, a case table -- and the Python that fits them (gameaikit.training). No board.",
-  "summary": "Inference for small learned models: logistic and softmax models read from a JSON model file, and a case table. It never trains while the game runs.",
+  "about": "Inference only: logistic and softmax models, a decision tree and a random forest, their file, a case table -- and the Python that fits them (gameaikit.training). No board.",
+  "summary": "Inference for small learned models: logistic and softmax models and decision trees and random forests read from a JSON model file, and a case table. It never trains while the game runs.",
   "owns": [
     "godot/addons/ai_learning/",
     "godot/test/ai_learning/",
@@ -10,10 +10,18 @@
     "python/gameaikit/training/",
     "python/tests/test_descent.py",
     "spec/vectors/model_file/",
-    "python/tests/test_model_file.py"
+    "python/tests/test_model_file.py",
+    "spec/vectors/tree/",
+    "python/tests/test_tree.py",
+    "spec/vectors/forest/",
+    "python/tests/test_forest.py"
   ],
-  "depends_on": [],
+  "depends_on": [
+    "ai_core"
+  ],
   "gates": [
-    "test-cloning-vectors"
+    "test-cloning-vectors",
+    "test-tree-vectors",
+    "test-forest-vectors"
   ]
 }

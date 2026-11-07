@@ -2,12 +2,12 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-10-26
+verified_on: 2026-11-07
 tier: 2
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 19, linear and logistic regression ; https://docs.godotengine.org/en/stable/classes/class_json.html
-invalidated_if: the kit's LearnedModel, ModelFile, SoftmaxModel, CaseTable or ClonedPlayer signatures change, or the demos that use them are renamed
+invalidated_if: the kit's LearnedModel, LearnedTree, LearnedForest, ModelFile, SoftmaxModel, CaseTable or ClonedPlayer signatures change, or the demos that use them are renamed
 teaches: learning
-translation_of: 0e452de03983aca5960ef6e0c3a3a769e57dad2c870d7a2f8abed6778a8470cc
+translation_of: 7b057d9afcb05beaed78ce0c499d2d58ee407ccf1c6f27b349291b29d15eff04
 -->
 
 > English: [ai_learning.md](ai_learning.md). Os termos que ficam em inglês
@@ -21,15 +21,32 @@ ajusta um modelo aos dados e publica os números dele num arquivo JSON; este
 *feature* e um *bias* -- `w·x + b` --, que responde a uma pergunta de sim ou
 não com uma probabilidade (`LOGISTIC`) ou a uma de quanto com o próprio
 número (`LINEAR`). `SoftmaxModel` responde "qual destes?" com uma
-probabilidade para cada resposta. `CaseTable` é um *ghost*: o que um
+probabilidade para cada resposta. `LearnedTree` é uma árvore de decisão
+(T113): uma pergunta por nível -- esta palavra é aquela, este número é no
+máximo aquele -- até uma folha que conta as respostas que as linhas de
+treino deram ali, então o caminho se lê como uma regra. `LearnedForest` é
+uma *random forest* (T114): muitas dessas árvores, cada uma ajustada à sua
+própria amostra das linhas, votando -- ganha quem tiver mais votos.
+`CaseTable` é um *ghost*: o que um
 jogador gravado fez em cada situação que encontrou, consultado em vez de
 ajustado. Nada aqui muda um peso (invariante 6). O livro: Russell e
 Norvig, *AIMA*, capítulo 19.
 
 ## Quando não usar {#when-not}
 
-Um modelo que não seja um número por *feature*: uma árvore, uma camada
-oculta, qualquer coisa com estrutura -- estas classes não guardam isso.
+Uma camada oculta, ou uma estrutura que não seja um peso por *feature*, nem
+uma árvore, nem árvores votando -- estas classes não guardam isso. Uma árvore sozinha, funda,
+com poucas linhas: ela aprende as linhas e não o jogador: com as poucas
+gravações do jogo de luta nenhuma árvore mais funda acerta mais nas lutas
+que nunca viu, e o *n-gram* ganha de todas
+([concepts/learning.md](../concepts/learning.md#a-decision-tree),
+em inglês); várias árvores votando é a resposta de costume. Uma *random
+forest* quando o motivo precisa ser legível -- o motivo dela é uma
+contagem de votos -- ou para salvar *features* que dizem pouco: ela deixa o
+palpite mais estável e não acrescenta nada, e nessas gravações o palpite
+mais estável dela é a ação mais comum -- a floresta publicada responde
+"step in" em 129 das 133 decisões separadas para teste
+([concepts/learning.md](../concepts/learning.md#a-random-forest), em inglês).
 *Features* que só importam juntas ("um chute baixo quando perto, a não ser
 que esteja encurralado"): estes modelos somam, então o produto precisa
 entrar como uma *feature* própria. E qualquer aprendizado durante a
@@ -46,7 +63,13 @@ exceção é o *n-gram* do `ai_opponent` (ADR 0016).
 - `make demo-fighting` -- **M** troca o boneco de treino; "ghost: exact",
   "ghost: nearest" e "clone" são um `CaseTable` e um `SoftmaxModel`
   ajustados a um jogador gravado (veja
-  [behaviour_cloning](behaviour_cloning.pt-BR.md)).
+  [behaviour_cloning](behaviour_cloning.pt-BR.md)). "tree: easy", "tree:
+  medium" e "tree: hard" leem você com uma `LearnedTree` ajustada às suas
+  gravações: o painel mostra cada teste do caminho, a palavra que ele leu e
+  para que lado foi, as contagens da folha, e o que o *n-gram* ao lado
+  espera. "forest: easy", "forest: medium" e "forest: hard" leem você com
+  uma `LearnedForest` de 25 dessas árvores: o painel mostra o voto de cada
+  árvore, cinco por linha, e a contagem.
 - `make run` (damas) declara este módulo pela sua metade Python: o
   treinador ajusta com `gameaikit.training`. O jogo não usa nenhuma das
   classes do *addon* -- os pesos aprendidos são lidos pelo seu próprio
@@ -61,7 +84,14 @@ e a verificação do próprio jogo tático das convenções que ele publica ao
 lado dos modelos -- e o entregam ao
 `LearnedPolicy` (`learned_policy.gd`), que tira dele os modelos `combat` e
 `capture` e compara a probabilidade do modelo de combate com um limiar.
-`godot/game/fighting/fight_clone_opponent.gd` joga com um `ClonedPlayer`.
+`godot/game/fighting/fight_clone_opponent.gd` joga com um `ClonedPlayer`, e
+`godot/game/fighting/fight_tree_opponent.gd` lê você com a árvore do
+`opponent_tree.json`, que o `python/gameaikit/cloning/opponent_tree.py`
+ajusta (`make train-tree`; `make tree-report` a mostra em cada
+profundidade). `godot/game/fighting/fight_forest_opponent.gd` lê você com a
+*random forest* do `opponent_forest.json`, que o
+`python/gameaikit/cloning/opponent_forest.py` ajusta (`make train-forest`;
+`make forest-report` põe uma árvore ao lado de florestas de 5, 25 e 100).
 Os ajustes que importam:
 
 | ajuste | onde | o que muda |
@@ -70,6 +100,8 @@ Os ajustes que importam:
 | o limiar | `LearnedPolicy.DEFAULT_THRESHOLD`, ou a sua própria comparação | o quanto o modelo precisa ter certeza antes de a unidade agir; mais corajoso abaixo de meio |
 | as *features* | `LearnedModel.features` | lidas do arquivo, na ordem do arquivo; `predict_named` casa pelo nome |
 | exata ou mais próxima | `CaseTable.exact` ou `CaseTable.nearest` | o que um *ghost* faz numa situação que o jogador nunca encontrou |
+| a profundidade e o tamanho da folha de uma árvore | `MAX_DEPTH`, `MIN_LEAF` no `opponent_tree.py` | quantos testes tem um caminho, e quão poucas linhas uma folha pode contar; mais funda se ajusta melhor às linhas e pior às lutas novas |
+| o tamanho e a semente de uma *random forest* | `TREES`, `SEED` no `opponent_forest.py` | quantas árvores votam -- mais votam com mais estabilidade, a um caminho por árvore em cada decisão -- e qual floresta os sorteios fazem |
 
 ## No seu projeto {#your-project}
 
@@ -83,8 +115,11 @@ também. Ou copie de um clone:
 Uma pasta: `godot/addons/ai_learning/`. Ela não precisa de mais nada, nem
 do `ai_core`. Abra o projeto uma vez, ou rode `godot --headless --import`,
 para o Godot registrar as classes. O ajuste é do Python: `python/gameaikit/`
-(`training/` para as regressões e `training/model_file.py` para escrever o
-arquivo, `cloning/` para um jogador clonado) -- copie aquilo com que você
+(`training/` para as regressões, `training/tree.py` para uma árvore,
+`training/forest.py` para uma *random forest* -- que sorteia com o
+`core/xorshift.py`, então copie esse também -- e
+`training/model_file.py` para escrever o arquivo, `cloning/` para um
+jogador clonado) -- copie aquilo com que você
 ajusta, e deixe isso fora do jogo.
 
 ### Um exemplo mínimo {#example}
@@ -141,8 +176,11 @@ As *features*, medidas no seu jogo com os nomes que o arquivo usa, e o que
 fazer com a resposta -- em geral uma comparação com um limiar. Os pesos se
 aplicam aos números crus do jogo: o lado Python desfaz a sua normalização
 antes de publicar, então aqui não há nada a normalizar. O arquivo é
-`models`, cada um com `kind`, `features`, `weights` e `bias`; qualquer outra
-coisa nele é sua, entregue sem leitura em `ModelFile.extra`. Se as suas
+`models`, cada um com `kind`, `features`, `weights` e `bias` -- ou, para
+uma árvore, `kind` "tree", `features`, `classes` e `nodes`, lida com
+`ModelFile.tree(name)`, ou, para uma *random forest*, `kind` "forest",
+`features`, `classes` e `trees`, uma lista de nós por árvore, lida com
+`ModelFile.forest(name)`; qualquer outra coisa nele é sua, entregue sem leitura em `ModelFile.extra`. Se as suas
 *features* precisam de números que não são pesos -- um raio, o que "sozinho"
 vale --, publique-os ali e verifique-os você mesmo por cima do `ModelFile`,
 como o `TacticalWeights` do jogo tático faz com as suas quatro
@@ -151,7 +189,7 @@ jogador clonado que o lado Python escreva.
 
 ## Para ir mais fundo {#deeper}
 
-- As duas regressões, ajustadas e lidas (em inglês):
+- As duas regressões, a árvore e a *random forest*, ajustadas e lidas (em inglês):
   [concepts/learning.md](../concepts/learning.md).
 - A forma do arquivo e o lado Godot (em inglês):
   [godot/learning.md](../godot/learning.md).

@@ -415,6 +415,15 @@ test-bandit-vectors: import ## The bandit vectors, against ai_bandit
 	@$(GODOT) --headless --path godot -s res://test/ai_bandit/bandit_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/bandit
 
+.PHONY: test-bayes-vectors
+test-vectors: test-bayes-vectors
+test-bayes-vectors: import ## The Bayesian network vectors, against ai_bayes
+	@# The same files are read by `make test-python` through gameaikit.bayes.
+	@# Through godot_checked.py: a SCRIPT ERROR that empties a typed answer
+	@# would otherwise read as a vector held.
+	@$(PYTHON) scripts/godot_checked.py res://test/ai_bayes/bayes_vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/bayes
+
 .PHONY: test-constraints-vectors
 test-vectors: test-constraints-vectors
 test-constraints-vectors: import ## The constraint vectors, against ai_constraints
@@ -428,6 +437,22 @@ test-cloning-vectors: import ## The cloning vectors, against ai_learning's softm
 	@# The same files are read by `make test-python` through gameaikit.cloning.
 	@$(GODOT) --headless --path godot -s res://test/ai_learning/cloning_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/cloning
+
+.PHONY: test-tree-vectors
+test-vectors: test-tree-vectors
+test-tree-vectors: import ## T113: the decision-tree vectors' walks, against ai_learning's LearnedTree
+	@# The fits in the same files are Python's alone, in `make test-python`
+	@# through gameaikit.training.tree: only Python fits (invariant 6).
+	@$(PYTHON) scripts/godot_checked.py res://test/ai_learning/tree_vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/tree
+
+.PHONY: test-forest-vectors
+test-vectors: test-forest-vectors
+test-forest-vectors: import ## T114: the random-forest vectors' votes, against ai_learning's LearnedForest
+	@# The fits in the same files are Python's alone, in `make test-python`
+	@# through gameaikit.training.forest: only Python fits (invariant 6).
+	@$(PYTHON) scripts/godot_checked.py res://test/ai_learning/forest_vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/forest
 
 .PHONY: test-combat-vectors
 test-vectors: test-combat-vectors
@@ -1070,6 +1095,33 @@ test-inference-budget: import ## A cloned player's decision stays under its mill
 .PHONY: test-clone-report
 test-clone-report: ## T18's comparison: held out, and measured on the published file
 	@$(PYTHON) python/gameaikit/cloning/compare.py --report
+
+# --- the decision tree that reads the opponent (T113) ------------------------
+#
+# The same rows as the clone, the same player and the same split; Python fits
+# the tree (invariant 6, N16) and the fighting game's "tree:" modes walk it.
+
+.PHONY: train-tree
+train-tree: ## T113: fit the decision tree on the person's recordings and publish it for the fighting game
+	@PYTHONPATH=python $(PYTHON) -m gameaikit.cloning.opponent_tree --write $(CURDIR)/godot/game/fighting
+
+.PHONY: tree-report
+tree-report: ## T113: the tree at each depth, on the rows it was fitted on and on held-out fights, beside the n-gram (a table, not a gate)
+	@PYTHONPATH=python $(PYTHON) -m gameaikit.cloning.opponent_tree --report
+
+# --- the random forest that reads the opponent (T114) -----------------------
+#
+# The same rows, player and split as the tree, its depth and leaf size too;
+# Python fits the forest, seeded (invariant 6, N18), and the fighting game's
+# "forest:" modes ask its trees for their votes.
+
+.PHONY: train-forest
+train-forest: ## T114: fit the random forest on the person's recordings and publish it for the fighting game
+	@PYTHONPATH=python $(PYTHON) -m gameaikit.cloning.opponent_forest --write $(CURDIR)/godot/game/fighting
+
+.PHONY: forest-report
+forest-report: ## T114: one tree against forests of 1, 5, 25 and 100, held out and over five seeds, beside the n-gram (a table, not a gate)
+	@PYTHONPATH=python $(PYTHON) -m gameaikit.cloning.opponent_forest --report
 
 # --- the fighters' pictures (T35, ADR 0015) ---------------------------------
 #

@@ -23,10 +23,24 @@ VECTOR = (pathlib.Path(__file__).resolve().parents[2]
 EVERY_CODE = {f"R{number}" for number in range(1, 12)}
 
 
+def load_vector() -> dict:
+    """The whole vector file."""
+    return json.loads(VECTOR.read_text(encoding="utf-8"))
+
+
 def load() -> tuple[validator.Declaration, list[dict]]:
     """The vector's game and its cases."""
-    data = json.loads(VECTOR.read_text(encoding="utf-8"))
+    data = load_vector()
     return declaration_from(data["declaration"]), data["cases"]
+
+
+def format_controls_of_the_vector() -> tuple[str, list[int]]:
+    """The Unicode version the vector's format controls follow, and every code point in them."""
+    controls = load_vector()["format_controls"]
+    codes = []
+    for first, last in controls["runs"]:
+        codes.extend(range(int(first, 16), int(last, 16) + 1))
+    return controls["unicode"], codes
 
 
 def answer(case: dict, declaration: validator.Declaration) -> str:
@@ -116,25 +130,50 @@ class TheVectors(unittest.TestCase):
             with self.subTest(case["why"]):
                 self.assertIsNone(re.fullmatch(validator.SPEECH_PATTERN, speech))
 
-    def test_r9_refuses_what_unicode_calls_a_control_or_a_separator_and_nothing_else(self) -> None:
-        # Derived from Unicode's own table, not from the validator's ranges
-        # (T129): a control (Cc) breaks or hides something, and a line or
-        # paragraph separator (Zl, Zp) is a line break. Every other code
-        # point is left to the other rules, and the pattern turns these
-        # away too. Surrogates are not characters a speech can hold.
+    def test_r9_refuses_what_unicode_calls_a_control_separator_or_format(self) -> None:
+        # Controls and separators come from Unicode's own table, not from the
+        # validator's ranges (T129): a control (Cc) breaks or hides something,
+        # and a line or paragraph separator (Zl, Zp) is a line break. Format
+        # controls come from the vector's runs, the list both validators are
+        # held to (T139); the next test holds those runs to the table. Every
+        # other code point is left to the other rules, and the pattern turns
+        # these away too. Surrogates are not characters a speech can hold.
+        format_codes = set(format_controls_of_the_vector()[1])
         refused = 0
         for code in range(0x110000):
             if 0xD800 <= code <= 0xDFFF:
                 continue
             speech = f"Halt{chr(code)}there"
             is_r9 = validator.why_speech_is_wrong(speech, ()).startswith("R9")
-            breaks_the_line = unicodedata.category(chr(code)) in ("Cc", "Zl", "Zp")
-            self.assertEqual(is_r9, breaks_the_line, hex(code))
-            if breaks_the_line:
+            breaks_or_hides = (unicodedata.category(chr(code)) in ("Cc", "Zl", "Zp")
+                               or code in format_codes)
+            self.assertEqual(is_r9, breaks_or_hides, hex(code))
+            if breaks_or_hides:
                 refused += 1
                 self.assertIsNone(re.fullmatch(validator.SPEECH_PATTERN, speech), hex(code))
-        # 65 controls (32 C0, DEL, 32 C1) and the two separators.
-        self.assertEqual(refused, 67)
+        # 65 controls (32 C0, DEL, 32 C1), the two separators and 170 format
+        # controls in 21 runs.
+        self.assertEqual(refused, 67 + 170)
+
+    def test_the_format_controls_are_the_vectors_runs_and_unicodes_cf(self) -> None:
+        # The validator names its runs by hand, and so does LlmValidator; both
+        # are compared to the vector's. The vector's are compared here to
+        # Unicode's own Cf: exactly, on the version the vector names. On
+        # another table -- CI's Python 3.12 has 15.0 -- a character a newer
+        # version added is unassigned (Cn) there, so the check is weaker:
+        # every Cf on this table is in the runs, and every code point in the
+        # runs is Cf or still unassigned here.
+        version, codes = format_controls_of_the_vector()
+        runs = load_vector()["format_controls"]["runs"]
+        self.assertEqual(validator.FORMAT_CONTROLS,
+                         tuple((int(first, 16), int(last, 16)) for first, last in runs))
+        cf = [code for code in range(0x110000) if unicodedata.category(chr(code)) == "Cf"]
+        if unicodedata.unidata_version == version:
+            self.assertEqual(codes, cf)
+            return
+        self.assertLessEqual(set(cf), set(codes))
+        for code in codes:
+            self.assertIn(unicodedata.category(chr(code)), ("Cf", "Cn"), hex(code))
 
 
 if __name__ == "__main__":

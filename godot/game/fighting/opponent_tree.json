@@ -1,0 +1,174 @@
+{
+ "generated_by": "gameaikit.cloning.opponent_tree",
+ "trained_on": {
+  "player": "person",
+  "recordings": [
+   "2026-10-15T17-33-56-20518.json",
+   "2026-10-15T17-34-20-44746.json",
+   "2026-10-15T17-34-53-77250.json",
+   "2026-10-15T17-56-14-45674.json",
+   "2026-10-15T17-56-31-62541.json",
+   "2026-10-15T17-56-48-79525.json"
+  ],
+  "held_out": [
+   "2026-10-15T17-32-38-25455.json",
+   "2026-10-15T17-55-48-19637.json",
+   "2026-10-15T17-57-06-97503.json"
+  ],
+  "rows": 317,
+  "max_depth": 3,
+  "min_leaf": 5
+ },
+ "models": {
+  "next action": {
+   "kind": "tree",
+   "features": [
+    "last",
+    "other",
+    "me",
+    "distance",
+    "health",
+    "corner"
+   ],
+   "classes": [
+    "step in",
+    "step out",
+    "crouch",
+    "jump",
+    "high",
+    "mid",
+    "low",
+    "overhead",
+    "throw",
+    "guard standing",
+    "guard crouching",
+    "evade"
+   ],
+   "nodes": [
+    {
+     "feature": "last",
+     "is": "high",
+     "yes": 1,
+     "no": 8
+    },
+    {
+     "feature": "other",
+     "is": "nothing",
+     "yes": 2,
+     "no": 5
+    },
+    {
+     "feature": "health",
+     "is": "ahead",
+     "yes": 3,
+     "no": 4
+    },
+    {
+     "counts": {
+      "step in": 3,
+      "crouch": 1,
+      "jump": 3,
+      "high": 4,
+      "mid": 1
+     }
+    },
+    {
+     "counts": {
+      "step out": 2,
+      "high": 4
+     }
+    },
+    {
+     "feature": "me",
+     "is": "hit",
+     "yes": 6,
+     "no": 7
+    },
+    {
+     "counts": {
+      "step in": 4,
+      "step out": 1,
+      "crouch": 1,
+      "high": 4,
+      "mid": 1,
+      "throw": 1,
+      "guard crouching": 1
+     }
+    },
+    {
+     "counts": {
+      "step in": 16,
+      "step out": 1,
+      "crouch": 2,
+      "jump": 1,
+      "high": 5
+     }
+    },
+    {
+     "feature": "health",
+     "is": "behind",
+     "yes": 9,
+     "no": 12
+    },
+    {
+     "feature": "last",
+     "is": "overhead",
+     "yes": 10,
+     "no": 11
+    },
+    {
+     "counts": {
+      "step in": 1,
+      "crouch": 1,
+      "overhead": 1,
+      "guard standing": 1,
+      "guard crouching": 1
+     }
+    },
+    {
+     "counts": {
+      "step in": 2,
+      "step out": 12,
+      "jump": 1,
+      "high": 2,
+      "mid": 2,
+      "throw": 7,
+      "guard standing": 2
+     }
+    },
+    {
+     "feature": "last",
+     "is": "jump",
+     "yes": 13,
+     "no": 14
+    },
+    {
+     "counts": {
+      "step in": 2,
+      "step out": 7,
+      "jump": 1,
+      "high": 2,
+      "mid": 6,
+      "overhead": 1,
+      "throw": 1,
+      "guard standing": 1
+     }
+    },
+    {
+     "counts": {
+      "step in": 70,
+      "step out": 16,
+      "crouch": 28,
+      "jump": 7,
+      "high": 8,
+      "mid": 42,
+      "low": 9,
+      "overhead": 5,
+      "throw": 19,
+      "guard standing": 3
+     }
+    }
+   ]
+  }
+ }
+}

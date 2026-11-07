@@ -124,18 +124,31 @@ func score() -> Array[int]:
 # The level's options, the answers to the expected action weighted up by how
 # much surer than chance the model is: 0 at chance, `LEAN` at its ceiling.
 func _weighted_options(name: String, character: String) -> Array:
-	expected = model.likeliest()
-	expected_after = model.context()
-	confidence = model.probabilities()[expected]
+	_expect()
 	var lean: int = lean_for(confidence)
-	var answers: Array = ANSWERS[expected]
+	var answers: Array = ANSWERS.get(expected, [])
 	var known: Array = super(name, character)
 	answered = known.any(func(option: Array) -> bool: return option[0] in answers)
 	return known.map(func(option: Array) -> Array: return [option[0], int(option[1]) + (lean if option[0] in answers else 0)])
 
 
+## Set `expected`, `confidence` and `expected_after` from the n-gram. The one
+## place the prediction comes from, so a second reader of the player -- the
+## decision tree (T113) -- replaces this and leans its answers the same way.
+func _expect() -> void:
+	expected = model.likeliest()
+	expected_after = model.context()
+	confidence = model.probabilities()[expected]
+
+
 ## How much an answer gains at `sureness`: in proportion to where it lies
-## between chance (nothing) and the model's ceiling (`LEAN`).
+## between chance (nothing) and the reader's `ceiling` (`LEAN`).
 func lean_for(sureness: float) -> int:
 	var chance: float = 1.0 / ACTIONS.size()
-	return roundi(LEAN * clampf((sureness - chance) / (model.ceiling() - chance), 0.0, 1.0))
+	return roundi(LEAN * clampf((sureness - chance) / (ceiling() - chance), 0.0, 1.0))
+
+
+## The surest the reader can be about one action: the n-gram's, which its
+## decay keeps below 1.
+func ceiling() -> float:
+	return model.ceiling()

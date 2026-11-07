@@ -73,7 +73,8 @@ class TheVectors(unittest.TestCase):
         # language with both suites green.
         cases = json.loads(VECTOR.read_text(encoding="utf-8"))["cases"]
         covered = {case["refused"] for case in cases if "refused" in case}
-        self.assertEqual(covered, {"M2", "M3", "M4", "M5", "M6", "M7", "M8", "M10"})
+        self.assertEqual(covered, {"M2", "M3", "M4", "M5", "M6", "M7", "M8", "M10",
+                                   "M11", "M12", "M13", "M14", "M15", "M16"})
 
     def test_a_parse_error_is_placed_on_the_line_an_editor_shows(self) -> None:
         # Counted from 1, as the game counts it: the third line here.

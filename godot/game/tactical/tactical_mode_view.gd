@@ -94,6 +94,13 @@ func tint_at(state: BoardState, side: int, _cursor: Vector2i, _person: int, _in_
 	return tint(state, side)
 
 
+## True when the tint's numbers are hit chances rather than counts: the
+## board then writes them with a `%`, in a corner of their own (T137).
+## False here: a count of pieces that could strike.
+func tint_is_a_chance() -> bool:
+	return false
+
+
 ## True when `side`, going from `before` to `after`, saw an enemy it did not
 ## see before: a walk that showed something can no longer be taken back, or
 ## Z would let a person look round a corner for free. False in a mode
