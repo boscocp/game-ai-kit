@@ -1,17 +1,18 @@
-# Learning: two regressions and a tree you can read
+# Learning: two regressions, a tree you can read, and a forest that votes
 
 <!-- doc-meta
 half_life: concept
-verified_on: 2026-11-06
+verified_on: 2026-11-07
 tier: 1
-source: https://en.wikipedia.org/wiki/Logistic_regression ; book:Leo Breiman, Jerome Friedman, Richard Olshen and Charles Stone, "Classification and Regression Trees", Wadsworth, 1984 -- CART and the Gini impurity
-invalidated_if: the regressions stop being linear in their features, the tree stops being CART on Gini impurity, or training moves out of Python's standard library
+source: https://en.wikipedia.org/wiki/Logistic_regression ; book:Leo Breiman, Jerome Friedman, Richard Olshen and Charles Stone, "Classification and Regression Trees", Wadsworth, 1984 -- CART and the Gini impurity ; https://doi.org/10.1023/A:1010933404324
+invalidated_if: the regressions stop being linear in their features, the tree stops being CART on Gini impurity, the forest stops being bootstrap samples and feature subsets voting, or training moves out of Python's standard library
 teaches: learning
 -->
 
 > How a logistic regression decides *attack or retreat*, how a linear one
 > decides *which node falls first*, how a decision tree guesses *what the
-> fighter in front of it does next*, and why all three are trained in
+> fighter in front of it does next*, what many trees voting change about
+> that guess, and why all of them are trained in
 > Python and only evaluated in the game. Needs Python 3 and nothing else.
 > The code is [`python/gameaikit/`](../../python/gameaikit/) and
 > [`godot/addons/ai_learning/`](../../godot/addons/ai_learning/) with the
@@ -178,13 +179,95 @@ action.
 So the tree is not here because it reads this person well. It is here
 because it is the first learned model whose decision a person can follow
 step by step on the screen, and because its weakness alone -- a high-variance
-learner on few rows -- is exactly what a forest of them voting fixes (T114).
+learner on few rows -- is exactly what a forest of them voting is for. The
+next section measures what that buys here.
 
 The same split as the regressions holds: Python fits and publishes
 `opponent_tree.json`, the game only walks it, and `check_no_training.py`
 holds both halves -- the published tree is what a fresh fit writes (N16),
 and no GDScript writes where it lives (N17). The n-gram beside it is the
 only model in the fight that learns anything, as ADR 0016 allows.
+
+## A random forest
+
+One tree fitted to few rows learns those rows: move a handful of them and
+its tests change, and so do its answers. That is **variance**, and the
+textbook answer to it is a **random forest** (Breiman, 2001): fit many
+trees, make them disagree, and let them vote. Two things make them
+disagree, in [`forest.py`](../../python/gameaikit/training/forest.py):
+
+- each tree is fitted on a **bootstrap sample** -- as many rows as there
+  are, drawn with replacement, so some rows come twice and about a third
+  not at all;
+- at each node, a tree may test only a **random subset of the features** --
+  the square root of their number, rounded down: two of the fighting
+  game's six. So one strong feature cannot take the root of every tree.
+
+Everything else is CART, as above: `forest.fit` hands `tree.fit` a chooser
+that calls the same `best_test` on the features it drew. To answer, each
+tree walks the situation and votes its leaf's likeliest answer; the most
+votes win, and of equal tallies the first in `classes` -- not whichever tree
+voted first. A tree whose walk stops on a value it cannot read abstains.
+One `Xorshift` (T109), seeded once, draws the bootstraps and the subsets in
+a fixed order, so the same rows and seed make the same forest on every
+machine; [`spec/vectors/forest/`](../../spec/vectors/forest/README.md)
+holds the Python fit and the game's vote to the same answers.
+
+The cost is stated plainly: one walk per tree, per decision. The published
+forest is 25 trees of depth 3 -- the published tree's depth and leaf size,
+so the comparison is one tree against many and nothing else -- which is at
+most 75 comparisons a decision. In `make demo-fighting`, the "forest:"
+modes show each tree's vote, five to a line, and the tally.
+
+`make forest-report` fits it on the same six training fights and scores it
+on the same three held out. "Over five seeds" refits each forest with seeds
+1 to 5 and gives the lowest and highest held-out score: how far it moves
+when nothing but the random draws change. "1 tree, bootstrapped" is a
+forest of one: a single tree on a bootstrap, which the seed moves too.
+
+| reader | right on the rows it was fitted on | right on fights it never saw (seed 1) | over five seeds |
+|---|---|---|---|
+| one tree, depth 3, leaf at least 5 rows (T113's, published) | 37.2% | 20.3% | (no seed) |
+| 1 tree, bootstrapped, depth 3 | 35.3% | 21.1% | 20.3% to 26.3% |
+| 5 trees, depth 3 | 34.7% | 21.1% | 19.5% to 21.1% |
+| 25 trees, depth 3 (published) | 35.6% | 19.5% | 19.5% to 21.1% |
+| 100 trees, depth 3 | 34.1% | 21.1% | 21.1% to 21.1% |
+| one tree, depth 20, leaf at least 1 row | 63.7% | 19.5% | (no seed) |
+| 1 tree, bootstrapped, depth 20 | 48.6% | 21.1% | 16.5% to 24.8% |
+| 5 trees, depth 20 | 51.1% | 16.5% | 16.5% to 21.1% |
+| 25 trees, depth 20 | 56.5% | 21.1% | 17.3% to 21.8% |
+| 100 trees, depth 20 | 56.5% | 19.5% | 18.0% to 21.1% |
+| always the commonest action | 30.9% | 21.1% | -- |
+| the n-gram (T17), learning during the fight | -- | 32.3% | -- |
+
+Two things to read in it, and the second is the lesson.
+
+**The forest does what it is for.** One tree on a bootstrap lands anywhere
+from 20.3% to 26.3% on the held-out fights depending on nothing but the
+draw; a hundred of them voting land on 21.1% every time. Grown deep, the
+spread goes from eight points to three. That is variance taken out, which is
+what averaging many noisy guesses does, and on the training rows the
+forest also stops climbing as fast as one tree does.
+
+**It does not find what is not there.** Every forest, at every size, scores
+within a row or two of always guessing the commonest action -- one held-out
+decision is 0.75% -- and the n-gram, which reads this fight rather than
+last week's, still beats them all by eleven points. The steadiest forest,
+100 trees at depth 3, settles exactly on the floor: with the noise averaged
+out, what is left is the commonest action. Averaging removes the noise in
+the guesses; it adds no signal the six words did not hold. A forest is the
+fix for a tree that learned the rows. It is not a fix for a question the
+features cannot answer, and on these recordings that is the question.
+
+The manual check is the same lesson by eye: in the "forest:" modes the
+tally moves less from one exchange to the next than the tree's path does in
+the "tree:" modes, because one changed word moves one tree's vote, not the
+answer.
+
+The split holds as before: Python fits and publishes
+`opponent_forest.json`, the game only asks its trees, and
+`check_no_training.py` holds both halves -- the published forest is what a
+fresh, seeded fit writes (N18), and no GDScript writes where it lives (N19).
 
 ## When not to use it
 
@@ -196,3 +279,7 @@ game teaches nothing anybody can print.
 A tree alone, deep, on few rows: it memorises the rows, as the table above
 shows. Cap its depth and its leaf size, judge it only on fights it never
 saw, and when one tree is not enough, many trees voting is the next step.
+
+A forest when the reader needs the reason: its reason is a tally, not a
+path. And a forest to rescue features that carry nothing: it steadies the
+guess, and the table above shows a steady guess at the floor.

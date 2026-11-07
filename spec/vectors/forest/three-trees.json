@@ -1,0 +1,216 @@
+{
+ "description": "The tree vectors' eight rows, three trees, depth 2, seed 7. Two features, so each node may look at one of them (the square root of two, rounded down), drawn at random, and each tree sees its own bootstrap: eight rows drawn with replacement. So the three trees differ from each other and from the single tree the same rows fit. Asked: a row it was fitted on; one it never saw; a number where a word is asked, where a tree whose root asks about distance abstains; and a situation where the trees disagree.",
+ "rows": [
+  [
+   "close",
+   0,
+   "throw"
+  ],
+  [
+   "close",
+   1,
+   "throw"
+  ],
+  [
+   "close",
+   5,
+   "low"
+  ],
+  [
+   "close",
+   6,
+   "low"
+  ],
+  [
+   "near",
+   0,
+   "low"
+  ],
+  [
+   "near",
+   4,
+   "low"
+  ],
+  [
+   "far",
+   0,
+   "high"
+  ],
+  [
+   "far",
+   3,
+   "high"
+  ]
+ ],
+ "trees": 3,
+ "max_depth": 2,
+ "min_leaf": 1,
+ "seed": 7,
+ "model": {
+  "kind": "forest",
+  "features": [
+   "distance",
+   "health"
+  ],
+  "classes": [
+   "high",
+   "low",
+   "throw"
+  ],
+  "trees": [
+   [
+    {
+     "feature": "health",
+     "at_most": 3.5,
+     "yes": 1,
+     "no": 4
+    },
+    {
+     "feature": "distance",
+     "is": "far",
+     "yes": 2,
+     "no": 3
+    },
+    {
+     "counts": {
+      "high": 4
+     }
+    },
+    {
+     "counts": {
+      "low": 1
+     }
+    },
+    {
+     "counts": {
+      "low": 3
+     }
+    }
+   ],
+   [
+    {
+     "feature": "health",
+     "at_most": 2.0,
+     "yes": 1,
+     "no": 4
+    },
+    {
+     "feature": "distance",
+     "is": "near",
+     "yes": 2,
+     "no": 3
+    },
+    {
+     "counts": {
+      "low": 2
+     }
+    },
+    {
+     "counts": {
+      "high": 1,
+      "throw": 1
+     }
+    },
+    {
+     "counts": {
+      "low": 4
+     }
+    }
+   ],
+   [
+    {
+     "feature": "health",
+     "at_most": 3.5,
+     "yes": 1,
+     "no": 4
+    },
+    {
+     "feature": "health",
+     "at_most": 2.0,
+     "yes": 2,
+     "no": 3
+    },
+    {
+     "counts": {
+      "low": 2,
+      "throw": 2
+     }
+    },
+    {
+     "counts": {
+      "high": 1
+     }
+    },
+    {
+     "counts": {
+      "low": 3
+     }
+    }
+   ]
+  ]
+ },
+ "cases": [
+  {
+   "situation": {
+    "distance": "close",
+    "health": 1
+   },
+   "votes": [
+    "low",
+    "high",
+    "low"
+   ],
+   "tally": {
+    "high": 1,
+    "low": 2
+   },
+   "likeliest": "low"
+  },
+  {
+   "situation": {
+    "distance": "near",
+    "health": 3.5
+   },
+   "votes": [
+    "low",
+    "low",
+    "high"
+   ],
+   "tally": {
+    "high": 1,
+    "low": 2
+   },
+   "likeliest": "low"
+  },
+  {
+   "situation": {
+    "distance": 7,
+    "health": 0
+   },
+   "votes": [
+    "",
+    "",
+    "low"
+   ],
+   "tally": {
+    "low": 1
+   },
+   "likeliest": "low"
+  },
+  {
+   "situation": {
+    "distance": "far",
+    "health": 5
+   },
+   "votes": [
+    "low",
+    "low",
+    "low"
+   ],
+   "tally": {
+    "low": 3
+   },
+   "likeliest": "low"
+  }
+ ]
+}

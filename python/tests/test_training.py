@@ -194,9 +194,9 @@ class TheReportsRules(unittest.TestCase):
         # A kind nothing can evaluate. No W rule looks at the kind, and the
         # game's `ModelFile` refuses the file whole for it.
         unknown = sound_report()
-        unknown["models"]["capture"]["kind"] = "random_forest"
+        unknown["models"]["capture"]["kind"] = "boosted_trees"
         self.assertEqual(report.findings_for(unknown, unknown), [
-            "M5 model `capture` is of kind `random_forest`, which nothing here can evaluate"])
+            "M5 model `capture` is of kind `boosted_trees`, which nothing here can evaluate"])
 
     def test_the_committed_weights_are_a_model_file_any_reader_loads(self) -> None:
         # The published file, through the generic rules alone: no field was

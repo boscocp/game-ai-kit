@@ -1,0 +1,207 @@
+{
+ "description": "Four trees, depth 1, seed 1: an even number of voters can split two and two, and then the first answer in classes wins, as a tie between leaf counts does in one tree. Twice here the first vote cast is throw and the tie goes to the answer before it in classes -- low, then high -- not to whichever tree voted first.",
+ "rows": [
+  [
+   "close",
+   0,
+   "throw"
+  ],
+  [
+   "close",
+   1,
+   "throw"
+  ],
+  [
+   "close",
+   5,
+   "low"
+  ],
+  [
+   "close",
+   6,
+   "low"
+  ],
+  [
+   "near",
+   0,
+   "low"
+  ],
+  [
+   "near",
+   4,
+   "low"
+  ],
+  [
+   "far",
+   0,
+   "high"
+  ],
+  [
+   "far",
+   3,
+   "high"
+  ]
+ ],
+ "trees": 4,
+ "max_depth": 1,
+ "min_leaf": 1,
+ "seed": 1,
+ "model": {
+  "kind": "forest",
+  "features": [
+   "distance",
+   "health"
+  ],
+  "classes": [
+   "high",
+   "low",
+   "throw"
+  ],
+  "trees": [
+   [
+    {
+     "feature": "health",
+     "at_most": 2.0,
+     "yes": 1,
+     "no": 2
+    },
+    {
+     "counts": {
+      "throw": 4
+     }
+    },
+    {
+     "counts": {
+      "high": 1,
+      "low": 3
+     }
+    }
+   ],
+   [
+    {
+     "feature": "distance",
+     "is": "far",
+     "yes": 1,
+     "no": 2
+    },
+    {
+     "counts": {
+      "high": 2
+     }
+    },
+    {
+     "counts": {
+      "low": 4,
+      "throw": 2
+     }
+    }
+   ],
+   [
+    {
+     "feature": "health",
+     "at_most": 2.0,
+     "yes": 1,
+     "no": 2
+    },
+    {
+     "counts": {
+      "throw": 4
+     }
+    },
+    {
+     "counts": {
+      "high": 1,
+      "low": 3
+     }
+    }
+   ],
+   [
+    {
+     "feature": "distance",
+     "is": "far",
+     "yes": 1,
+     "no": 2
+    },
+    {
+     "counts": {
+      "high": 2
+     }
+    },
+    {
+     "counts": {
+      "low": 3,
+      "throw": 3
+     }
+    }
+   ]
+  ]
+ },
+ "cases": [
+  {
+   "situation": {
+    "distance": "close",
+    "health": 0
+   },
+   "votes": [
+    "throw",
+    "low",
+    "throw",
+    "low"
+   ],
+   "tally": {
+    "low": 2,
+    "throw": 2
+   },
+   "likeliest": "low"
+  },
+  {
+   "situation": {
+    "distance": "near",
+    "health": 6
+   },
+   "votes": [
+    "low",
+    "low",
+    "low",
+    "low"
+   ],
+   "tally": {
+    "low": 4
+   },
+   "likeliest": "low"
+  },
+  {
+   "situation": {
+    "distance": "far",
+    "health": 2
+   },
+   "votes": [
+    "throw",
+    "high",
+    "throw",
+    "high"
+   ],
+   "tally": {
+    "high": 2,
+    "throw": 2
+   },
+   "likeliest": "high"
+  },
+  {
+   "situation": {
+    "distance": "close",
+    "health": 5
+   },
+   "votes": [
+    "low",
+    "low",
+    "low",
+    "low"
+   ],
+   "tally": {
+    "low": 4
+   },
+   "likeliest": "low"
+  }
+ ]
+}

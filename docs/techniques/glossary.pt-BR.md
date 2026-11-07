@@ -95,6 +95,7 @@ também em itálico, ficam como foram publicados.
 | *string*, *array* | os tipos de texto e de lista; ficam em inglês como no código |
 | *docstring* | o comentário de documentação de uma função ou classe, o `##` do GDScript |
 | *softmax* | a função que transforma as notas de várias respostas em probabilidades que somam 1 |
+| *random forest* | muitas árvores de decisão votando, cada uma ajustada a uma amostra sorteada das linhas e olhando só algumas *features* a cada pergunta; fica em inglês, como nos textos de aprendizado de máquina |
 | *shadow* | o adversário de Killer Instinct treinado com as lutas do próprio jogador; as *Shadows* do jogo |
 | *baked* | pré-calculado: os pontos que o Godot calcula uma vez ao longo de uma curva |
 | *skirmish* | a escaramuça: a demo por turnos em que o azul é a política aprendida |
