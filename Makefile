@@ -713,6 +713,13 @@ test-rts-exit: import ## The RTS, run and closed, leaks nothing at exit, and a p
 	@# must see; each child has a deadline (review of PR #100).
 	@$(PYTHON) scripts/check_exit_leaks.py res://game/rts/rts.tscn --timeout 60
 
+.PHONY: test-rts-flock
+check: test-rts-flock
+test-rts-flock: import ## T19's wall-gap jam, planted, is seen; a group walking as a flock does not jam there, inside its frame share (T151)
+	@# Timed too, so it flakes under load like test-rts-budget: run it
+	@# alone before believing a red.
+	@$(PYTHON) scripts/godot_checked.py res://test/rts/rts_flock_gap.gd
+
 .PHONY: rts-measure
 rts-measure: import ## Slow (minutes): the commander vs the queues, STRIPS vs HTN, each level vs the next, the seat's bias (T20)
 	@$(GODOT) --headless --path godot -s res://test/rts/rts_measure.gd
@@ -916,7 +923,7 @@ demo-behaviour: import ## One guard, four ways to decide: 1-4 swap state machine
 	@$(GODOT) --path godot res://demos/behaviour/behaviour_demo.tscn
 
 .PHONY: demo-rts
-demo-rts: import ## Real-time strategy against a commander that plans: drag selects, right click orders, B D L T E build, W 1 2 3 train, V watches, C level, H planner, I influence, F fog
+demo-rts: import ## Real-time strategy against a commander that plans: drag selects, right click orders, B D L T E build, W 1 2 3 train, V watches, C level, H planner, I influence, F fog, G flock
 	@$(GODOT) --path godot res://game/rts/rts.tscn
 
 .PHONY: demo-tactical

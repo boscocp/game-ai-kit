@@ -2,10 +2,10 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-10-26
+verified_on: 2026-11-07
 tier: 2
 source: https://ojs.aaai.org/index.php/AIIDE/article/view/12435/12294 ; book:Elijah Emerson, "Crowd Pathfinding and Steering Using Flow Field Tiles", in Steve Rabin (ed.), "Game AI Pro", CRC Press, 2013
-invalidated_if: the kit's FlowField, SpatialHash, FrameBudget, RtsWorld or RtsController signatures change, or the demos that use them are renamed
+invalidated_if: the kit's FlowField, SpatialHash, FrameBudget, RtsWorld, RtsController or GakRtsCrowd signatures change, or the demos that use them are renamed
 teaches: strategy-ai
 -->
 
@@ -29,6 +29,13 @@ deterministic match -- one seed and one list of commands always end the
 same -- that an AI sees only through a frozen `RtsSnapshot` and changes
 only through `RtsCommand`s it may refuse.
 
+A unit walks alone: from cell middle to cell middle, so a group sent to one
+point files into a column. The core does not steer it round the others --
+nudged apart on a move order, T19's two armies jammed in a wall's gaps --
+but a world's **crowd** (`GakRtsCrowd`) takes each step along a field, and
+something above the core can put its own there: the RTS game's flock
+(`RtsFlock`, **G**), built on `ai_steering`, which the core never loads.
+
 ## When not to use it {#when-not}
 
 A few units with many different goals: each field is then built for one
@@ -43,7 +50,8 @@ move and take it back -- the examples' board does that (ADR 0019).
 - `make demo-rts` -- every unit you order walks a shared flow field;
   **drag** selects, **right click** orders. **V** watches two computers
   play, **I** shows the influence the commander reads, **F** toggles the
-  fog that `RtsWorld.visible_to` computes.
+  fog that `RtsWorld.visible_to` computes, **G** makes a group's move order
+  walk as a flock instead of a column.
 - Which demo uses which technique, both ways: [the catalogue](catalogue.md#ai_rts_core).
 
 ## In this kit {#in-this-kit}
@@ -61,6 +69,7 @@ matter:
 | bucket size | `SpatialHash.new(size)` | about the radius most questions ask; smaller reads more buckets, larger turns more away |
 | the shares | `FrameBudget.SHARES` | milliseconds each layer may take of the 16.7 |
 | how often the AI decides | `RtsMatch.decide_every` | ticks between decisions; half a second by default |
+| how a unit steps among the others | `RtsWorld.crowd`, a `GakRtsCrowd` | the base walks straight at the next cell's middle, as the core always has; the game's `RtsFlock` adds three forces among a group. A recording replays only on a world given the same crowd |
 
 ## In your own project {#your-project}
 

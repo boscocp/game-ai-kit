@@ -42,6 +42,12 @@ const DEPOSIT_COLOURS: Dictionary = {RtsKinds.ROCKS: Color(0.75, 0.72, 0.68), Rt
 const FOG := Color(0.0, 0.0, 0.0, 0.6)
 const EXPLORED := Color(0.0, 0.0, 0.0, 0.35)
 const SELECTED := Color(1.0, 1.0, 0.6)
+## The flock's three forces, in `Flock.Rule` order (T151). Not the flocking
+## demo's red and blue: here those are the two sides.
+const FORCE_COLOURS: Array[Color] = [Color(1.0, 0.35, 0.85), Color(0.3, 0.95, 1.0), Color(0.6, 1.0, 0.3)]
+const SIGHT_COLOUR := Color(1.0, 1.0, 1.0, 0.4)
+## How long a force as strong as the unit can turn is drawn, in pixels.
+const ARROW_PIXELS: float = CELL * 1.5
 
 ## What to draw: the snapshot of the side the screen belongs to; when
 ## `everything` is set, the whole world instead.
@@ -64,6 +70,8 @@ var toast: String = ""
 var toast_bad: bool = false
 var toast_until: int = 0
 var art: RtsArt
+## The world's flock, whose watched unit's forces are drawn when it has any.
+var flock: RtsFlock
 
 ## The match's tick, which paces the walking frames.
 var tick: int = 0
@@ -132,6 +140,8 @@ func _draw() -> void:
 	for unit: Dictionary in shown:
 		_draw_unit(unit)
 	_draw_strikes(shown)
+	if flock != null and not flock.watched_forces.is_empty():
+		_draw_flock()
 	if not everything:
 		_draw_fog()
 	if placing != "" and placing_at != Vector2i(-1, -1):
@@ -272,6 +282,23 @@ func _draw_placing() -> void:
 	draw_rect(Rect2(centre - Vector2(CELL, CELL) * 0.5, Vector2(CELL, CELL)), tint, false, 2.0)
 	var words: String = tr("click to build {what}").format({what = RtsWords.with_the(placing)}) if good else placing_refusal
 	draw_string(ThemeDB.fallback_font, centre + Vector2(CELL, -CELL * 0.6), words, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 13, tint)
+
+
+# The watched unit's sight, a line to each groupmate it counted, and its
+# three forces as arrows, unweighted: what each rule asks of it. Drawn from
+# where it stands now, a stride or so past where it decided.
+func _draw_flock() -> void:
+	var watched: RtsUnit = world.unit(flock.watched)
+	if watched == null:
+		return
+	var at: Vector2 = to_screen(watched.position)
+	draw_arc(at, RtsFlock.SIGHT * CELL, 0.0, TAU, 48, SIGHT_COLOUR, 1.0)
+	for id: int in flock.watched_counted:
+		if world.unit(id) != null:
+			draw_line(at, to_screen(world.unit(id).position), SIGHT_COLOUR, 1.0)
+	var strongest: float = RtsKinds.of(watched.kind, "speed") * RtsFlock.TURN
+	for rule: int in range(flock.watched_forces.size()):
+		draw_line(at, at + flock.watched_forces[rule] / strongest * ARROW_PIXELS, FORCE_COLOURS[rule], 3.0)
 
 
 func _draw_toast() -> void:

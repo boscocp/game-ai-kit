@@ -4,9 +4,11 @@
 ## walk until in reach, then work until done -- run once a tick by
 ## `RtsWorld.step` for every unit in id order. Walking reads the flow field
 ## to the goal: the arrow under the unit's feet, followed from cell centre to
-## cell centre at the unit's speed. Units do not steer round one another --
-## that is T22's lesson (`ai_steering`) -- but `RtsWorld` nudges them apart
-## after every tick, so they never stand on one point.
+## cell centre at the unit's speed -- the world's `crowd` takes that step, and
+## its base takes it straight. Units do not steer round one another -- that
+## is T22's lesson (`ai_steering`), which the RTS game's flock brings in
+## through the crowd -- but `RtsWorld` nudges them apart after every tick,
+## so they never stand on one point.
 ##
 ## A fighter with no order looks for the nearest enemy it can see and goes
 ## for it -- not every tick, but every `LOOK_EVERY` ticks, each fighter on its
@@ -93,7 +95,7 @@ static func _walk(world: RtsWorld, unit: RtsUnit, goal: Vector2i, point: Vector2
 		return false
 	var direction: Vector2i = field.direction_at(here)
 	var waypoint: Vector2 = point if direction == Vector2i.ZERO else Vector2(here + direction) + Vector2(0.5, 0.5)
-	world.place(unit, unit.position.move_toward(waypoint, stride))
+	world.place(unit, world.crowd.step_to(unit, waypoint, stride))
 	return false
 
 

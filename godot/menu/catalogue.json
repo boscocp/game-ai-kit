@@ -211,9 +211,10 @@
         {"technique": "utility", "part": "each squad scores every region by worth, odds and distance, and goes to the best"},
         {"technique": "influence-map", "part": "the computer's belief about who holds the map, the enemy half remembered through the fog and fading; I draws it"},
         {"technique": "state-machine", "part": "each squad gathers, advances, fights or falls back, and the arrow it took is written beside it"},
-        {"technique": "flow-field", "part": "a squad's members follow one field to their region, shared by everyone going there"}
+        {"technique": "flow-field", "part": "a squad's members follow one field to their region, shared by everyone going there"},
+        {"technique": "flocking", "part": "G: a group sent to one cell walks as a flock, the field's heading plus three forces from the groupmates in sight; the first of your selection in one shows them"}
       ],
-      "controls": "drag to select, right click to move, attack or gather; B D L T E build with a worker, W 1 2 3 train; space pauses, + and - change the speed, V watches two computers, C the level, H the planner, I the influence map, F lifts the fog from the screen, R again",
+      "controls": "drag to select, right click to move, attack or gather; B D L T E build with a worker, W 1 2 3 train; space pauses, + and - change the speed, V watches two computers, C the level, H the planner, I the influence map, F lifts the fog from the screen, G a group moves as a flock, R again",
       "watch": "The panel's plan: each step's wait counts down, and when the commander sees what you build, its goal changes to the counter and the plan is redrawn. On the board, a squad's dashed line is where it chose to go and the numbers are every region's score -- press I and see how much it believes is where it last saw it.",
       "docs": "docs/concepts/rts-ai.md"
     },

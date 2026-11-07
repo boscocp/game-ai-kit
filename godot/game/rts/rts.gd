@@ -25,6 +25,10 @@
 ## kept in `data/rts/`; `make measure-rts-clock` turns those into the
 ## clock's values, which the game only reads.
 ##
+## G switches T151's flock (`RtsFlock`): a group sent to one cell, by you or
+## by the computer, walks as a flock instead of filing into a column, and
+## the first unit of your selection that is in one shows its three forces.
+##
 ## Your orders and the computer's pass through the same door
 ## (`RtsMatch.give`, `RtsRules`): you may not order what it may not, and it
 ## sees only what its units see.
@@ -70,6 +74,9 @@ var last_refusal: String = ""
 var reveal: bool = false
 ## K: the computer's sides play under the human clock (T55).
 var human_clock: bool = false
+## G: a group's move order walks as a flock (T151). The world's crowd, kept
+## across restarts with its switch.
+var flock := RtsFlock.new()
 ## Opened to record, and how many matches it has kept.
 var recording: bool = OS.get_cmdline_user_args().has("--record")
 var matches_kept: int = 0
@@ -114,6 +121,9 @@ func _legend_entries() -> Array[Array]:
 		[RtsThinking.STATE_COLOURS[Squad.FIGHT], tr("its squad fighting")],
 		[RtsThinking.STATE_COLOURS[Squad.RETREAT], tr("its squad falling back")],
 		[RtsThinking.PLAN_COLOUR, tr("where its plan will build")],
+		[RtsView.FORCE_COLOURS[Flock.Rule.SEPARATION], tr("G flock: away from the too close")],
+		[RtsView.FORCE_COLOURS[Flock.Rule.ALIGNMENT], tr("G flock: towards their heading")],
+		[RtsView.FORCE_COLOURS[Flock.Rule.COHESION], tr("G flock: towards their middle")],
 	] as Array[Array]
 
 
@@ -121,6 +131,7 @@ func _legend_entries() -> Array[Array]:
 ## paused, the camera on your base.
 func restart() -> void:
 	world = RtsScenario.start(SEED)
+	world.crowd = flock
 	var level: Difficulty = RtsLevels.presets()[level_index]
 	computer = RtsCommander.new(RtsScenario.EAST, level, SEED * 7, planner)
 	stand_in = QueueSide.new(RtsScenario.WEST, level, SEED * 11)
@@ -216,6 +227,18 @@ func decision_overlay() -> Dictionary:
 	shown["income"] = BuildSchedule.income(RtsSnapshot.of(world, computer.side))
 	if not thinking["squads"].is_empty():
 		shown["squads"] = thinking["squads"]
+	if not flock.watched_forces.is_empty():
+		shown["flock"] = _flock_overlay()
+	return shown
+
+
+# The watched unit's flock, as the overlay carries it: who, how many
+# groupmates it counted, and how hard each rule pushes, in cells a second
+# a second.
+func _flock_overlay() -> Dictionary:
+	var shown: Dictionary = {"unit": flock.watched, "counted": flock.watched_counted.size()}
+	for rule: int in range(RtsFlock.RULES.size()):
+		shown[RtsFlock.RULES[rule]] = snappedf(flock.watched_forces[rule].length(), 0.01)
 	return shown
 
 
@@ -315,6 +338,8 @@ func _on_key(code: Key) -> void:
 			restart()
 		KEY_M:
 			_meter.visible = not _meter.visible
+		KEY_G:
+			flock.on = not flock.on
 		KEY_R:
 			restart()
 
@@ -481,10 +506,23 @@ func _refresh() -> void:
 	_thinking.view = RtsSnapshot.of(world, computer.side)
 	_thinking.world = world
 	_thinking.watcher = -1 if (reveal or watching) else RtsScenario.WEST
+	flock.watched = _watched_in_a_flock()
+	_view.flock = flock
 	_header.text = _header_text(yours)
 	_panel.text = tr("What the computer is thinking") + "\n" + "\n".join(_thinking.lines())
 	_card.show_selection(yours, _view.selected)
 	_redraw()
+
+
+# The lowest id of your selection that walks in a group's move order: the
+# unit whose forces are drawn. 0 when none does, or the flock is off.
+func _watched_in_a_flock() -> int:
+	var ids: Array[int] = _selected_movers()
+	ids.sort()
+	for id: int in ids:
+		if flock.on and world.unit(id).order == RtsCommand.MOVE:
+			return id
+	return 0
 
 
 func _redraw() -> void:
@@ -507,7 +545,7 @@ func _header_text(yours: RtsSnapshot) -> String:
 	if last_refusal != "":
 		return line + "\n" + RtsRefusal.words(last_refusal)
 	return line + "\n" + tr("V watch two computers · C level · H planner · I influence · F fog · R again · arrows or the edge: look round") \
-		+ " · " + tr("K human clock · M meter") + _clock_text()
+		+ " · " + tr("K human clock · M meter") + " · " + (tr("G flock: on") if flock.on else tr("G flock: off")) + _clock_text()
 
 
 # The human clock's state, and the recording's, for the header's last line.

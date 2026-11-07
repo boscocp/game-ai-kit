@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-11-06
+verified_on: 2026-11-07
 tier: 2
 source: https://www.red3d.com/cwr/steer/gdc99/ ; book:Ian Millington, "AI for Games", 3rd edition, CRC Press, 2019 -- chapter 3 on movement
 invalidated_if: the kit's SteeringVehicle, SteeringBehaviour, Steering.combined or Flock signatures change, or the demos that use them are renamed
@@ -45,6 +45,10 @@ instead.
   drawn **red**, **blue** and **green**, with **yellow** lines to the
   neighbours it counted. **Click** drops an obstacle, **Tab** watches the
   next boid.
+- `make demo-rts` -- **G** makes a group sent to one cell walk as a flock
+  rather than file into a column; the first unit of your selection in one
+  draws its three forces, **magenta**, **cyan** and **lime** (red and blue
+  are the two sides there).
 - `make demo-racing` -- the driver seeks a point ahead on the racing line;
   **1-3** pick the AI, **Tab** watches the three. `make demo-racing3d` steers
   with the PID controller (**1**) and the heat line (**2**).
@@ -127,6 +131,14 @@ force, hand it the boids it can see, in a fixed order, with
 against every other is O(n^2), fine for a few dozen; a grid of cells as wide
 as the sight radius, as the demo's `NeighbourGrid`, is about O(n). Work every
 boid's force out before moving any, and two runs from one start agree.
+
+A flock that must also get somewhere adds a fourth force for the way, with
+its own weight: ask `flock.forces(vehicle)` for the three, put the way's
+first, and pass your own weights to `Steering.combined`. The RTS does that
+(`godot/game/rts/rts_flock.gd`): the way is the flow field's arrow under the
+unit, and its neighbours come from the world's spatial hash, groupmates
+only. The arrow, not the line to the next cell's middle -- every unit
+seeking that one point is the column again.
 
 ## Deeper {#deeper}
 
