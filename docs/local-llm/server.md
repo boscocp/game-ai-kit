@@ -196,6 +196,27 @@ Sources, opened 2026-11-06:
 <https://github.com/ggml-org/llama.cpp/blob/b11960/common/json-schema-to-grammar.cpp>;
 <https://github.com/ggml-org/llama.cpp/blob/b11960/src/llama-grammar.cpp>.
 
+### The format controls (T139)
+
+T139 added Unicode's format controls (category Cf, 21 runs from U+00AD to
+U+E007F) to R9 and to the class, written the same way: each run as
+`first-last`, the characters themselves. Not re-read in the source and
+not measured against a model; what follows is the reading above, applied.
+
+- Every member is outside ASCII, so every byte of its UTF-8 is 0x80 or
+  more: none is a `]`, a `\` or a `-`, and the converter copies each one
+  as it is. The `-` between two members is ASCII, written by the
+  validator, and reads as a range.
+- Seven runs lie past U+FFFF, four bytes in UTF-8. On the reading above,
+  `decode_utf8` turns a character into its code point and a range
+  compares code points, so `U+E0020-U+E007F` would be those 96 tag
+  characters. That it reads four bytes as one character is the open
+  part: the 2026-11-06 reading did not check that case line by line.
+- The committed schema writes those seven as surrogate-pair escapes.
+  Python's and Godot's JSON parsers join each pair into one character
+  (measured on 4.7.2 for Godot; a vector holds it), and the server reads
+  the schema a game sends, not that file.
+
 ## Nothing in `$HOME` {#home}
 
 Left to their defaults, llama.cpp downloads into `~/.cache/llama.cpp`, the
