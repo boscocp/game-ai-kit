@@ -18,3 +18,5 @@ var throw_at: Vector2 = Vector2.INF
 var takedown: bool = false
 ## The direction a shot goes, from the eyes, or ZERO: no shot.
 var shoot: Vector3 = Vector3.ZERO
+## Open the nearest door within reach, or shut it if it is open (T115).
+var use_door: bool = false

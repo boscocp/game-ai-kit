@@ -41,6 +41,8 @@ var next_belief: float = 0.0
 var decisions: Dictionary[int, Dictionary] = {}
 var shots: Array[Dictionary] = []
 var bodies: Array[Vector2] = []
+## Each of the level's doors, by index: true while it stands open (T115).
+var doors_open: Array[bool] = []
 ## "", "escaped" or "caught".
 var outcome: String = ""
 ## The director, with the rules' `use_director` on; null, off.
@@ -67,6 +69,8 @@ static func make(on_level: InfiltrationLevel, with_rules: InfiltrationRules, see
 	var types: Dictionary[String, GuardType] = GuardType.all_in(data)
 	world.sounds = LevelSounds.new(StimulusTable.new(data["events"]))
 	world.player = InfiltrationPlayer.new(on_level.start, with_rules)
+	for door: Dictionary in on_level.doors:
+		world.doors_open.append(false)
 	var placed: Array[Dictionary] = specs if not specs.is_empty() else on_level.guard_specs
 	if with_rules.use_director and specs.is_empty():
 		placed = placed.duplicate()

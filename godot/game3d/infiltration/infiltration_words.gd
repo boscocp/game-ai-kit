@@ -15,18 +15,19 @@ class_name InfiltrationWords
 extends RefCounted
 
 ## Every identifier the screen shows, so the table holds each one. A test
-## holds this list to guard_actions.json, guard_types.json and the constants
-## that write the others: a name added there and missing here would show
-## English without a sound.
+## holds this list to guard_actions.json, guard_types.json,
+## intruder_network.json and the constants that write the others: a name
+## added there and missing here would show English without a sound.
 const SHOWN: Array[String] = [  # shown through tr()
 	"unaware", "suspicious", "searching", "alert",
 	"patrol", "glance", "investigate", "search", "cover a way out", "report", "call for help",
-	"raise the alarm", "check on a partner", "engage", "flank", "take cover", "return",
+	"raise the alarm", "check on a partner", "engage", "flank", "take cover", "return", "check the evidence",
 	"sentry", "shooter", "flanker",
 	"standing", "crouched", "prone",
 	"beside", "ahead", "far",
 	"sight", "body", "footstep", "thrown_object", "open_door", "shot", "call_for_help", "creep",
 	"takedown", "radio_report", "alarm", "guard_shot", "check_in", "partner_quiet",
+	"intruder", "radio_fault", "noise",
 ]
 ## Identifiers whose English word another example's table already translates
 ## for its own sense -- the bot match's "sprint" is a pace, here it is a

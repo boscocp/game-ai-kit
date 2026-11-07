@@ -415,6 +415,15 @@ test-bandit-vectors: import ## The bandit vectors, against ai_bandit
 	@$(GODOT) --headless --path godot -s res://test/ai_bandit/bandit_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/bandit
 
+.PHONY: test-bayes-vectors
+test-vectors: test-bayes-vectors
+test-bayes-vectors: import ## The Bayesian network vectors, against ai_bayes
+	@# The same files are read by `make test-python` through gameaikit.bayes.
+	@# Through godot_checked.py: a SCRIPT ERROR that empties a typed answer
+	@# would otherwise read as a vector held.
+	@$(PYTHON) scripts/godot_checked.py res://test/ai_bayes/bayes_vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/bayes
+
 .PHONY: test-constraints-vectors
 test-vectors: test-constraints-vectors
 test-constraints-vectors: import ## The constraint vectors, against ai_constraints

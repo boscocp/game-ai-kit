@@ -1,0 +1,142 @@
+{
+ "description": "Values of three and two. The rattle's table has six rows, the weather varying slowest: a reading that swaps the parents lands on the wrong row.",
+ "network": {
+  "variables": [
+   {
+    "name": "weather",
+    "values": [
+     "calm",
+     "windy",
+     "storm"
+    ],
+    "parents": [],
+    "table": [
+     [
+      0.5,
+      0.3,
+      0.2
+     ]
+    ]
+   },
+   {
+    "name": "window",
+    "values": [
+     "open",
+     "shut"
+    ],
+    "parents": [],
+    "table": [
+     [
+      0.25,
+      0.75
+     ]
+    ]
+   },
+   {
+    "name": "rattle",
+    "values": [
+     "loud",
+     "quiet"
+    ],
+    "parents": [
+     "weather",
+     "window"
+    ],
+    "table": [
+     [
+      0.3,
+      0.7
+     ],
+     [
+      0.05,
+      0.95
+     ],
+     [
+      0.6,
+      0.4
+     ],
+     [
+      0.2,
+      0.8
+     ],
+     [
+      0.9,
+      0.1
+     ],
+     [
+      0.5,
+      0.5
+     ]
+    ]
+   },
+   {
+    "name": "draught",
+    "values": [
+     "yes",
+     "no"
+    ],
+    "parents": [
+     "window"
+    ],
+    "table": [
+     [
+      0.8,
+      0.2
+     ],
+     [
+      0.1,
+      0.9
+     ]
+    ]
+   }
+  ]
+ },
+ "problem": "",
+ "queries": [
+  {
+   "query": "weather",
+   "value": "storm",
+   "evidence": {
+    "rattle": "loud"
+   },
+   "distribution": [
+    0.2112676056338028,
+    0.33802816901408445,
+    0.4507042253521127
+   ],
+   "influence": {
+    "rattle": 0.2507042253521126
+   }
+  },
+  {
+   "query": "window",
+   "value": "open",
+   "evidence": {
+    "rattle": "loud",
+    "draught": "yes"
+   },
+   "distribution": [
+    0.8802588996763754,
+    0.1197411003236246
+   ],
+   "influence": {
+    "rattle": 0.1529861724036482,
+    "draught": 0.40138566023975575
+   }
+  },
+  {
+   "query": "rattle",
+   "value": "loud",
+   "evidence": {
+    "weather": "windy"
+   },
+   "distribution": [
+    0.29999999999999993,
+    0.7
+   ],
+   "influence": {
+    "weather": 0.03374999999999989
+   }
+  }
+ ]
+}

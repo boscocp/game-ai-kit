@@ -11,13 +11,17 @@
 ## level, or one a generator made, needs data, not code.
 ##
 ## Sound floods the same walk graph, 4-connected: a radius is a diamond,
-## ground slow to walk is quieter to hear across, and a door is only open
-## or shut (T69's review). It is kept, and said, rather than a second graph
-## for sound: on these levels every walk cell costs one, and there are no
-## doors.
+## ground slow to walk is quieter to hear across. It is kept, and said,
+## rather than a second graph for sound: on these levels every walk cell
+## costs one.
 ##
-## When not to use it: a level with doors that open and close, or floors
-## above floors. The walk grid has one floor per cell.
+## The doors (T115) are storeroom and building doors set in a box's face:
+## the player opens one, a guard who sees it open takes it as a sign
+## (`GuardSuspicion`). They close no way -- a door is evidence here, not a
+## wall: the walk grid, sight and sound pass as if it were not there.
+##
+## When not to use it: a level whose doors must block the way, or floors
+## above floors. The walk grid has one floor per cell, and no door in it.
 class_name InfiltrationLevel
 extends RefCounted
 
@@ -42,6 +46,9 @@ var guard_specs: Array[Dictionary] = []
 ## `post`, out of the start's sight, with the `beat` it walks when sent.
 ## The world builds them only with the director on.
 var reserve_specs: Array[Dictionary] = []
+## The doors (T115): each a `place` on a walk cell beside a box, and the
+## way it `faces` out of the box, in radians. All start shut.
+var doors: Array[Dictionary] = []
 ## The free walk cells, and each one's index; their neighbour list.
 var cells: Array[Vector2i] = []
 var index_of: Dictionary[Vector2i, int] = {}
@@ -62,6 +69,8 @@ static func read(source: Variant, level_name: String = "") -> InfiltrationLevel:
 		level.guard_specs.append(_guard_spec(spec))
 	for spec: Dictionary in data.get("reserve", []):
 		level.reserve_specs.append(_reserve_spec(spec))
+	for door: Dictionary in data.get("doors", []):
+		level.doors.append({"place": _place([door["x"], door["z"]]), "faces": deg_to_rad(float(door.get("facing", 0.0)))})
 	level._index_cells()
 	return level
 

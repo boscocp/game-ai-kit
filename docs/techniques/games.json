@@ -457,6 +457,10 @@
     "discourse-acts": {
       "en": "a language model reading discourse acts, behind a validator",
       "pt-BR": "um modelo de linguagem lendo atos de discurso, atrás de um validador"
+    },
+    "bayes": {
+      "en": "a Bayesian network, exact inference by enumeration",
+      "pt-BR": "uma rede bayesiana, inferência exata por enumeração"
     }
   }
 }

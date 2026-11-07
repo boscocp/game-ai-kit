@@ -1,0 +1,149 @@
+{
+ "description": "AIMA's burglary network (figure 13.2). John and Mary both call: P(burglary) is about 0.284 -- the book's answer, worked by hand in the README -- and Mary's call moved it more than John's.",
+ "network": {
+  "variables": [
+   {
+    "name": "burglary",
+    "values": [
+     "yes",
+     "no"
+    ],
+    "parents": [],
+    "table": [
+     [
+      0.001,
+      0.999
+     ]
+    ]
+   },
+   {
+    "name": "earthquake",
+    "values": [
+     "yes",
+     "no"
+    ],
+    "parents": [],
+    "table": [
+     [
+      0.002,
+      0.998
+     ]
+    ]
+   },
+   {
+    "name": "alarm",
+    "values": [
+     "yes",
+     "no"
+    ],
+    "parents": [
+     "burglary",
+     "earthquake"
+    ],
+    "table": [
+     [
+      0.95,
+      0.05
+     ],
+     [
+      0.94,
+      0.06
+     ],
+     [
+      0.29,
+      0.71
+     ],
+     [
+      0.001,
+      0.999
+     ]
+    ]
+   },
+   {
+    "name": "john_calls",
+    "values": [
+     "yes",
+     "no"
+    ],
+    "parents": [
+     "alarm"
+    ],
+    "table": [
+     [
+      0.9,
+      0.1
+     ],
+     [
+      0.05,
+      0.95
+     ]
+    ]
+   },
+   {
+    "name": "mary_calls",
+    "values": [
+     "yes",
+     "no"
+    ],
+    "parents": [
+     "alarm"
+    ],
+    "table": [
+     [
+      0.7,
+      0.3
+     ],
+     [
+      0.01,
+      0.99
+     ]
+    ]
+   }
+  ]
+ },
+ "problem": "",
+ "queries": [
+  {
+   "query": "burglary",
+   "value": "yes",
+   "evidence": {
+    "john_calls": "yes",
+    "mary_calls": "yes"
+   },
+   "distribution": [
+    0.2841718353643929,
+    0.7158281646356071
+   ],
+   "influence": {
+    "john_calls": 0.22805438132547795,
+    "mary_calls": 0.267888105417623
+   }
+  },
+  {
+   "query": "alarm",
+   "value": "yes",
+   "evidence": {
+    "john_calls": "yes",
+    "mary_calls": "yes"
+   },
+   "distribution": [
+    0.7606920388631077,
+    0.2393079611368924
+   ],
+   "influence": {
+    "john_calls": 0.610601921113348,
+    "mary_calls": 0.7172543270631806
+   }
+  },
+  {
+   "query": "burglary",
+   "value": "yes",
+   "evidence": {},
+   "distribution": [
+    0.0010000000000000002,
+    0.999
+   ],
+   "influence": {}
+  }
+ ]
+}

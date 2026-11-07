@@ -1,6 +1,9 @@
 ## How an infiltration guard carries out the action it chose: where it
 ## walks, where it looks, and what it says or fires.
 ##
+## Checking the evidence (T115) walks to the sign that raised the guard's
+## belief that someone is there, and shuts a door it finds open.
+##
 ## Each action is a place to go and a way to look, and a few say something
 ## -- a radio report, a call for help, an alarm -- which `LevelSounds`
 ## carries to whoever is in earshot. A call takes `call_seconds` to say,
@@ -53,6 +56,8 @@ static func _act(guard: InfiltrationGuard, world: InfiltrationWorld) -> Vector2:
 			guard.goal = cover_from(guard, world)
 		"return":
 			guard.goal = _nearest_home(guard)
+		"check the evidence":
+			return _check_evidence(guard, world)
 		_:
 			return _speak(guard, world)
 	return Vector2.INF
@@ -63,6 +68,20 @@ static func _glance(guard: InfiltrationGuard) -> Vector2:
 	if guard.percept.sight.perceived():
 		return guard.percept.seen_place
 	return guard.percept.heard_place if guard.percept.loudness > 0.0 else Vector2.INF
+
+
+# Walk to where the sign that raised its belief most was noticed, looking
+# at it; a door found open there is shut. Being there settles the sign
+# (`GuardSuspicion`), so the belief falls when nothing else is found.
+static func _check_evidence(guard: InfiltrationGuard, world: InfiltrationWorld) -> Vector2:
+	guard.goal = guard.suspicion.lead_place()
+	if guard.goal == Vector2.INF:
+		return Vector2.INF
+	var reach: float = float(guard.suspicion.spec["settled_within"])
+	for index: int in range(world.level.doors.size()):
+		if world.doors_open[index] and guard.position.distance_to(world.level.doors[index]["place"]) <= reach:
+			world.doors_open[index] = false
+	return guard.goal
 
 
 # Walk to where the partner was last heard; there, the worry is settled.

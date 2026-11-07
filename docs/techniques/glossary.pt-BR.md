@@ -66,6 +66,7 @@ também em itálico, ficam como foram publicados.
 | *bandit*, *arm* | quem escolhe entre opções fixas pelo que cada uma rendeu até agora, como um apostador entre caça-níqueis (*one-armed bandits*); cada opção é um braço (*arm*) |
 | *epsilon-greedy*, *epsilon* | o *bandit* mais simples: quase sempre a opção de melhor média, e com chance *epsilon* uma qualquer, ao acaso |
 | *exploration*, *exploitation* | tentar as opções que se conhece pouco, e ficar com a que já rendeu mais; o dilema que todo *bandit* equilibra |
+| *explaining away* | numa rede bayesiana, uma causa que explica um efeito torna as outras causas desse efeito menos prováveis: o alarme explicado por um terremoto deixa o roubo menos provável que o alarme sozinho |
 | *rush* | a abertura que ataca cedo, com o que tem, antes de o outro se preparar; uma das três do oponente *bandit*, com o nome do código |
 | CSP (problema de satisfação de restrições) | variáveis, os valores que cada uma pode ter e as restrições entre elas; "satisfação de restrições" é traduzido, CSP fica como sigla, a do AIMA |
 | *solver* | o programa que acha uma resposta para um problema declarado; fica em inglês porque "resolvedor" quase não se usa |

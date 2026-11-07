@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: concept
-verified_on: 2026-11-05
+verified_on: 2026-11-06
 tier: 0
 source: https://aima.cs.berkeley.edu/contents.html
 invalidated_if: a module, a demo or a source named in the table changes, or a task of the roadmap (T84-T101) lands and changes what the kit has
@@ -121,7 +121,7 @@ last three columns to the repository.
 
 | Technique | Literature | Known for | In the kit | Demos | Tier |
 |---|---|---|---|---|---|
-| Bayesian networks | AIMA ch. 13 | reasoning under uncertainty | not in the kit | -- | 1 |
+| Bayesian networks | AIMA ch. 13 | reasoning under uncertainty | discrete variables and hand-written tables, exact inference by enumeration and each sign's influence, twinned: `ai_bayes`; the guard's "is anyone there?" from a noise, a door found open and a partner gone quiet: `godot/game3d/infiltration/guard_suspicion.gd` (T115) | `demo-infiltration` | 1 |
 | Tracking over time: a grid belief, HMMs, Kalman and particle filters | AIMA ch. 14; GAP Online 2021 ch. 6 | chasing an unseen player | a grid belief that spreads and is cleared where seen: `godot/addons/ai_perception/belief_map.gd`; a particle filter with a transition and a sensor model, seeded and twinned: `godot/addons/ai_perception/particle_belief.gd` (T91) | `demo-infiltration` | 1 |
 | MDPs, value and policy iteration | AIMA 17.1-17.2 | small grid worlds | the maze solved in Python, its policy looked up: `python/gameaikit/mdp/`, `godot/game/maze/mdp_pac_man.gd`; `docs/concepts/mdp.md` | `demo-maze` | 1 |
 | Bandits (UCB1, regret matching) | AIMA 17.3; GAP2 ch. 25 | choosing among strategies by their payoff | UCB1, and epsilon-greedy for the comparison (not regret matching), counted during one fight (ADR 0016, N13): `ai_bandit`, `godot/game/fighting/fight_bandit_opponent.gd` (T99) | `demo-fighting` | 1 |
