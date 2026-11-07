@@ -1,0 +1,58 @@
+{
+ "name": "two-neighbours-by-hand",
+ "shape": "forces",
+ "why": "The case worked on docs/concepts/steering.md. A is 2 away inside the separation radius of 4 and pushes at half strength: (-0.5, 0) times 20 is (-10, 0). Headings (0, 1) and (1, 0) add to the diagonal: wanted (7.071, 7.071), minus the velocity (5, 0). The centre is (1, 3): wanted (3.162, 9.487), minus (5, 0). Weighted 1.5, 1, 1 they add to (-14.767, 16.558), longer than 20, so the flock's force is clamped to (-13.312, 14.926).",
+ "boid": {
+  "position": [
+   0.0,
+   0.0
+  ],
+  "velocity": [
+   5.0,
+   0.0
+  ],
+  "max_speed": 10.0,
+  "max_force": 20.0
+ },
+ "neighbours": [
+  {
+   "position": [
+    2.0,
+    0.0
+   ],
+   "velocity": [
+    0.0,
+    8.0
+   ]
+  },
+  {
+   "position": [
+    0.0,
+    6.0
+   ],
+   "velocity": [
+    6.0,
+    0.0
+   ]
+  }
+ ],
+ "separation_radius": 4.0,
+ "expected": {
+  "separation": [
+   -10.0,
+   0.0
+  ],
+  "alignment": [
+   2.0710678118654746,
+   7.071067811865475
+  ],
+  "cohesion": [
+   -1.837722339831621,
+   9.486832980505138
+  ],
+  "flock": [
+   -13.311692958657167,
+   14.926447352750658
+  ]
+ }
+}

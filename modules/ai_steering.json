@@ -1,14 +1,15 @@
 {
   "module": "ai_steering",
   "kind": "technique",
-  "about": "Seek, arrive, pursue and avoid, in GDScript and Python.",
-  "summary": "Steering behaviours -- seek, arrive, pursue, avoid -- and a PID controller, as forces on a vehicle.",
+  "about": "Seek, arrive, pursue, avoid and a flock, in GDScript and Python.",
+  "summary": "Steering behaviours -- seek, arrive, pursue, avoid -- a PID controller, and Reynolds' flock of three rules, as forces on a vehicle.",
   "owns": [
     "godot/addons/ai_steering/",
     "godot/test/ai_steering/",
     "spec/vectors/steering/",
     "python/gameaikit/steering/",
     "python/tests/test_steering.py",
+    "python/tests/test_steering_flock.py",
     "python/tests/test_steering_vectors.py"
   ],
   "depends_on": [],

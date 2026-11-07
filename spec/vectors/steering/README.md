@@ -2,15 +2,15 @@
 
 <!-- doc-meta
 half_life: structure
-verified_on: 2026-10-26
+verified_on: 2026-11-06
 tier: 1
 source: https://github.com/boscocp/game-ai-kit
 invalidated_if: a behaviour's formula changes, the vehicle stops being explicit Euler, or Vector2 becomes double precision
 teaches: none
 -->
 
-> Eight trajectories, two languages, and the files that say they drove the
-> same way.
+> Eight trajectories and five flock cases, two languages, and the files that
+> say they came out the same.
 
 `ai_steering` (GDScript) and `gameaikit.steering` (Python) implement the same
 vehicle and the same four behaviours. Each vector is one `.json` file: a
@@ -76,3 +76,37 @@ optional `time_to_target`), `pursue` (`quarry` with `position` and
 `velocity`, optional `max_prediction` and `time_to_target`; the quarry moves on by its velocity
 after every step) or `avoid` (`centres`, `radii`, `look_ahead`). A field a
 kind does not know is refused on both sides.
+
+## The flock, in `flock/` (T150)
+
+Five more files pin `Flock` and its three rules, written by
+`flock/derive.py`, which imports nothing from the repository either:
+
+    python3 spec/vectors/steering/flock/derive.py spec/vectors/steering/flock
+
+Two shapes, told apart by `shape`. A **forces** vector is one boid
+(`position`, `velocity`, `max_speed`, `max_force`), the `neighbours` it is
+handed (`position`, `velocity`), the `separation_radius`, optional
+`time_to_target` and `weights`, and the `expected` forces of `separation`,
+`alignment`, `cohesion` and the weighted `flock`. A **steps** vector is a
+small flock flying: `boids`, one `max_speed` and `max_force` for all, and at
+each sampled step every boid's `positions` and `velocities`. Every boid is
+handed the whole flock, itself included, which each rule must skip, and
+every force is worked out from one snapshot before any boid moves. Of the
+three skips, this pins alignment's: a boid counting its own heading would
+fly a different line. Separation's and cohesion's skips change nothing
+here: a boid at no distance from itself has no direction to push, and
+counting itself moves the centre towards it but not the direction to that
+centre. So `flock_test.gd`'s self-only flock pins those two.
+
+| file | what it pins |
+|---|---|
+| `two-neighbours-by-hand` | the case worked on `docs/concepts/steering.md`: half-strength separation, two headings adding to a diagonal, a centre, and a sum clamped to 20 |
+| `two-close-on-one-side-are-clamped` | two pushes of 0.75 adding past the limit, and two headings that cancel, so alignment asks for nothing |
+| `nobody-in-sight` | no neighbour: every rule, and the flock, asks for nothing |
+| `far-neighbours-only-pull` | weights 0, 2, 0 and a `time_to_target` of 0.5: only alignment counts, twice |
+| `four-boids-flying` | four boids from four headings fly one way by step 240, at about half their top speed -- the default second's time constant, which the demo shortens to a frame |
+
+`make test-steering-vectors` runs both folders on the GDScript side, the
+flock's through `scripts/godot_checked.py`; `python/tests/test_steering_flock.py`
+reads the flock's on the Python side.

@@ -1,0 +1,20 @@
+en,pt_BR
+separation,separation
+alignment,alignment
+cohesion,cohesion
+separation: away from the too close,separation: longe dos perto demais
+alignment: towards their heading,alignment: para onde eles apontam
+cohesion: towards their middle,cohesion: para o meio deles
+avoid: the obstacle ahead,avoid: o obstáculo à frente
+"the neighbours it counted, its sight","os vizinhos contados, a visão"
+the watched boid,o boid observado
+an obstacle,um obstáculo
+{seconds} s,{seconds} s
+{seconds} s  (paused),{seconds} s  (pausado)
+"1 separation, 2 alignment, 3 cohesion: on or off","1 separation, 2 alignment, 3 cohesion: liga ou desliga"
+click: an obstacle  ·  Tab: the next boid,clique: um obstáculo  ·  Tab: o próximo boid
+space: pause  ·  .: one step  ·  R: again,espaço: pausa  ·  .: um passo  ·  R: de novo
+switched on,ligado
+switched off,desligado
+{rule} ({state}): pushes {force},{rule} ({state}): empurra {force}
+boid {boid} counts {count} neighbours,o boid {boid} conta {count} vizinhos

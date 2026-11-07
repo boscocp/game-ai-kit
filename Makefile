@@ -666,11 +666,15 @@ test-racing3d-vectors: import ## The 3D driver's decisions from stated snapshots
 
 .PHONY: test-steering-vectors
 test-vectors: test-steering-vectors
-test-steering-vectors: import ## The steering trajectories, against ai_steering
+test-steering-vectors: import ## The steering trajectories and the flock's three rules, against ai_steering
 	@# The other half is `make test-python`. The tolerance is sized for
 	@# Vector2's 32-bit floats: docs/godot/vector2-is-single-precision.md.
+	@# The flock's runner is new (T150), so it runs through godot_checked.py,
+	@# which fails it on any engine error it prints.
 	@$(GODOT) --headless --path godot -s res://test/ai_steering/steering_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/steering
+	@$(PYTHON) scripts/godot_checked.py res://test/ai_steering/flock_vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/steering/flock
 
 .PHONY: test-steering-properties
 test-steering-properties: import ## Arrive comes to rest, seek never does, no force breaks its limit (T22)
@@ -906,6 +910,15 @@ demo-stealth: import ## Cross the hall unseen: arrows walk, shift sprints, space
 .PHONY: demo-steering
 demo-steering: import ## Four vehicles: seek, arrive, pursue, seek with avoid, each force drawn; click moves a target, space pauses, . one step, R again
 	@$(GODOT) --path godot res://demos/steering/steering_demo.tscn
+
+.PHONY: demo-flocking
+demo-flocking: import ## A hundred boids from three rules: 1-3 switch separation, alignment, cohesion; click an obstacle, Tab the next boid, space pauses, . one step, R again
+	@$(GODOT) --path godot res://demos/flocking/flocking_demo.tscn
+
+.PHONY: measure-flocking
+measure-flocking: import ## T150: the flocking demo flown ten seconds with each rule off in turn -- the table on docs/concepts/steering.md
+	@# A measurement, not in make check; seeded, so the same on any machine.
+	@$(PYTHON) scripts/godot_checked.py res://test/demo_flocking/flocking_table.gd
 
 .PHONY: demo-racing
 demo-racing: import ## Race an AI in the same car: arrows/WASD drive, 1-3 the AI, R again, P pause, Tab watch the three AIs

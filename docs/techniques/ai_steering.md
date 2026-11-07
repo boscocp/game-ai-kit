@@ -2,10 +2,10 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-10-26
+verified_on: 2026-11-06
 tier: 2
 source: https://www.red3d.com/cwr/steer/gdc99/ ; book:Ian Millington, "AI for Games", 3rd edition, CRC Press, 2019 -- chapter 3 on movement
-invalidated_if: the kit's SteeringVehicle, SteeringBehaviour or Steering.combined signatures change, or the demos that use them are renamed
+invalidated_if: the kit's SteeringVehicle, SteeringBehaviour, Steering.combined or Flock signatures change, or the demos that use them are renamed
 teaches: steering
 -->
 
@@ -18,8 +18,10 @@ Not where to go -- that is a search or a decision above it -- but how to get
 there in continuous space, one frame at a time: the force to apply now.
 Seek, arrive, pursue and avoid each turn "where I am, and where that is"
 into a force no larger than the vehicle can apply, and `Steering.combined`
-adds several with weights. The racing demos add a PID controller and Melder's
-heat line. The book: Reynolds, *Steering Behaviors for Autonomous
+adds several with weights. `Flock` is Reynolds' boids: separation, alignment
+and cohesion over the neighbours each boid is handed, and a flock with no
+leader appears. The racing demos add a PID controller and Melder's heat
+line. The book: Reynolds, *Steering Behaviors for Autonomous
 Characters* (GDC 1999); Millington, *AI for Games*, chapter 3.
 
 ## When not to use it {#when-not}
@@ -28,7 +30,9 @@ A real car model, whose turning depends on speed and grip: then the
 behaviours still say where to go and the car model says how. Walls,
 corridors and crowds of obstacles: avoid knows only circles, and two of them
 pushing opposite ways leave the vehicle stuck -- a flow field or a navigation
-mesh is the answer there.
+mesh is the answer there. A group that must arrive in order or hold a
+formation: a flock has no places and no leader, so follow a path or a leader
+instead.
 
 ## Where to watch it {#watch}
 
@@ -36,6 +40,11 @@ mesh is the answer there.
   The **orange** arrow is what the behaviour asks for, the **blue** one where
   the vehicle is going: when they disagree it is about to turn. **Click**
   moves a target, **space** pauses, **.** steps one frame.
+- `make demo-flocking` -- a hundred boids. **1**, **2** and **3** switch
+  separation, alignment and cohesion; the white boid's three forces are
+  drawn **red**, **blue** and **green**, with **yellow** lines to the
+  neighbours it counted. **Click** drops an obstacle, **Tab** watches the
+  next boid.
 - `make demo-racing` -- the driver seeks a point ahead on the racing line;
   **1-3** pick the AI, **Tab** watches the three. `make demo-racing3d` steers
   with the PID controller (**1**) and the heat line (**2**).
@@ -55,6 +64,9 @@ matter:
 | time to target | `SeekBehaviour.new(target, seconds)`, and the same last argument of `ArriveBehaviour` and `PursueBehaviour` | how sharply the velocity turns into the one wanted -- a time constant: about two-thirds of the gap closes in that many seconds. Seek's and pursue's default is 1, arrive's 0.1; a car on a line wants about 0.1. Keep it several frames long, or it chatters ([why](../concepts/steering.md)) |
 | look-ahead | `PursueBehaviour` `max_prediction`, `AvoidBehaviour` `look_ahead` | how far ahead it guesses, or looks for obstacles |
 | weights | `Steering.combined(vehicle, forces, weights)` | how much each behaviour counts when several speak |
+| too close | `Flock.new(radius)`, `SeparationBehaviour.new(radius)` | inside it a neighbour pushes the boid away, all of `max_force` at contact, nothing at the edge |
+| flock weights | `Flock.new(radius, seconds, weights)`, separation, alignment, cohesion | 1.5, 1 and 1 by default, set once; a weight of zero switches a rule off. The demo's 1-3 pass their own weights to `Steering.combined` instead |
+| sight | yours: whom you hand to `Flock.see(neighbours)` | the demo hands over every boid within 50 (too close is 25), found by `godot/demos/flocking/neighbour_grid.gd` |
 
 ## In your own project {#your-project}
 
@@ -109,7 +121,16 @@ own physics -- a `CharacterBody2D` -- keep the vehicle as the point the
 behaviours reason about, and copy its velocity into `velocity` before
 `move_and_slide()`.
 
+A flock is one `Flock` and your neighbour query. Before asking a boid for its
+force, hand it the boids it can see, in a fixed order, with
+`flock.see(neighbours)`; the three rules never look for them. Every boid
+against every other is O(n^2), fine for a few dozen; a grid of cells as wide
+as the sight radius, as the demo's `NeighbourGrid`, is about O(n). Work every
+boid's force out before moving any, and two runs from one start agree.
+
 ## Deeper {#deeper}
 
 - Why seek never stops and arrive does: [concepts/steering.md](../concepts/steering.md).
+- The flock's three forces worked by hand, and what each rule does when it
+  is switched off: [concepts/steering.md](../concepts/steering.md), "Flocking".
 - Steering a car round a track: [concepts/racing-ai.md](../concepts/racing-ai.md).

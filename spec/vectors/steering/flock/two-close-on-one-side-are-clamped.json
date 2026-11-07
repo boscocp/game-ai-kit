@@ -1,0 +1,58 @@
+{
+ "name": "two-close-on-one-side-are-clamped",
+ "shape": "forces",
+ "why": "Two neighbours a unit away on the same side push at three-quarter strength each: 1.5 times 20 is 30, clamped to 20. They fly opposite ways, so their headings cancel and alignment asks for nothing.",
+ "boid": {
+  "position": [
+   0.0,
+   0.0
+  ],
+  "velocity": [
+   0.0,
+   0.0
+  ],
+  "max_speed": 10.0,
+  "max_force": 20.0
+ },
+ "neighbours": [
+  {
+   "position": [
+    1.0,
+    0.0
+   ],
+   "velocity": [
+    0.0,
+    3.0
+   ]
+  },
+  {
+   "position": [
+    1.0,
+    0.0
+   ],
+   "velocity": [
+    0.0,
+    -3.0
+   ]
+  }
+ ],
+ "separation_radius": 4.0,
+ "expected": {
+  "separation": [
+   -20.0,
+   0.0
+  ],
+  "alignment": [
+   0.0,
+   0.0
+  ],
+  "cohesion": [
+   10.0,
+   0.0
+  ],
+  "flock": [
+   -20.0,
+   0.0
+  ]
+ }
+}

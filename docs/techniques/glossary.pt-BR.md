@@ -33,6 +33,9 @@ também em itálico, ficam como foram publicados.
 | *heuristic* (heurística) | o palpite do A\* sobre o que falta; traduzido, pelo mesmo motivo |
 | *steering* | decidir para que lado empurrar um veículo agora, e com que força |
 | *seek*, *arrive*, *pursue*, *avoid* | os comportamentos de *steering* de Reynolds; ficam em inglês porque são os nomes das classes e dos artigos |
+| *flocking* | o bando que aparece quando cada agente segue só três regras sobre os vizinhos que enxerga; nenhum deles sabe que existe um bando |
+| *boid* | um agente de um *flocking*, o nome que Reynolds deu (de *bird-oid*, "parecido com pássaro") em 1987 |
+| *separation*, *alignment*, *cohesion* | as três regras do *flocking*: afastar-se de quem está perto demais, virar para onde os vizinhos apontam, ir para o meio deles; ficam em inglês porque são os nomes das classes e do artigo |
 | *flow field* | um campo que diz, em cada célula, para que lado ir até o objetivo |
 | *heat line* | o "calor" de Melder ao longo da largura da pista, para escolher onde ficar |
 | PID | controlador proporcional, integral e derivativo |

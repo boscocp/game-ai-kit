@@ -2,14 +2,15 @@
 
 <!-- doc-meta
 half_life: concept
-verified_on: 2026-10-26
+verified_on: 2026-11-06
 tier: 1
 source: https://www.red3d.com/cwr/steer/gdc99/ ; book:Ian Millington, "AI for Games", 3rd edition, CRC Press, 2019 -- chapter 3 on movement ; https://github.com/idmillington/aicore
-invalidated_if: ai_steering's behaviours change their formula, or test/ai_steering/steering_properties.gd's thresholds change
+invalidated_if: ai_steering's behaviours or Flock change their formula, test/ai_steering/steering_properties.gd's thresholds change, or FlockWorld's numbers or seed change
 teaches: steering
 -->
 
-> How the four vehicles in `make demo-steering` decide. The code is
+> How the four vehicles in `make demo-steering` decide, and the hundred boids
+> in `make demo-flocking`. The code is
 > [`godot/addons/ai_steering/`](../../godot/addons/ai_steering/), the same
 > maths in Python is [`gameaikit.steering`](../../python/gameaikit/steering/),
 > and the numbers below were measured on both.
@@ -216,12 +217,111 @@ same weights with a sideways push go round. A weighted sum can still tie
 behaviour with something to say wins -- is the cure for that; but this tie
 was the behaviour's. `seek-and-avoid-head-on` pins the fix.
 
+## Flocking: three rules, and no flock
+
+Every behaviour above steers one vehicle at something. Reynolds' boids
+(1987) steer each vehicle at its neighbours, and nothing else. Each boid
+looks at the boids it can see and adds three forces:
+
+- **separation** -- away from each neighbour closer than a radius, harder the
+  closer: all of `max_force` at contact, nothing at the radius;
+- **alignment** -- towards the neighbours' average heading, at top speed;
+- **cohesion** -- towards the neighbours' centre, at top speed: seek, aimed at
+  the middle of whoever is in sight.
+
+No boid knows there is a flock, and the flock still appears. That is the
+whole lesson. `make demo-flocking` flies a hundred of them, and 1, 2 and 3
+switch the rules off one at a time, so you see each one by what goes
+missing.
+
+### One boid, two neighbours, by hand
+
+The boid is at (0, 0), flying at (5, 0), top speed 10, force 20, and too
+close means nearer than 4. It sees A at (2, 0), flying at (0, 8), and B at
+(0, 6), flying at (6, 0).
+
+- **Separation.** A is 2 away, inside the radius: it pushes straight away
+  from itself, (-1, 0), at 1 - 2/4 = half strength. B is 6 away and pushes
+  nothing. Half of 20, away from A: **(-10, 0)**.
+- **Alignment.** The headings are A's (0, 1) and B's (1, 0); speeds do not
+  count. They add to the diagonal, so the boid wants (7.071, 7.071), top
+  speed that way. Minus its velocity (5, 0), over a time to target of one
+  second (the library's default, which the demo shortens to a frame -- see
+below): **(2.071, 7.071)**.
+- **Cohesion.** The centre of A and B is (1, 3). Top speed towards it is
+  (3.162, 9.487); minus the velocity: **(-1.838, 9.487)**.
+- **The flock.** Weighted 1.5, 1 and 1 -- separation weighs most, as in
+  Shiffman's flocking example -- they add to (-14.767, 16.558). That is
+  longer than 20, so `Steering.combined` clamps it once: **(-13.312, 14.926)**.
+
+`spec/vectors/steering/flock/two-neighbours-by-hand.json` holds these
+numbers, and both languages must reach them.
+
+### What each rule was doing
+
+Measured on the demo's world (`FlockWorld`, seed 150), ten seconds in.
+`make measure-flocking` prints this table; it is seeded and stepped, so it
+prints the same numbers on any machine.
+
+| switched off | nearest other, on average | speed, of 120 | headings agree | neighbours | distances a step |
+|---|---|---|---|---|---|
+| nothing | 16.0 | 119 | 0.84 | 11.1 | 1836 |
+| separation | 1.5 -- they pile up | 118 | 0.55 | 28.4 | 2944 |
+| alignment | 12.1 | 16 -- they mill about | 0.07 | 16.8 | 2382 |
+| cohesion | 20.8 -- they loosen | 120 | 0.95 | 9.5 | 2174 |
+
+"Headings agree" is the length of the average heading: 1 when every boid
+flies the same way, near 0 when they cancel. With all three on it is 0.84
+and not 1 because a hundred boids make a few flocks, each going its own
+way. Without cohesion it is higher still: nothing pulls a boid back into a
+flock turning another way, so the loose groups drift onto one heading.
+And without alignment they do not drift apart: cohesion and separation
+alone hold them in a churning knot, going nowhere.
+
+**The time to target matters as much as the rules.** The demo gives
+alignment and cohesion one frame to turn, as Shiffman's example does: it
+asks for the whole gap to the velocity wanted every frame, clamped. Given
+the library's default second instead, the same flock flies at 76 of its
+120, its headings agree at 0.70, and it bunches to 14.8: cohesion seeks a
+centre that flies along with the flock, so part of what a slow time
+constant asks is to shed the velocity, and alignment, asking for top
+speed, settles with it somewhere between. That was this page's first
+reading of the table, and the review of wave 157 measured it to the time
+constant, not to cohesion. The vectors keep the default second -- the
+case worked above and `four-boids-flying`, whose four boids settle at
+about half their top speed for exactly that reason.
+
+### Who are my neighbours?
+
+The rules are handed their neighbours; none of them looks. Asking every
+boid about every other is O(n^2): 9,900 distances a step for a hundred
+boids. The demo files the boids in a uniform grid whose cells are as wide
+as the sight radius (`godot/demos/flocking/neighbour_grid.gd`), so a boid
+looks in its own cell and the eight around it. At the start that is 1,622
+distances a step (measured, `FlockWorld.distances_measured()`); ten
+seconds in, bunched into flocks, the table's last column says 1,836 --
+under a fifth of the naive count -- and 2,944 with separation off, when
+they pile up. A grid pays off
+while the points are spread out, and comes back towards O(n^2) as they
+pack into a few cells. The neighbours come back in id order, and every
+boid decides from the same snapshot before any moves, so two runs from one
+seed agree to the last bit; the demo's test flies two and compares.
+
+### When not to flock
+
+A flock has no places and no leader. A squad that must arrive in order, a
+column through a gate, a formation that keeps its shape: those want a
+path, a leader to follow, or slots in a formation, not three rules. A
+weight of zero switches a rule off; the demo passes its own weights to
+`Steering.combined` for that, and leaves the flock's as they were made.
+
 ## Two languages, one answer
 
 The Python half exists so the lesson needs nothing but Python (tier 1), and
 so the two can be held to one answer. `spec/vectors/steering/` pins eight
-trajectories, written by a third copy of the maths that imports nothing
-from either. Godot's `Vector2` holds 32-bit floats and Python's 64
+trajectories, and its `flock/` folder the three rules' forces and a small
+flock flying, each written by a third copy of the maths that imports
+nothing from either. Godot's `Vector2` holds 32-bit floats and Python's 64
 ([why it matters](../godot/vector2-is-single-precision.md)), so the vectors
 allow 1e-3; the largest difference measured was 9.4e-6. That is still tight
 enough to see a real change: asking arrive for 0.11 s instead of 0.1 moves
@@ -247,6 +347,17 @@ its vector by 4e-2.
   (<https://ics-websites.science.uu.nl/docs/vakken/mcrws/papers_new/Reynolds%20-%201999%20-%20Steering%20behaviors%20for%20autonomous%20characters.pdf>),
   section "A Simple Vehicle Model"; red3d.com refused the connection that day.
 - Ian Millington, *AI for Games*, 3rd edition, CRC Press, 2019, chapter 3.
+- Craig W. Reynolds, "Flocks, Herds, and Schools: A Distributed Behavioral
+  Model", SIGGRAPH 1987 (Computer Graphics 21(4), pp. 25-34): the three
+  rules, there called collision avoidance, velocity matching and flock
+  centering.
+- Daniel Shiffman, the "Flocking" example for Processing, which *The Nature
+  of Code* (2012) builds in chapter 6 (`NOC_6_09_Flocking`):
+  <https://processing.org/examples/flocking.html>, its `Boid.pde` read on
+  2026-11-06 -- the flocking demo's numbers: `maxspeed = 2`,
+  `maxforce = 0.03` a frame, `neighbordist = 50`, `desiredseparation = 25`,
+  and separation weighed 1.5 ("Arbitrarily weight these forces", its
+  comment says).
 - Ian Millington, `aicore`, the code of the first edition (2003-2009;
   its README calls it "a historical curiosity" next to the third edition's
   listings): <https://github.com/idmillington/aicore> -- `src/steering.cpp`,

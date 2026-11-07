@@ -1,0 +1,64 @@
+{
+ "name": "far-neighbours-only-pull",
+ "shape": "forces",
+ "why": "Both neighbours outside the separation radius: separation is zero, cohesion and alignment pull. Weights 0, 2, 0 and a time_to_target of 0.5: only alignment counts, twice, and the gap is closed twice as hard.",
+ "boid": {
+  "position": [
+   0.0,
+   0.0
+  ],
+  "velocity": [
+   0.0,
+   4.0
+  ],
+  "max_speed": 10.0,
+  "max_force": 20.0
+ },
+ "neighbours": [
+  {
+   "position": [
+    8.0,
+    2.0
+   ],
+   "velocity": [
+    3.0,
+    0.0
+   ]
+  },
+  {
+   "position": [
+    7.0,
+    -3.0
+   ],
+   "velocity": [
+    4.0,
+    3.0
+   ]
+  }
+ ],
+ "separation_radius": 4.0,
+ "weights": [
+  0.0,
+  2.0,
+  0.0
+ ],
+ "time_to_target": 0.5,
+ "expected": {
+  "separation": [
+   0.0,
+   0.0
+  ],
+  "alignment": [
+   18.973665961010276,
+   -1.6754446796632418
+  ],
+  "cohesion": [
+   18.11749341877368,
+   -8.470916846522123
+  ],
+  "flock": [
+   19.922477656126006,
+   -1.7592282515807938
+  ]
+ }
+}
