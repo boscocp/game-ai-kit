@@ -84,7 +84,13 @@ findings 1 to 3, no blocker: three shoulds and five nits.**
 8. The view and the overlay draw `GuardSuspicion.asked`, the evidence the
    belief was last asked from.
 
+After the rename, the overlay's `lead` was "" whenever no sign raised the
+belief, and `make test-demo-overlays`, which refuses an empty field, failed.
+That gate was not rerun after the review commit; T152's wave found it. The
+overlay now says "none" when there is no lead (the word T152's stacked
+branch uses), and the gate passes in en and pt_BR.
+
 Rerun after the fixes: `make check-no-engine`, `make test-bayes-vectors`,
-`make test-godot-some SUITES="test/ai_bayes test/infiltration"` (its
+`make test-demo-overlays` (en and pt_BR), `make test-godot-some SUITES="test/ai_bayes test/infiltration"` (its
 output read for `SCRIPT ERROR`: none), and `make lint-readability
 lint-translations-docs`.
