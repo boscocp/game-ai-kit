@@ -2,12 +2,12 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-11-06
+verified_on: 2026-11-07
 tier: 1
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 13, Probabilistic Reasoning, sections 13.2 and 13.3.1, figures 13.2 and 13.10
 invalidated_if: the kit's BayesNetwork signature or its data shape changes, or the infiltration demo stops asking it
 teaches: stealth-ai
-translation_of: 8362983b2d44f97509b4123ddfd0e50f3ea7af952fa3f98b71f61cf7b4d60ce7
+translation_of: 51e7ddcb9645bdb0cd08bcfd90cb3df495de2457160df0dd35209396b39d2669
 -->
 
 > English: [ai_bayes.md](ai_bayes.md). Os termos que ficam em inglês
@@ -74,6 +74,10 @@ Aqui as tabelas são escritas à mão, em dados, e nunca mudam durante o jogo
   porta, aperte **F** para abri-la e saia: um guarda que a vê aberta passa
   da marca, vai até ela (a ação dele diz "verificar os indícios"), fecha a
   porta, e a crença dele cai de novo. **Tab** observa o próximo guarda.
+  No mercado (**L** depois dos níveis gerados, T152) um quarto sinal, o
+  vulto que o olho do guarda destacou de uma multidão: ande no passo com um
+  grupo e ele "se mistura", baixando a crença; corra ou agache e ele
+  "destoa", subindo-a.
 - Que demo usa que técnica, nos dois sentidos: o
   [catálogo](catalogue.pt-BR.md).
 
@@ -89,7 +93,7 @@ ele notou em silêncio --, cada um visto "yes" enquanto o arquivo o mantém,
 muda. O *explaining away* aparece no painel: só com um parceiro em
 silêncio, a chance de o rádio estar com defeito é 0,548; quando uma porta
 também é encontrada aberta, ela cai para 0,047 -- agora o intruso explica o
-silêncio. Um barulho sozinho dá 0,07, uma porta sozinha 0,42, os dois 0,94. O
+silêncio. Um barulho sozinho dá 0,07, uma porta sozinha 0,42, os dois 0,94. Num nível com multidão entra um `figure` com o intruso como pai, observado só enquanto o olho do guarda destaca alguém de um grupo e somado no resto do tempo: misturar-se dá 0,0018 onde nada visto dá 0,0036, destoar sozinho 0,08 -- ainda abaixo do limiar -- e com um barulho 0,65. O
 seletor do guarda (`ai_utility`) lê a crença como mais um número: a ação
 "verificar os indícios" pontua de 0,3 para cima, e o guarda anda até o sinal
 que mais subiu a crença. Lá o sinal se resolve -- uma porta que ele encontra

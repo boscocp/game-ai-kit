@@ -1,5 +1,5 @@
 {
-  "about": "What an infiltration guard believes about whether anyone is there at all (T115): a Bayesian network for ai_bayes's BayesNetwork, its tables written by hand, not learned, and held equal to spec/vectors/bayes/the-guards-intruder.json. An intruder makes noise seven times in ten while a guard is near, and leaves a door open one time in two; with no one there, a noise is heard one time in ten (rats, pipes, the wind) and a door is found open one time in two hundred, when a colleague forgot it. A partner who stops answering the radio is most likely the intruder's work, unless the radio is at fault (two in a hundred): the radio explains the silence away. `evidence` says which events a guard counts as each variable seen -- sounds heard, a door seen open, a partner gone quiet -- and for how many seconds it keeps counting one; past that, or once the guard has walked to where it was and found nothing (`settled_within` metres), it is seen as no. Every number is the kit's own, chosen so that a noise alone stays below the guard's threshold to check (in guard_actions.json, 0.3) and a door alone rises above it (0.42); nothing here is taken from a game.",
+  "about": "What an infiltration guard believes about whether anyone is there at all (T115): a Bayesian network for ai_bayes's BayesNetwork, its tables written by hand, not learned, and held equal to spec/vectors/bayes/the-guards-intruder.json. An intruder makes noise seven times in ten while a guard is near, and leaves a door open one time in two; with no one there, a noise is heard one time in ten (rats, pipes, the wind) and a door is found open one time in two hundred, when a colleague forgot it. A partner who stops answering the radio is most likely the intruder's work, unless the radio is at fault (two in a hundred): the radio explains the silence away. `evidence` says which events a guard counts as each variable seen -- sounds heard, a door seen open, a partner gone quiet -- and for how many seconds it keeps counting one; past that, or once the guard has walked to where it was and found nothing (`settled_within` metres), it is seen as no. Every number is the kit's own, chosen so that a noise alone stays below the guard's threshold to check (in guard_actions.json, 0.3) and a door alone rises above it (0.42); nothing here is taken from a game. On a crowded level (T152) a guard whose eye picks the player out of a group of civilians also sees a `figure`, entered only when it was the player who was picked out -- so the model treats a figure as ambiguous on purpose: an intruder who blends in looks like anyone else (`crowd`: kept for remember_for seconds, settled like the others): with an intruder, the figure picked out is one who blends in -- walks in step with its group -- one time in two; with no one there it is a civilian, who blends in ninety-eight times in a hundred. So a figure walking in step lowers the belief and one sprinting or crouching in a crowd raises it, yet a figure standing out alone (0.08) still stays below the threshold: with a noise, it rises above (0.65). Until the eye picks someone out, which on the other levels is never, the figure is left out of the evidence and summed over, so it changes no number there.",
   "query": "intruder",
   "suspected": "yes",
   "settled_within": 1.5,
@@ -8,12 +8,14 @@
     "open_door": {"kinds": ["open_door"], "remember_for": 30.0},
     "partner_quiet": {"kinds": ["partner_quiet"], "remember_for": 30.0}
   },
+  "crowd": {"variable": "figure", "remember_for": 10.0},
   "variables": [
     {"name": "intruder", "values": ["yes", "no"], "parents": [], "table": [[0.05, 0.95]]},
     {"name": "radio_fault", "values": ["yes", "no"], "parents": [], "table": [[0.02, 0.98]]},
     {"name": "noise", "values": ["yes", "no"], "parents": ["intruder"], "table": [[0.7, 0.3], [0.1, 0.9]]},
     {"name": "open_door", "values": ["yes", "no"], "parents": ["intruder"], "table": [[0.5, 0.5], [0.005, 0.995]]},
     {"name": "partner_quiet", "values": ["yes", "no"], "parents": ["intruder", "radio_fault"],
-      "table": [[0.95, 0.05], [0.6, 0.4], [0.9, 0.1], [0.01, 0.99]]}
+      "table": [[0.95, 0.05], [0.6, 0.4], [0.9, 0.1], [0.01, 0.99]]},
+    {"name": "figure", "values": ["blends_in", "stands_out"], "parents": ["intruder"], "table": [[0.5, 0.5], [0.98, 0.02]]}
   ]
 }

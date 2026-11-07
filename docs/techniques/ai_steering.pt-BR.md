@@ -7,7 +7,7 @@ tier: 2
 source: https://www.red3d.com/cwr/steer/gdc99/ ; book:Ian Millington, "AI for Games", 3rd edition, CRC Press, 2019 -- chapter 3 on movement
 invalidated_if: the kit's SteeringVehicle, SteeringBehaviour, Steering.combined or Flock signatures change, or the demos that use them are renamed
 teaches: steering
-translation_of: cc5eca5d23a300fabae485682135c3e87e5e5411d640599c7f3292dfe6673977
+translation_of: d9244770aa9cec05fa1c2ec314eb369d318375abef6c2389e8dbd21696817218
 -->
 
 > English: [ai_steering.md](ai_steering.md). Os termos que ficam em inglês
@@ -47,6 +47,14 @@ bando não tem lugares nem líder, então siga um caminho ou um líder.
   branco são desenhadas em **vermelho**, **azul** e **verde**, com linhas
   **amarelas** até os vizinhos que ele contou. **Clique** põe um obstáculo,
   **Tab** observa o próximo *boid*.
+- `make demo-infiltration`, no mercado (**L** depois dos níveis gerados)
+  -- uma multidão: três grupos de civis, cada um um `Flock` com três forças
+  do jogo somadas por `Steering.combined` (o alvo do passeio dele, e ficar
+  longe dos outros grupos, e abrir caminho para você e os guardas, que não
+  desviam de ninguém). As paredes não são uma
+  força: cada passo é dado na grade de células por onde se anda no nível, deslizando ao longo de
+  uma barraca. Ande no passo dentro de um grupo e ele fica circulado no
+  chão: você se mistura.
 - `make demo-rts` -- **G** faz um grupo mandado a uma célula andar como um
   bando em vez de virar uma coluna; a primeira unidade da sua seleção num
   bando desenha as suas três forças, em **magenta**, **ciano** e **lima**

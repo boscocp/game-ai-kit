@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-11-06
+verified_on: 2026-11-07
 tier: 1
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 13, Probabilistic Reasoning, sections 13.2 and 13.3.1, figures 13.2 and 13.10
 invalidated_if: the kit's BayesNetwork signature or its data shape changes, or the infiltration demo stops asking it
@@ -71,6 +71,10 @@ Python, offline.
   a door, press **F** to open it, and leave: a guard that sees it open
   rises over the tick, goes to it (its action reads "check the evidence"),
   shuts it, and its belief falls again. **Tab** watches the next guard.
+  On the market (**L** past the generated levels, T152) a fourth sign, the
+  figure the guard's eye picked out of a crowd: walk in step with a group
+  and it "blends in", lowering the belief; sprint or crouch and it "stands
+  out", raising it.
 - Which demo uses which technique, both ways: the
   [catalogue](catalogue.md).
 
@@ -84,7 +88,7 @@ open, a partner it noticed silent -- each seen "yes" for as long as the
 file keeps it, "no" otherwise, and asks the network again whenever what is
 seen changes. Explaining away is on the panel: with only a partner gone
 quiet, the radio's chance of a fault is 0.548; once a door is also found
-open, it falls to 0.047 -- the intruder now explains the silence. A noise alone gives 0.07, a door alone 0.42, both 0.94. The
+open, it falls to 0.047 -- the intruder now explains the silence. A noise alone gives 0.07, a door alone 0.42, both 0.94. On a crowded level a `figure` with the intruder as parent joins them, observed only while the guard's eye picks someone out of a group and summed over otherwise: blending in gives 0.0018 where nothing seen gives 0.0036, standing out alone 0.08 -- still under the threshold -- and with a noise 0.65. The
 guard's selector (`ai_utility`) reads the belief as one more number: the
 action "check the evidence" scores from 0.3 up, so the guard walks to the
 sign that raised its belief most. There the sign is settled -- a door it

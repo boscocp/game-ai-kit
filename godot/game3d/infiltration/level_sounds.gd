@@ -115,7 +115,7 @@ func _deliver(world: InfiltrationWorld, guard: InfiltrationGuard, sound: Diction
 	# Within one step, the louder wins.
 	if guard.heard.is_empty() or world.time > float(guard.heard["at"]) or loudness > float(guard.heard["loudness"]):
 		var hold: float = float(sound["hold"]) if holding else 0.0
-		guard.heard = {"loudness": loudness, "place": sound["place"], "kind": kind, "at": world.time, "until": world.time + hold}
+		guard.heard = {"loudness": loudness, "place": sound["place"], "kind": kind, "from": sound["from"], "at": world.time, "until": world.time + hold}
 
 
 ## What `guard` hears this step at `now`: the sound it holds, or {} -- and

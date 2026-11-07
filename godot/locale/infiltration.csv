@@ -112,3 +112,17 @@ last change: none yet,última mudança: nenhuma ainda
 "last change: {sign} not seen, {before} to {after}","última mudança: {sign} não visto, de {before} para {after}"
 F: open the door,F: abrir a porta
 F: shut the door,F: fechar a porta
+the market,o mercado
+figure,vulto
+blends in,se mistura
+stands out,destoa
+walking in step,andando no passo
+walking against the group,andando contra o grupo
+standing still,parado
+sprinting,correndo
+crouching or lying down,agachado ou deitado
+"{sign}: {reading}, {moved}","{sign}: {reading}, {moved}"
+{sign}: no one picked out,{sign}: ninguém destacado
+"last change: {sign} {reading}, {before} to {after}","última mudança: {sign} {reading}, de {before} para {after}"
+"you: in group {group}, ringed: {reason}; its eye {certainty}, its ear {loudness}","você: no grupo {group}, circulado: {reason}; o olho dele {certainty}, o ouvido dele {loudness}"
+"you: in no group; its eye {certainty}, its ear {loudness}","você: em nenhum grupo; o olho dele {certainty}, o ouvido dele {loudness}"

@@ -13,7 +13,10 @@
 ## flashing on each cell its sight just emptied -- its last known position
 ## as a grey silhouette, the spots it was given (the one it chose from the
 ## belief, purple) and the spots searched, and its way out; every sound's
-## flood as a ring of cells at its edge.
+## flood as a ring of cells at its edge. On a crowded level (T152) the
+## civilians, each group its own colour, and a ring on the floor round each
+## civilian of the group the player is counted in, with a line from the
+## player to the group's middle: the group whose cover it has.
 ##
 ## When not to use it: as the HUD. The bars, scores and radar are 2D.
 class_name InfiltrationDrawing
@@ -34,12 +37,16 @@ const SEARCHED: Color = Color(0.6, 0.6, 0.6)
 const SPOT: Color = Color(0.7, 0.35, 0.9)
 const SOUND: Color = Color(0.4, 0.85, 1.0)
 const GHOST: Color = Color(0.85, 0.85, 0.85, 0.35)
+## The civilians, a colour a group, and the ring of the group you are in.
+const CIVILIANS: Array[Color] = [Color(0.85, 0.75, 0.55), Color(0.6, 0.8, 0.75), Color(0.8, 0.65, 0.8)]
+const COUNTED: Color = Color(1.0, 1.0, 1.0)
 ## A phase's colour: calm, suspicious, searching, alert.
 const PHASES: Array[Color] = [Color(0.5, 0.8, 0.5), Color(0.95, 0.85, 0.3), Color(1.0, 0.55, 0.15), Color(0.95, 0.15, 0.15)]
 
 var shelf: AssetShelf = AssetShelf.new()
 var _player: BotBody
 var _guards: Array[BotBody] = []
+var _civilians: Array[BotBody] = []
 var _lines := ImmediateMesh.new()
 var _ghost: Node3D
 var _belief: MultiMeshInstance3D
@@ -53,6 +60,7 @@ func build(world: InfiltrationWorld) -> void:
 	for child: Node in get_children():
 		child.free()
 	_guards.clear()
+	_civilians.clear()
 	InfiltrationGround.build(self, world.level)
 	_player = BotBody.new(shelf, PLAYER)
 	add_child(_player)
@@ -60,6 +68,11 @@ func build(world: InfiltrationWorld) -> void:
 		var body := BotBody.new(shelf, GUARD)
 		add_child(body)
 		_guards.append(body)
+	if world.crowd != null:
+		for person: int in range(world.crowd.people.size()):
+			var civilian := BotBody.new(shelf, CIVILIANS[world.crowd.group_of[person] % CIVILIANS.size()])
+			add_child(civilian)
+			_civilians.append(civilian)
 	_doors = DoorDrawing.new()
 	_doors.build(world.level)
 	add_child(_doors)
@@ -88,6 +101,7 @@ func refresh(world: InfiltrationWorld, watched: int, thinking: bool) -> void:
 		var body: BotBody = _guards[guard.id]
 		body.stand(world.level.arena.above(guard.position, 0.0), guard.facing, false, delta)
 		body.rotation.z = 0.0 if guard.alive() else PI / 2.0
+	_move_civilians(world, delta)
 	_doors.refresh(world)
 	_lines.clear_surfaces()
 	_ghost.visible = false
@@ -101,8 +115,37 @@ func refresh(world: InfiltrationWorld, watched: int, thinking: bool) -> void:
 			_draw_zones(world, guard)
 			_draw_points_seen(world, guard)
 	_draw_sounds(world)
+	_draw_counted(world)
 	_draw_watched(world, world.guard(watched))
 	_lines.surface_end()
+
+
+# Each civilian's body where its vehicle is, facing the way it walks.
+func _move_civilians(world: InfiltrationWorld, delta: float) -> void:
+	for person: int in range(_civilians.size()):
+		var vehicle: SteeringVehicle = world.crowd.people[person]
+		var facing: float = vehicle.velocity.angle() if vehicle.velocity != Vector2.ZERO else 0.0
+		_civilians[person].stand(world.level.arena.above(vehicle.position, 0.0), facing, false, delta)
+
+
+# A ring round each civilian of the group the player is counted in, and a
+# line from the player to its middle: the cover it has, drawn where it is.
+func _draw_counted(world: InfiltrationWorld) -> void:
+	if world.crowd == null or world.crowd.cover.group == -1:
+		return
+	var group: int = world.crowd.cover.group
+	for person: int in range(world.crowd.people.size()):
+		if world.crowd.group_of[person] == group:
+			_ring(world, world.crowd.people[person].position)
+	_line(world.level.arena.above(world.player.position, 0.1), world.level.arena.above(world.crowd.middle_of(group), 0.1), COUNTED)
+
+
+# An octagon half a metre across round `middle`, just above the floor.
+func _ring(world: InfiltrationWorld, middle: Vector2) -> void:
+	var height: float = world.level.arena.floor_at(middle) + 0.06
+	for step: int in range(8):
+		_line(_lift(middle + Vector2.from_angle(TAU * step / 8.0) * 0.5, height),
+			_lift(middle + Vector2.from_angle(TAU * (step + 1) / 8.0) * 0.5, height), COUNTED)
 
 
 func _draw_zones(world: InfiltrationWorld, guard: InfiltrationGuard) -> void:

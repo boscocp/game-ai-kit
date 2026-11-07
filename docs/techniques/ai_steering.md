@@ -45,6 +45,14 @@ instead.
   drawn **red**, **blue** and **green**, with **yellow** lines to the
   neighbours it counted. **Click** drops an obstacle, **Tab** watches the
   next boid.
+- `make demo-infiltration`, on the market (**L** past the generated levels)
+  -- a crowd: three groups of civilians, each a `Flock` with three forces of
+  the game's added through `Steering.combined` (its wander target,
+  keeping clear of the other groups, and making way for you and the
+  guards, who do not steer round anyone). The walls are
+  not a force: each step is taken on the level's walk grid, sliding along a
+  stall. Walk in step inside a group and it is ringed on the floor: you
+  blend in.
 - `make demo-rts` -- **G** makes a group sent to one cell walk as a flock
   rather than file into a column; the first unit of your selection in one
   draws its three forces, **magenta**, **cyan** and **lime** (red and blue

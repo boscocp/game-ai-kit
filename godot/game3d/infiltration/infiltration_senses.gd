@@ -11,8 +11,14 @@
 ## spots searched. With the accumulator switched off, sight is a plain
 ## yes-or-no: the peak when anything is perceived, nothing when not.
 ##
-## Its signs -- a noise, a door seen open, a partner gone quiet -- are then
-## asked of the intruder network (`GuardSuspicion`, T115).
+## On a crowded level the percept is then weighed by where the player
+## stands among the civilians (`InfiltrationCrowd.weigh`, T152): blending in
+## lowers the eye's certainty and how loud the player's footstep is to the
+## ear; standing out raises the certainty.
+##
+## Its signs -- a noise, a door seen open, a partner gone quiet, a figure
+## picked out of a crowd -- are then asked of the intruder network
+## (`GuardSuspicion`, T115).
 ##
 ## A partner checks in by radio every `check_in_every` seconds; one heard
 ## at least twice and then silent for `quiet_after` is a partner gone quiet
@@ -31,6 +37,8 @@ static func sense(guard: InfiltrationGuard, world: InfiltrationWorld, seconds: f
 		percept.loudness = float(heard["loudness"])
 		percept.heard_place = heard["place"]
 		percept.heard_kind = str(heard["kind"])
+	if world.crowd != null:
+		world.crowd.weigh(percept, int(heard.get("from", 0)))
 	guard.percept = percept
 	var perceived: bool = percept.sight.perceived()
 	guard.sees_since = minf(guard.sees_since, world.time) if perceived else INF

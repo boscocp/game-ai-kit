@@ -1,7 +1,7 @@
 {
   "module": "infiltration",
   "kind": "example",
-  "about": "The stealth example (T69, T70): guards read from data that perceive, grow aware, believe, search together, call for help and fight, on two hand-made levels and generated ones, in third person; and a director that paces the level by its reserve guards (T90), with its Python twin; and generated levels declared and solved by a constraint solver (T95); and a Bayesian network over each guard's signs -- a noise, a door found open, a partner gone quiet -- that says whether anyone is there at all (T115).",
+  "about": "The stealth example (T69, T70): guards read from data that perceive, grow aware, believe, search together, call for help and fight, on two hand-made levels and generated ones, in third person; and a director that paces the level by its reserve guards (T90), with its Python twin; and generated levels declared and solved by a constraint solver (T95); and a Bayesian network over each guard's signs -- a noise, a door found open, a partner gone quiet -- that says whether anyone is there at all (T115); and a market whose civilians walk in groups as flocks, among which a player walking in step hides (T152).",
   "owns": [
     "godot/game3d/infiltration/",
     "godot/test/infiltration/",
@@ -21,6 +21,7 @@
     "ai_fuzzy",
     "ai_perception",
     "ai_search",
+    "ai_steering",
     "ai_teamwork",
     "ai_utility",
     "botmatch",

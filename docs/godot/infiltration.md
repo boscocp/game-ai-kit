@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-11-06
+verified_on: 2026-11-07
 tier: 2
 source: https://github.com/boscocp/game-ai-kit
 invalidated_if: the guards' actions, the guard types, the rules or the levels change, and infiltration_properties.gd prints different numbers
@@ -491,6 +491,59 @@ radio's line: with only a partner gone quiet, its chance of a fault is
 orange and swung out; the corner says when F can open or shut one. The
 legend has no line for it: one more line ran it past the window's gutter.
 
+## A crowd to hide in (T152)
+
+The market (`levels/the_market.json`, **L** after the generated levels) is
+the one level with civilians: sixteen in three groups, two walking round
+the stalls the same way round, one up and down the spine from the west
+gate to the east one. It is offered apart from `HAND_MADE`, so the levels
+the guards' properties are held on, and their numbers, are unchanged.
+
+Each group is `ai_steering`'s `Flock` -- separation, alignment and
+cohesion over the civilians of the same group within 4 m -- plus three
+forces of this game added through `Steering.combined`: a seek to the
+group's next point, a separation from the other groups within 2 m, and a
+stronger one from the player and the guards within 1.2 m, since they do
+not steer round anyone. Walls are not a force: a step is taken on the walk
+grid and slides along a stall, as the player's does. Every force comes
+from one snapshot, in id order; `crowd_test.gd` holds that two runs agree,
+that no civilian leaves the floor, and that none comes within 0.5 m of
+another (measured 0.64 m, on one seed with the player standing at the
+gate), and on the walk down the spine none within 0.4 m of you or a guard
+(measured 0.72 m and 0.50 m).
+
+The player is counted in the group with the most civilians closer than
+3 m (at least two). Walking upright within 45 degrees of the group's
+heading blends in; sprinting, crouching or lying down, standing still or
+walking against it stands out. **The guard's percept is weighed, as the
+task asked, at one site** (`InfiltrationCrowd.weigh`), by numbers in
+`crowd.json`, and both weighings are shown. Blending in multiplies the
+sight certainty by 0.25 (`certainty_scale`) and hears the player's
+footstep as if its reach were a quarter of its own (`footstep_scale`, 6 m
+becomes 1.5 m: `PathHearing`'s falloff over the share of the reach left).
+Standing out multiplies the certainty by 1.3 and leaves the footstep as it
+is. The network is then given the reading as evidence -- the `figure`
+sign -- so it can say why its belief moved; the weighing itself is the
+percept's.
+
+Measured on the market (`crowd_test.gd`): walking in step down the spine
+past the sentry for 12 s, no guard grows alert; sprinting the same way,
+one is alert at 4.0 s. Without the footstep's shorter reach, walking in
+step was alert at 10.7 s: the patrol hears the steps, comes to look and
+sees you close up. With it the walk holds about 20 s, until the patrol's
+own route brings it into the group.
+
+On screen: the civilians, a colour a group; the group you are counted in
+ringed on the floor with a line to its middle; under the radar, the figure
+sign and "you: in group 2, ringed: walking in step; its eye 0.25, its ear
+0.40" -- what the watched guard's eye and ear were left with, weighed.
+
+**Not done**: footsteps are the only sound the crowd covers (a takedown or
+a shot is heard as anywhere), and civilians do not react to a shot. With
+the accumulator off (**4**) sight is yes-or-no, and a certainty weighed
+down to 0.25 is still a yes: the guard is alert at once while the panel
+says 0.25. The weighing is for the accumulator, the game's default.
+
 ## The kit's own numbers
 
 Sourced: the player's walk and sprint speeds (the bot match's), and, from
@@ -507,7 +560,8 @@ search's `worth`, `travel`, `last_known_cap` (2) and `spot_radius` (2.5 m),
 and every knob; in `guard_types.json`, the per-phase decays (0.02 and 0.015
 while searching and alert); in `guard_actions.json`, every weight and
 curve; and in `intruder_network.json` (T115), every table, how long each
-sign is kept and `settled_within`.
+sign is kept and `settled_within`; and in `crowd.json` (T152), every
+number.
 
 ## Where this was done differently from the task, and why
 
@@ -543,4 +597,8 @@ and once on a generated level -- do the quiet stretches and the pressure
 match the strip, and does a new patrol ever appear where you could see it
 arrive? And `tasks/T115-a-bayesian-network-for-the-guard.md`: open a door
 and leave -- does the guard's belief rise, is the open door named as the
-reason, and does it fall again when nothing else is found?
+reason, and does it fall again when nothing else is found? And
+`tasks/T152-a-crowd-to-hide-in.md`: on the market, walk into a group as a
+guard looks your way, then sprint through it -- does the certainty drop
+and rise, and does the panel say why? Do the civilians part round you and
+the guards without anyone passing through anyone else?
