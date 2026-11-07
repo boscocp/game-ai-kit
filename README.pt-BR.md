@@ -9,6 +9,10 @@
 
 Ensinar IA em jogos, uma peça legível por vez.
 
+**Assista primeiro:** [treze das demos em três minutos](https://youtu.be/1tvfXbz6LJQ),
+no YouTube, cada uma mostrando a decisão enquanto ela é tomada. O vídeo é em
+inglês.
+
 Um conjunto de *addons* do Godot 4 que você pode levar **um de cada vez**, e
 pequenos jogos em que cada um deles decide alguma coisa de verdade. O código
 foi escrito para ser lido: se um trecho é rápido e ilegível, ele perde para o

@@ -8,6 +8,9 @@ Teaching AI in games, one readable piece at a time.
 
 > Em português: [README.pt-BR.md](README.pt-BR.md).
 
+**Watch first:** [thirteen of the demos in three minutes](https://youtu.be/1tvfXbz6LJQ),
+on YouTube, each one showing the decision as it is made.
+
 A set of Godot 4 addons you can take **one at a time**, plus small games,
 most of them versions of games you know, where each of them actually decides
 something. The code is written to be read: if a passage is fast and

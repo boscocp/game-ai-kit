@@ -34,7 +34,7 @@ Also: #107 (the READMEs say what is published), #109 and #110 (tasks T150-T153).
 - The flocking tasks ran right after T113 and T115.
 - Footsteps in a crowd are weighed in the percept with their factor in data (`crowd.json`), not suppressed.
 - The donation section uses GitHub Sponsors and a Pix key.
-- T153, the YouTube video, waits.
+- T153, the YouTube video, was made after this batch (wave 162, #119); the owner posted it, https://youtu.be/1tvfXbz6LJQ. Its end card says "MIT" by mistake: the repository is Apache-2.0.
 - The owner merged most PRs with `--admin`; this session merged #112, #116, #117 and this one at the owner's word ("pode, faz os merges e depois desliga").
 
 **Manual checks waiting:**
@@ -47,7 +47,7 @@ Also: #107 (the READMEs say what is published), #109 and #110 (tasks T150-T153).
 - Add `python` and `godot` as required checks in the ruleset once CI is green on main (not `gates`, because of the 429).
 - Clean up the old agent worktrees in `.claude/worktrees/`.
 
-**Next.** T153, the video, when the owner says. Then the follow-ups: T140 (make R9's test public for `HttpRuntime`), T141, T146, T148, T121, the squad queue and the old wip tasks.
+**Next.** The follow-ups: T140 (make R9's test public for `HttpRuntime`), T141, T146, T148, T121, the squad queue and the old wip tasks.
 
 ## Resuming after 2026-11-06, waves 150 to 153 merged (ready to open)
 
@@ -1588,7 +1588,7 @@ review.
 | T150 | A flock from three rules | done | wave 157 (#112): separation, alignment and cohesion and a `Flock` in `ai_steering`; `make demo-flocking`, a hundred boids, 1-3 switch the rules; one-frame time to target like Shiffman; `make measure-flocking` prints the page's table |
 | T151 | An RTS group moves as a flock | done | wave 158 (#116): a `GakRtsCrowd` port in the core, `RtsFlock` in the game; G flocks a group's move order, off by default and byte-identical when off; `make test-rts-flock` holds T19's wall-gap jam; a G-on match is not kept as a recording |
 | T152 | A crowd to hide in | done | wave 159 (#117): a market level with sixteen civilians in three flocks; walking in step inside a group scales a guard's sight certainty and the reach of the player's steps, both in `crowd.json` and shown; the figure is evidence in T115's network |
-| T153 | A video of the demos, for YouTube | todo | the owner, 2026-11-06; after T150-T152, made last from a current main: Godot's Movie Maker records each demo in English with its overlay, ffmpeg edits a 2-4 minute video with captions, a title and an end card, no music; delivered to `$HOME/Videos/game-ai-kit/` with a thumbnail and chapters; nothing uploaded |
+| T153 | A video of the demos, for YouTube | done | wave 162 (#119): 13 demos in 3:23, recorded by Movie Maker in English with each overlay, captions, title and end card, no music; mp4, clips, thumbnail and chapters in `$HOME/Videos/game-ai-kit/`; the owner posted it, https://youtu.be/1tvfXbz6LJQ; both READMEs link it |
 
 ---
 
