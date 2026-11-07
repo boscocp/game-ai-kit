@@ -15,6 +15,8 @@ const RED: int = TacticalScenario.RED
 const BLUE: int = TacticalScenario.BLUE
 const SHIELD_CELL: Vector2i = Vector2i(7, 4)
 const CURSOR: Vector2i = Vector2i(4, 4)
+## Half the outline the corner numbers are drawn with.
+const OUTLINE: float = 2.0
 ## Ids from one digit to two: a squad has fewer than ten a side.
 const IDS: Array[String] = ["5", "9", "12"]
 
@@ -57,14 +59,26 @@ func test_the_old_corner_is_caught_covering_the_id() -> void:
 
 
 # Advance Wars mode: nothing moves. Its tint is a count, without a `%`, in
-# the bottom-right corner where it always was.
+# the bottom-right corner where it always was -- held through the scene's own
+# two ways of drawing it, a refresh and the cursor moving (the review of
+# wave 160 found a direct `show_threat` let both call sites be wrong).
 func test_in_advance_wars_the_count_stays_where_it_was() -> void:
 	var scene: TacticalGame = _opened(0)
-	assert_bool(scene.view().tint_is_a_chance()).is_false()
-	scene._intent.show_threat({Vector2i(2, 2): 3} as Dictionary[Vector2i, int])
-	var corner: Vector2 = scene._board.centre_of(Vector2i(2, 2)) - Vector2(BoardView.TILE_PIXELS, BoardView.TILE_PIXELS) / 2.0
-	assert_dict(scene._intent.tint_label(Vector2i(2, 2))).is_equal(
-		{"words": "3", "baseline": corner + Vector2(BoardView.TILE_PIXELS - 12.0, BoardView.TILE_PIXELS - 4.0)})
+	scene._showing_threat = true
+	scene._refresh()
+	_assert_counts_where_they_were(scene, "after a refresh")
+	scene.point_at(Vector2i(2, 2))
+	_assert_counts_where_they_were(scene, "after the cursor moved")
+
+
+func _assert_counts_where_they_were(scene: TacticalGame, when: String) -> void:
+	var threat: Dictionary[Vector2i, int] = scene._intent._threat
+	assert_bool(threat.is_empty()).override_failure_message("no threatened cell %s" % when).is_false()
+	assert_bool(scene._intent._threat_is_chance).override_failure_message("a chance %s" % when).is_false()
+	for cell: Vector2i in threat:
+		var corner: Vector2 = scene._board.centre_of(cell) - Vector2(BoardView.TILE_PIXELS, BoardView.TILE_PIXELS) / 2.0
+		assert_dict(scene._intent.tint_label(cell)).is_equal(
+			{"words": str(threat[cell]), "baseline": corner + Vector2(BoardView.TILE_PIXELS - 12.0, BoardView.TILE_PIXELS - 4.0)})
 
 
 # The largest `number` of any piece in the squad's table.
@@ -75,8 +89,10 @@ func _most(number: String) -> int:
 	return most
 
 
+# Apart with their outlines: both numbers are drawn with a 4-pixel outline,
+# 2 pixels outside the letters on every side.
 func _assert_apart(chance_box: Rect2, other: Rect2, what: String) -> void:
-	assert_bool(chance_box.intersects(other)).override_failure_message(
+	assert_bool(chance_box.grow(OUTLINE).intersects(other.grow(OUTLINE))).override_failure_message(
 		"the chance at %s covers %s at %s" % [chance_box, what, other]).is_false()
 
 
