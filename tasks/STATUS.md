@@ -1539,6 +1539,9 @@ review.
 | T147 | A publishing guide, checked against the stores | done | wave 152 (#102): `docs/howto/publish.md`, store and PyPI rules read 2026-11-06; Godot 4.7.2 reads only the Asset Store; `gameaikit` free on PyPI (404); five owner decisions recorded; ADR 0009 revisited |
 | T148 | A cold import that crashes is explained, or survived | todo | signal 11 on a cold `--import` at 4.7.2, seen in waves 140, 142 and 147's review, a rerun passing each time; measure first, a bounded retry with a planted case only if it is the engine's |
 | T149 | Addon zips laid out for the Asset Store | done | wave 153 (#105): zips laid out `addons/ai_<name>/`, a kit zip `game-ai-kit-addons-<v>.zip` for the one store asset, the 4.7.2 installer rule copied into `release.py`'s self-test, `Copyright 2026 Adalberto Pereira` in all 18 LICENSE copies; the store install itself is the owner's manual check |
+| T150 | A flock from three rules | todo | the owner, 2026-11-06, after T113 and T115: separation, alignment and cohesion in `ai_steering`, each switchable; `make demo-flocking`, a hundred boids, the watched boid's forces and neighbours drawn; the neighbour query is the caller's |
+| T151 | An RTS group moves as a flock | todo | the owner, 2026-11-06; after T150: a group's move order flocks in `godot/game/rts/` (the core may not depend on `ai_steering`); T19's wall-gap jam is the planted case; `test-rts-budget` still holds |
+| T152 | A crowd to hide in | todo | the owner, 2026-11-06; after T150 and T115: civilians flocking in one infiltration level; walking in step inside a group lowers the guard's certainty, as evidence in T115's network; shown with its reason |
 
 ---
 
