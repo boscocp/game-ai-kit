@@ -1,0 +1,153 @@
+{
+ "description": "The alarm rang. Learning there was an earthquake explains it away: P(burglary) falls, and the earthquake's influence is negative.",
+ "network": {
+  "variables": [
+   {
+    "name": "burglary",
+    "values": [
+     "yes",
+     "no"
+    ],
+    "parents": [],
+    "table": [
+     [
+      0.001,
+      0.999
+     ]
+    ]
+   },
+   {
+    "name": "earthquake",
+    "values": [
+     "yes",
+     "no"
+    ],
+    "parents": [],
+    "table": [
+     [
+      0.002,
+      0.998
+     ]
+    ]
+   },
+   {
+    "name": "alarm",
+    "values": [
+     "yes",
+     "no"
+    ],
+    "parents": [
+     "burglary",
+     "earthquake"
+    ],
+    "table": [
+     [
+      0.95,
+      0.05
+     ],
+     [
+      0.94,
+      0.06
+     ],
+     [
+      0.29,
+      0.71
+     ],
+     [
+      0.001,
+      0.999
+     ]
+    ]
+   },
+   {
+    "name": "john_calls",
+    "values": [
+     "yes",
+     "no"
+    ],
+    "parents": [
+     "alarm"
+    ],
+    "table": [
+     [
+      0.9,
+      0.1
+     ],
+     [
+      0.05,
+      0.95
+     ]
+    ]
+   },
+   {
+    "name": "mary_calls",
+    "values": [
+     "yes",
+     "no"
+    ],
+    "parents": [
+     "alarm"
+    ],
+    "table": [
+     [
+      0.7,
+      0.3
+     ],
+     [
+      0.01,
+      0.99
+     ]
+    ]
+   }
+  ]
+ },
+ "problem": "",
+ "queries": [
+  {
+   "query": "burglary",
+   "value": "yes",
+   "evidence": {
+    "alarm": "yes"
+   },
+   "distribution": [
+    0.373551228281836,
+    0.6264487717181639
+   ],
+   "influence": {
+    "alarm": 0.372551228281836
+   }
+  },
+  {
+   "query": "burglary",
+   "value": "yes",
+   "evidence": {
+    "alarm": "yes",
+    "earthquake": "yes"
+   },
+   "distribution": [
+    0.003268423587696965,
+    0.996731576412303
+   ],
+   "influence": {
+    "alarm": 0.002268423587696965,
+    "earthquake": -0.37028280469413904
+   }
+  },
+  {
+   "query": "earthquake",
+   "value": "yes",
+   "evidence": {
+    "john_calls": "no",
+    "mary_calls": "yes"
+   },
+   "distribution": [
+    0.005612151520557884,
+    0.9943878484794422
+   ],
+   "influence": {
+    "john_calls": -0.030268763765897842,
+    "mary_calls": 0.004128940412644414
+   }
+  }
+ ]
+}

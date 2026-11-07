@@ -67,7 +67,7 @@ const REQUIRED: Dictionary = {
 	"res://game/rts/rts.tscn": [["plan", false], ["ore", true]],
 	"res://game3d/botmatch/botmatch.tscn": [["candidates", false], ["confidence", true]],
 	"res://game3d/racing/racing3d.tscn": [["target_speed", true], ["heat_ball", true]],
-	"res://game3d/infiltration/infiltration.tscn": [["awareness", true], ["action", false]],
+	"res://game3d/infiltration/infiltration.tscn": [["awareness", true], ["action", false], ["intruder", true]],
 	"res://game/maze/maze.tscn": [["target", false], ["distance", true]],
 	"res://game/talk/talk.tscn": [["trust", true], ["suspicion", true], ["thinking", false]],
 }

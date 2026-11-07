@@ -1,0 +1,19 @@
+{
+  "about": "What an infiltration guard believes about whether anyone is there at all (T115): a Bayesian network for ai_bayes's BayesNetwork, its tables written by hand, not learned, and held equal to spec/vectors/bayes/the-guards-intruder.json. An intruder makes noise seven times in ten while a guard is near, and leaves a door open one time in two; with no one there, a noise is heard one time in ten (rats, pipes, the wind) and a door is found open one time in two hundred, when a colleague forgot it. A partner who stops answering the radio is most likely the intruder's work, unless the radio is at fault (two in a hundred): the radio explains the silence away. `evidence` says which events a guard counts as each variable seen -- sounds heard, a door seen open, a partner gone quiet -- and for how many seconds it keeps counting one; past that, or once the guard has walked to where it was and found nothing (`settled_within` metres), it is seen as no. Every number is the kit's own, chosen so that a noise alone stays below the guard's threshold to check (in guard_actions.json, 0.3) and a door alone rises above it (0.42); nothing here is taken from a game.",
+  "query": "intruder",
+  "suspected": "yes",
+  "settled_within": 1.5,
+  "evidence": {
+    "noise": {"kinds": ["footstep", "sprint", "creep", "thrown_object", "takedown", "shot"], "remember_for": 20.0},
+    "open_door": {"kinds": ["open_door"], "remember_for": 30.0},
+    "partner_quiet": {"kinds": ["partner_quiet"], "remember_for": 30.0}
+  },
+  "variables": [
+    {"name": "intruder", "values": ["yes", "no"], "parents": [], "table": [[0.05, 0.95]]},
+    {"name": "radio_fault", "values": ["yes", "no"], "parents": [], "table": [[0.02, 0.98]]},
+    {"name": "noise", "values": ["yes", "no"], "parents": ["intruder"], "table": [[0.7, 0.3], [0.1, 0.9]]},
+    {"name": "open_door", "values": ["yes", "no"], "parents": ["intruder"], "table": [[0.5, 0.5], [0.005, 0.995]]},
+    {"name": "partner_quiet", "values": ["yes", "no"], "parents": ["intruder", "radio_fault"],
+      "table": [[0.95, 0.05], [0.6, 0.4], [0.9, 0.1], [0.01, 0.99]]}
+  ]
+}

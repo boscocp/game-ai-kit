@@ -1,0 +1,251 @@
+{
+ "description": "The infiltration guard's network, asked as the game asks it: every piece of evidence seen, yes or no, all eight ways.",
+ "network": {
+  "variables": [
+   {
+    "name": "intruder",
+    "values": [
+     "yes",
+     "no"
+    ],
+    "parents": [],
+    "table": [
+     [
+      0.05,
+      0.95
+     ]
+    ]
+   },
+   {
+    "name": "radio_fault",
+    "values": [
+     "yes",
+     "no"
+    ],
+    "parents": [],
+    "table": [
+     [
+      0.02,
+      0.98
+     ]
+    ]
+   },
+   {
+    "name": "noise",
+    "values": [
+     "yes",
+     "no"
+    ],
+    "parents": [
+     "intruder"
+    ],
+    "table": [
+     [
+      0.7,
+      0.3
+     ],
+     [
+      0.1,
+      0.9
+     ]
+    ]
+   },
+   {
+    "name": "open_door",
+    "values": [
+     "yes",
+     "no"
+    ],
+    "parents": [
+     "intruder"
+    ],
+    "table": [
+     [
+      0.5,
+      0.5
+     ],
+     [
+      0.005,
+      0.995
+     ]
+    ]
+   },
+   {
+    "name": "partner_quiet",
+    "values": [
+     "yes",
+     "no"
+    ],
+    "parents": [
+     "intruder",
+     "radio_fault"
+    ],
+    "table": [
+     [
+      0.95,
+      0.05
+     ],
+     [
+      0.6,
+      0.4
+     ],
+     [
+      0.9,
+      0.1
+     ],
+     [
+      0.01,
+      0.99
+     ]
+    ]
+   }
+  ]
+ },
+ "problem": "",
+ "queries": [
+  {
+   "query": "intruder",
+   "value": "yes",
+   "evidence": {
+    "noise": "yes",
+    "open_door": "yes",
+    "partner_quiet": "yes"
+   },
+   "distribution": [
+    0.9987584273915081,
+    0.001241572608491868
+   ],
+   "influence": {
+    "noise": 0.007385171277495273,
+    "open_door": 0.10932528663960328,
+    "partner_quiet": 0.02518401849025631
+   }
+  },
+  {
+   "query": "intruder",
+   "value": "yes",
+   "evidence": {
+    "noise": "yes",
+    "open_door": "yes",
+    "partner_quiet": "no"
+   },
+   "distribution": [
+    0.9370791063719335,
+    0.06292089362806647
+   ],
+   "influence": {
+    "noise": 0.25681641765529317,
+    "open_door": 0.8074543631712248,
+    "partner_quiet": -0.03649530252931832
+   }
+  },
+  {
+   "query": "intruder",
+   "value": "yes",
+   "evidence": {
+    "noise": "yes",
+    "open_door": "no",
+    "partner_quiet": "yes"
+   },
+   "distribution": [
+    0.8016802644771305,
+    0.19831973552286952
+   ],
+   "influence": {
+    "noise": 0.435602578811816,
+    "open_door": -0.08775287627477435,
+    "partner_quiet": 0.6454651339259143
+   }
+  },
+  {
+   "query": "intruder",
+   "value": "yes",
+   "evidence": {
+    "noise": "yes",
+    "open_door": "no",
+    "partner_quiet": "no"
+   },
+   "distribution": [
+    0.06962815024352641,
+    0.9303718497564737
+   ],
+   "influence": {
+    "noise": 0.059049951270995216,
+    "open_door": -0.05999659295718225,
+    "partner_quiet": -0.08658698030768981
+   }
+  },
+  {
+   "query": "intruder",
+   "value": "yes",
+   "evidence": {
+    "noise": "no",
+    "open_door": "yes",
+    "partner_quiet": "yes"
+   },
+   "distribution": [
+    0.9745587191697466,
+    0.02544128083025338
+   ],
+   "influence": {
+    "noise": -0.016814536944266267,
+    "open_door": 0.6975921194252677,
+    "partner_quiet": 0.3376160440105108
+   }
+  },
+  {
+   "query": "intruder",
+   "value": "yes",
+   "evidence": {
+    "noise": "no",
+    "open_door": "yes",
+    "partner_quiet": "no"
+   },
+   "distribution": [
+    0.4149272451998302,
+    0.5850727548001697
+   ],
+   "influence": {
+    "noise": -0.2653354435168101,
+    "open_door": 0.40788529452573813,
+    "partner_quiet": -0.22201542995940554
+   }
+  },
+  {
+   "query": "intruder",
+   "value": "yes",
+   "evidence": {
+    "noise": "no",
+    "open_door": "no",
+    "partner_quiet": "yes"
+   },
+   "distribution": [
+    0.1614209725999201,
+    0.8385790274000798
+   ],
+   "influence": {
+    "noise": -0.20465671306539435,
+    "open_door": -0.11554562714455874,
+    "partner_quiet": 0.1526820055458259
+   }
+  },
+  {
+   "query": "intruder",
+   "value": "yes",
+   "evidence": {
+    "noise": "no",
+    "open_door": "no",
+    "partner_quiet": "no"
+   },
+   "distribution": [
+    0.0035511092174271524,
+    0.9964488907825728
+   ],
+   "influence": {
+    "noise": -0.007027089755104037,
+    "open_door": -0.0034908414566649187,
+    "partner_quiet": -0.005187857836667052
+   }
+  }
+ ]
+}

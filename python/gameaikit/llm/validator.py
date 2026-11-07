@@ -29,8 +29,9 @@ Every rule has a code, so the two validators -- this one and `ai_llm`'s
   R6  an intent the game did not declare
   R7  an argument that is not empty and not one of its intent's values
   R8  a speech that is empty, or longer than SPEECH_LIMIT characters
-  R9  a speech with a line break (a line or paragraph separator too), or
-      another control character (C0, DEL or C1), in it
+  R9  a speech with a line break (a line or paragraph separator too),
+      another control character (C0, DEL or C1), or a format control
+      (Unicode's Cf: zero-width, bidirectional, the soft hyphen) in it
   R10 a speech with markup in it
   R11 a speech that contains one of the game's secrets
 
@@ -65,19 +66,54 @@ MARKUP = "<>[]*`"
 # makes each a mandatory break. R9 refuses them with the C1 controls (T129).
 LINE_SEPARATORS = "\u2028\u2029"
 
+# Unicode's format controls, category Cf as Unicode 16.0 lists it, each run as
+# its first and last code point. Invisible, and not harmless: an override
+# reverses the rest of the line on screen, and a zero-width joiner inside a
+# secret hides it from R11. R9 refuses them (T139). Named by range here and in
+# `LlmValidator`, so neither twin leans on a Unicode table the other lacks;
+# `spec/vectors/llm/replies.json` holds the list both are compared to. The
+# price: an emoji joined by U+200D, and a Persian line that needs U+200C, are
+# refused too.
+FORMAT_CONTROLS = (
+    (0x00AD, 0x00AD),    # soft hyphen
+    (0x0600, 0x0605),    # Arabic number signs
+    (0x061C, 0x061C),    # Arabic letter mark, a bidirectional mark
+    (0x06DD, 0x06DD),    # Arabic end of ayah
+    (0x070F, 0x070F),    # Syriac abbreviation mark
+    (0x0890, 0x0891),    # Arabic pound and piastre marks above
+    (0x08E2, 0x08E2),    # Arabic disputed end of ayah
+    (0x180E, 0x180E),    # Mongolian vowel separator
+    (0x200B, 0x200F),    # zero-width space, non-joiner and joiner; LRM, RLM
+    (0x202A, 0x202E),    # bidirectional embeddings and overrides
+    (0x2060, 0x2064),    # word joiner, invisible operators
+    (0x2066, 0x206F),    # bidirectional isolates, deprecated format characters
+    (0xFEFF, 0xFEFF),    # zero-width no-break space, the byte-order mark
+    (0xFFF9, 0xFFFB),    # interlinear annotation
+    (0x110BD, 0x110BD),  # Kaithi number sign
+    (0x110CD, 0x110CD),  # Kaithi number sign above
+    (0x13430, 0x1343F),  # Egyptian hieroglyph format controls
+    (0x1BCA0, 0x1BCA3),  # shorthand format controls
+    (0x1D173, 0x1D17A),  # musical beams, ties and slurs
+    (0xE0001, 0xE0001),  # language tag
+    (0xE0020, 0xE007F),  # tag characters
+)
+
 # The speech as a pattern, for the schema a constraining runtime is handed:
 # one to SPEECH_LIMIT characters, none of them MARKUP, a control character
-# (C0, DEL or C1), a line separator, a quote or a backslash. llama.cpp turns
-# a pattern into a grammar over the string's JSON text, escapes and all, so a
-# class without the quote and the backslash is the one spelling that means
-# the same there and in JSON Schema, which reads the decoded string. It also
-# drops `maxLength` when a pattern is present, so the length is in the
-# pattern too (T116, docs/local-llm/server.md). The guard loses the straight
-# quote; the validator still admits one (R10 is the check, not this). The
-# separators go in as the characters themselves, not as a `\u2028` escape:
-# Godot's RegEx (PCRE2) refuses that escape, and every reader of the
-# pattern takes the character (T129).
-SPEECH_PATTERN = (r'^[^"\\<>\[\]*`\x00-\x1F\x7F-\x9F' + LINE_SEPARATORS
+# (C0, DEL or C1), a line separator, a format control, a quote or a
+# backslash. llama.cpp turns a pattern into a grammar over the string's JSON
+# text, escapes and all, so a class without the quote and the backslash is
+# the one spelling that means the same there and in JSON Schema, which reads
+# the decoded string. It also drops `maxLength` when a pattern is present,
+# so the length is in the pattern too (T116, docs/local-llm/server.md). The
+# guard loses the straight quote; the validator still admits one (R10 is the
+# check, not this). The separators go in as the characters themselves, not
+# as a `\u2028` escape: Godot's RegEx (PCRE2) refuses that escape, and every
+# reader of the pattern takes the character (T129). The format controls go
+# in the same way, each run as `first-last` (T139).
+FORMAT_CLASS = "".join(chr(first) if first == last else f"{chr(first)}-{chr(last)}"
+                       for first, last in FORMAT_CONTROLS)
+SPEECH_PATTERN = (r'^[^"\\<>\[\]*`\x00-\x1F\x7F-\x9F' + LINE_SEPARATORS + FORMAT_CLASS
                   + r']{1,%d}$') % SPEECH_LIMIT
 
 # How deep objects and lists may nest. A reply is one flat object; past
@@ -187,8 +223,8 @@ def why_speech_is_wrong(speech: str, secrets: tuple[str, ...]) -> str:
     """R8 to R11, on one line of speech. The game's fallback is held to them too."""
     if not speech or len(speech) > SPEECH_LIMIT:
         return f"R8 the speech is {len(speech)} characters; 1 to {SPEECH_LIMIT} are allowed"
-    if any(_is_control_or_line_break(character) for character in speech):
-        return "R9 the speech is more than one line, or has a control character"
+    if any(_is_refused_by_r9(character) for character in speech):
+        return "R9 the speech is more than one line, or has a control or format character"
     if any(character in MARKUP for character in speech):
         return f"R10 the speech has markup in it, one of {MARKUP}"
     lowered = speech.translate(ASCII_LOWER)
@@ -198,15 +234,17 @@ def why_speech_is_wrong(speech: str, secrets: tuple[str, ...]) -> str:
     return ""
 
 
-def _is_control_or_line_break(character: str) -> bool:
-    """A control character, or a line or paragraph separator: R9's test.
+def _is_refused_by_r9(character: str) -> bool:
+    """A control character, a line or paragraph separator, or a format control.
 
-    Unicode's Cc is U+0000 to U+001F and U+007F to U+009F, NEXT LINE among
-    them. Each of these would break the line a game shows, or put an
-    invisible code in it.
+    R9's test. Unicode's Cc is U+0000 to U+001F and U+007F to U+009F, NEXT
+    LINE among them; Cf is FORMAT_CONTROLS. Each of these would break the
+    line a game shows, or put an invisible code in it.
     """
     code = ord(character)
-    return code < 32 or 127 <= code <= 159 or character in LINE_SEPARATORS
+    if code < 32 or 127 <= code <= 159 or character in LINE_SEPARATORS:
+        return True
+    return any(first <= code <= last for first, last in FORMAT_CONTROLS)
 
 
 def why_declaration_is_wrong(declaration: Declaration) -> str:

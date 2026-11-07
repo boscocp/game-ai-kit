@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-11-05
+verified_on: 2026-11-06
 tier: 2
 source: https://github.com/boscocp/game-ai-kit
 invalidated_if: the guards' actions, the guard types, the rules or the levels change, and infiltration_properties.gd prints different numbers
@@ -51,7 +51,8 @@ no line changed, play all of them.
 WASD walk, relative to the camera; the mouse turns the camera (click to
 capture it, Esc to free it). C crouches, Z lies prone, Shift sprints
 (upright only). G throws a distraction where the crosshair points; E takes
-down a guard from behind when the corner says you can; a click shoots.
+down a guard from behind when the corner says you can; F opens or shuts
+a door within reach (T115, below); a click shoots.
 1 cycles the belief -- off, the grid, the particles -- 2-4 switch the
 coordinator, the arbiter and the accumulator; 5 the off-screen halving; 6 the director (T90, below:
 the level starts again, with its reserve). Tab watches the next guard, H hides the reasoning,
@@ -73,6 +74,7 @@ its last known position as a grey figure, the spot it was given (purple)
 and the spots searched (grey) while it searches, its way out, and where it
 is walking. Every sound's reach along the level as blue marks. The radar
 shows it all from above; the panel shows the watched guard's every score.
+Under the radar, the watched guard's intruder network (T115, below).
 
 ## What changed in T69's pieces, and why
 
@@ -447,6 +449,48 @@ level costs too. The level is the same either way:
 the whole trace for seeds 3, 54 and 144, and the measurement fails if the
 two ways differ.
 
+## Is anyone there? The intruder network (T115)
+
+Each guard asks `ai_bayes`'s network, from `intruder_network.json`,
+whether anyone is there at all: the intruder (0.05) and a faulty radio
+(0.02) as causes; a noise, a door found open and a partner gone quiet as
+signs. `GuardSuspicion` keeps each sign while it is fresh -- a sound of a
+kind the file lists, for 20 s; a door its eyes saw open, or a partner it
+noticed silent, for 30 s -- and lets one go once the guard has walked
+within 1.5 m of where it was. What is seen goes in as yes or no, every sign
+every time, so with nothing seen the belief is 0.004, below the prior. A
+noise alone gives 0.07, a door alone 0.42, a partner alone 0.16, a noise
+and a door 0.94; `spec/vectors/bayes/the-guards-intruder.json` holds all
+eight, and `suspicion_test.gd` holds the game's file to it.
+
+The guard's selector reads the belief as `intruder`: "check the evidence"
+(weight 0.65) steps up at 0.3, needs a sign that raised the belief and
+the guard not alert, and walks to that sign; a door it finds open there is
+shut. It sits after every other action in `guard_actions.json`, so no tie
+it could win was anyone else's, and its weight leaves "check on a partner"
+(0.7), "investigate" (0.8) and the fight ahead of it: a noise alone never
+crosses the threshold, so a footstep is still the awareness's job.
+`test-infiltration` and `test-infiltration-properties` hold with it.
+
+**The doors** are three on each hand-made level, set in a box's face: a
+storeroom door in a warehouse shelf, a building's door in the courtyard.
+They are evidence, not walls: the walk grid, sight and sound pass as if
+they were not there. A generated level has none. A door is seen when it is
+in one of the guard's zones with a clear line to its middle, whatever the
+light: it is tall and pale.
+
+On screen, under the radar: "is anyone there?" and the belief as a bar,
+the tick at 0.3; the radio's chance of a fault; each sign seen or not, with
+what it did to the belief -- the belief with all of it, less the belief
+without that sign -- the lead marked `>`: the sign seen that raised the
+belief most, the one the guard walks to (the largest change either way can
+be a sign not seen, "no noise", and is not what it acts on); and the last
+change, which sign and the belief before and after. Explaining away is the
+radio's line: with only a partner gone quiet, its chance of a fault is
+0.548; find a door open as well and it falls to 0.047. A door left open is
+orange and swung out; the corner says when F can open or shut one. The
+legend has no line for it: one more line ran it past the window's gutter.
+
 ## The kit's own numbers
 
 Sourced: the player's walk and sprint speeds (the bot match's), and, from
@@ -461,8 +505,9 @@ whole `decision` row (`noticed_for` 3 s, `known_for` 60 s, `under_fire_for`
 `belief.particles_per_cell` (2), the
 search's `worth`, `travel`, `last_known_cap` (2) and `spot_radius` (2.5 m),
 and every knob; in `guard_types.json`, the per-phase decays (0.02 and 0.015
-while searching and alert); and in `guard_actions.json`, every weight and
-curve.
+while searching and alert); in `guard_actions.json`, every weight and
+curve; and in `intruder_network.json` (T115), every table, how long each
+sign is kept and `settled_within`.
 
 ## Where this was done differently from the task, and why
 
@@ -496,4 +541,6 @@ purple cross inside it? And `tasks/T90-a-director-paces-the-infiltration.md`:
 with the director on (6) and the reasoning shown, play twice on one seed
 and once on a generated level -- do the quiet stretches and the pressure
 match the strip, and does a new patrol ever appear where you could see it
-arrive?
+arrive? And `tasks/T115-a-bayesian-network-for-the-guard.md`: open a door
+and leave -- does the guard's belief rise, is the open door named as the
+reason, and does it fall again when nothing else is found?

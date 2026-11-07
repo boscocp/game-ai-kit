@@ -6,11 +6,11 @@
   "type": "object",
   "properties": {
     "speech": {
-      "description": "What the character says: one line, no markup. The pattern says the same -- no control character (C0, DEL or C1) and no line or paragraph separator, U+2028 and U+2029, written here as JSON escapes so the pattern holds the characters themselves (T129) -- for a runtime that constrains its output, and also leaves out the quote and the backslash: llama.cpp reads a pattern against the string's JSON text, escapes and all, and drops maxLength beside one, so the length is in the pattern too (T116).",
+      "description": "What the character says: one line, no markup. The pattern says the same -- no control character (C0, DEL or C1), no line or paragraph separator, U+2028 and U+2029, and no format control (Unicode's Cf, by range: T139), the last two written here as JSON escapes so the pattern holds the characters themselves (T129) -- for a runtime that constrains its output, and also leaves out the quote and the backslash: llama.cpp reads a pattern against the string's JSON text, escapes and all, and drops maxLength beside one, so the length is in the pattern too (T116).",
       "type": "string",
       "minLength": 1,
       "maxLength": 280,
-      "pattern": "^[^\"\\\\<>\\[\\]*`\\x00-\\x1F\\x7F-\\x9F\u2028\u2029]{1,280}$"
+      "pattern": "^[^\"\\\\<>\\[\\]*`\\x00-\\x1F\\x7F-\\x9F\u2028\u2029\u00ad\u0600-\u0605\u061c\u06dd\u070f\u0890-\u0891\u08e2\u180e\u200b-\u200f\u202a-\u202e\u2060-\u2064\u2066-\u206f\ufeff\ufff9-\ufffb\ud804\udcbd\ud804\udccd\ud80d\udc30-\ud80d\udc3f\ud82f\udca0-\ud82f\udca3\ud834\udd73-\ud834\udd7a\udb40\udc01\udb40\udc20-\udb40\udc7f]{1,280}$"
     },
     "intent": {
       "description": "Which of the game's declared discourse acts the player's words were.",
