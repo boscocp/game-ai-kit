@@ -25,3 +25,7 @@ var motion: float = 0.0
 var loudness: float = 0.0
 var heard_place: Vector2 = Vector2.ZERO
 var heard_kind: String = ""
+## On a crowded level (T152), when the eye picked the player out of a
+## group: whether it blends in or stands out, and why; "" otherwise.
+var figure: String = ""
+var crowd_reason: String = ""

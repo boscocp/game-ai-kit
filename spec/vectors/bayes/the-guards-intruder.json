@@ -1,5 +1,5 @@
 {
- "description": "The infiltration guard's network, asked as the game asks it: every piece of evidence seen, yes or no, all eight ways.",
+ "description": "The infiltration guard's network, asked as the game asks it: every piece of evidence seen, yes or no, all eight ways, the crowd's figure left out and summed over; then the figure a guard picks out of a crowd (T152), blending in and standing out, with nothing else, a noise, or a door.",
  "network": {
   "variables": [
    {
@@ -98,6 +98,26 @@
       0.99
      ]
     ]
+   },
+   {
+    "name": "figure",
+    "values": [
+     "blends_in",
+     "stands_out"
+    ],
+    "parents": [
+     "intruder"
+    ],
+    "table": [
+     [
+      0.5,
+      0.5
+     ],
+     [
+      0.98,
+      0.02
+     ]
+    ]
    }
   ]
  },
@@ -149,10 +169,10 @@
    },
    "distribution": [
     0.8016802644771305,
-    0.19831973552286952
+    0.1983197355228695
    ],
    "influence": {
-    "noise": 0.435602578811816,
+    "noise": 0.4356025788118159,
     "open_door": -0.08775287627477435,
     "partner_quiet": 0.6454651339259143
    }
@@ -166,13 +186,13 @@
     "partner_quiet": "no"
    },
    "distribution": [
-    0.06962815024352641,
-    0.9303718497564737
+    0.06962815024352642,
+    0.9303718497564736
    ],
    "influence": {
-    "noise": 0.059049951270995216,
-    "open_door": -0.05999659295718225,
-    "partner_quiet": -0.08658698030768981
+    "noise": 0.05904995127099523,
+    "open_door": -0.05999659295718224,
+    "partner_quiet": -0.0865869803076898
    }
   },
   {
@@ -185,7 +205,7 @@
    },
    "distribution": [
     0.9745587191697466,
-    0.02544128083025338
+    0.02544128083025339
    ],
    "influence": {
     "noise": -0.016814536944266267,
@@ -203,7 +223,7 @@
    },
    "distribution": [
     0.4149272451998302,
-    0.5850727548001697
+    0.5850727548001698
    ],
    "influence": {
     "noise": -0.2653354435168101,
@@ -220,13 +240,13 @@
     "partner_quiet": "yes"
    },
    "distribution": [
-    0.1614209725999201,
+    0.16142097259992008,
     0.8385790274000798
    ],
    "influence": {
-    "noise": -0.20465671306539435,
-    "open_door": -0.11554562714455874,
-    "partner_quiet": 0.1526820055458259
+    "noise": -0.20465671306539449,
+    "open_door": -0.11554562714455882,
+    "partner_quiet": 0.15268200554582587
    }
   },
   {
@@ -238,13 +258,133 @@
     "partner_quiet": "no"
    },
    "distribution": [
-    0.0035511092174271524,
+    0.003551109217427152,
     0.9964488907825728
    ],
    "influence": {
-    "noise": -0.007027089755104037,
-    "open_door": -0.0034908414566649187,
-    "partner_quiet": -0.005187857836667052
+    "noise": -0.007027089755104038,
+    "open_door": -0.00349084145666492,
+    "partner_quiet": -0.005187857836667053
+   }
+  },
+  {
+   "query": "intruder",
+   "value": "yes",
+   "evidence": {
+    "noise": "no",
+    "open_door": "no",
+    "partner_quiet": "no",
+    "figure": "blends_in"
+   },
+   "distribution": [
+    0.0018149471888218706,
+    0.9981850528111781
+   ],
+   "influence": {
+    "noise": -0.003610201660338295,
+    "open_door": -0.00179031978147249,
+    "partner_quiet": -0.002662875944328887,
+    "figure": -0.0017361620286052814
+   }
+  },
+  {
+   "query": "intruder",
+   "value": "yes",
+   "evidence": {
+    "noise": "yes",
+    "open_door": "no",
+    "partner_quiet": "no",
+    "figure": "blends_in"
+   },
+   "distribution": [
+    0.03677885729224641,
+    0.9632211427077535
+   ],
+   "influence": {
+    "noise": 0.03135370844308625,
+    "open_door": -0.03383976906226555,
+    "partner_quiet": -0.049526248517813294,
+    "figure": -0.03284929295128001
+   }
+  },
+  {
+   "query": "intruder",
+   "value": "yes",
+   "evidence": {
+    "noise": "no",
+    "open_door": "yes",
+    "partner_quiet": "no",
+    "figure": "blends_in"
+   },
+   "distribution": [
+    0.2656946003231171,
+    0.7343053996768829
+   ],
+   "influence": {
+    "noise": -0.254802606156456,
+    "open_door": 0.26208933335282275,
+    "partner_quiet": -0.20662733430752722,
+    "figure": -0.14923264487671312
+   }
+  },
+  {
+   "query": "intruder",
+   "value": "yes",
+   "evidence": {
+    "noise": "no",
+    "open_door": "no",
+    "partner_quiet": "no",
+    "figure": "stands_out"
+   },
+   "distribution": [
+    0.0818057064763292,
+    0.9181942935236709
+   ],
+   "influence": {
+    "noise": -0.12910415286085525,
+    "open_door": -0.06879116294813781,
+    "partner_quiet": -0.09879098499228306,
+    "figure": 0.07825459725890205
+   }
+  },
+  {
+   "query": "intruder",
+   "value": "yes",
+   "evidence": {
+    "noise": "yes",
+    "open_door": "no",
+    "partner_quiet": "no",
+    "figure": "stands_out"
+   },
+   "distribution": [
+    0.6516864413269665,
+    0.3483135586730336
+   ],
+   "influence": {
+    "noise": 0.4407765819897821,
+    "open_door": -0.13659461883799084,
+    "partner_quiet": -0.17064333640904217,
+    "figure": 0.5820582910834401
+   }
+  },
+  {
+   "query": "intruder",
+   "value": "yes",
+   "evidence": {
+    "noise": "no",
+    "open_door": "yes",
+    "partner_quiet": "no",
+    "figure": "stands_out"
+   },
+   "distribution": [
+    0.9466089432722551,
+    0.05339105672774485
+   ],
+   "influence": {
+    "noise": -0.03493719019524111,
+    "open_door": 0.796012073847788,
+    "partner_quiet": -0.03109930858539056,
+    "figure": 0.5316816980724248
    }
   }
  ]

@@ -1,0 +1,35 @@
+{
+  "about": "The infiltration example's crowded level (T152): a market square 40 by 28 metres in daylight, x east and z south, four houses (5 m) at its corners and four stalls (1.2 m) round an open spine from the west gate, where you start, to the east one, where you leave. The light is the same everywhere, so there is no shadow to hide in: the cover is the crowd. Three groups of civilians walk it as flocks (crowd.json): two round the stalls, one each way, and one up and down the spine. A sentry watches the spine from the north and two guards patrol the lanes. It is not one of the levels the guards' properties are held on: those stay as they were, and the crowd's own tests hold this one.",
+  "width": 40,
+  "depth": 28,
+  "points": [],
+  "spawns": {"player": [[1.5, 14.5]]},
+  "exit": [38.5, 14.5],
+  "boxes": [
+    {"x": 8, "z": 3, "width": 10, "depth": 4, "height": 5.0},
+    {"x": 32, "z": 3, "width": 10, "depth": 4, "height": 5.0},
+    {"x": 8, "z": 25, "width": 10, "depth": 4, "height": 5.0},
+    {"x": 32, "z": 25, "width": 10, "depth": 4, "height": 5.0},
+    {"x": 16, "z": 10, "width": 4, "depth": 2, "height": 1.2},
+    {"x": 24, "z": 10, "width": 4, "depth": 2, "height": 1.2},
+    {"x": 16, "z": 18, "width": 4, "depth": 2, "height": 1.2},
+    {"x": 24, "z": 18, "width": 4, "depth": 2, "height": 1.2}
+  ],
+  "platforms": [],
+  "stairs": [],
+  "ambient": 0.6,
+  "lights": [],
+  "hiding": [
+    {"x": 2, "z": 2, "width": 2, "depth": 2, "hides": 0.8}
+  ],
+  "guards": [
+    {"type": "sentry", "post": [20.5, 3.5], "facing": 90.0},
+    {"type": "patrol", "route": [[6.5, 8.5], [33.5, 8.5]]},
+    {"type": "patrol", "route": [[33.5, 20.5], [6.5, 20.5]]}
+  ],
+  "crowd": [
+    {"people": 5, "start": [11.5, 7.5], "loop": [[29.5, 7.5], [29.5, 21.5], [11.5, 21.5], [11.5, 7.5]]},
+    {"people": 5, "start": [29.5, 21.5], "loop": [[11.5, 21.5], [11.5, 7.5], [29.5, 7.5], [29.5, 21.5]]},
+    {"people": 6, "start": [6.5, 14.5], "loop": [[35.5, 14.5], [6.5, 14.5]]}
+  ]
+}

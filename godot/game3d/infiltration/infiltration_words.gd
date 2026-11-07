@@ -27,7 +27,7 @@ const SHOWN: Array[String] = [  # shown through tr()
 	"beside", "ahead", "far",
 	"sight", "body", "footstep", "thrown_object", "open_door", "shot", "call_for_help", "creep",
 	"takedown", "radio_report", "alarm", "guard_shot", "check_in", "partner_quiet",
-	"intruder", "radio_fault", "noise",
+	"intruder", "radio_fault", "noise", "figure", "blends_in", "stands_out",
 ]
 ## Identifiers whose English word another example's table already translates
 ## for its own sense -- the bot match's "sprint" is a pace, here it is a
@@ -37,6 +37,7 @@ const SAID_AS: Dictionary = {
 	"sprint": "a sprint",  # shown through tr()
 	"the_warehouse": "the warehouse",  # shown through tr()
 	"the_courtyard": "the courtyard",  # shown through tr()
+	"the_market": "the market",  # shown through tr()
 	"build_up": "building up",  # shown through tr()
 	"sustain_peak": "holding the peak",  # shown through tr()
 	"peak_fade": "fading",  # shown through tr()

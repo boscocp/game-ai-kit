@@ -22,6 +22,11 @@
 ## others, and after every step `DirectorOrders` reads what happened to the
 ## player and may send one on patrol or call one back.
 ##
+## On a crowded level (T152) the civilians walk after the player moves, and
+## the player's place among them is read once a step (`InfiltrationCrowd`),
+## before any guard looks; on every other level `crowd` is null and nothing
+## of this runs.
+##
 ## When not to use it: as the view. Drawing is `InfiltrationDrawing`'s.
 class_name InfiltrationWorld
 extends RefCounted
@@ -45,6 +50,8 @@ var bodies: Array[Vector2] = []
 var doors_open: Array[bool] = []
 ## "", "escaped" or "caught".
 var outcome: String = ""
+## The civilians, on a level with a crowd; null on every other (T152).
+var crowd: InfiltrationCrowd = null
 ## The director, with the rules' `use_director` on; null, off.
 var director: DirectorOrders = null
 ## The seams the properties plant in; see the header.
@@ -79,6 +86,8 @@ static func make(on_level: InfiltrationLevel, with_rules: InfiltrationRules, see
 		world.guards.append(InfiltrationGuard.new(world.guards.size(), types[spec["type"]], spec, on_level.neighbours, with_rules,
 			seed_value * 7919 + world.guards.size()))
 	world.team = GuardTeam.new(on_level, with_rules)
+	if not on_level.crowd.is_empty():
+		world.crowd = InfiltrationCrowd.new(on_level.crowd, float(with_rules.stances["standing"]["speed"]))  # not shown: an identifier
 	if with_rules.use_director:
 		world.director = DirectorOrders.new(world)
 	return world
@@ -92,8 +101,10 @@ func step(intent: PlayerIntent) -> void:
 	var seconds: float = rules.step_seconds
 	time += seconds
 	player.move(intent, level, rules, seconds)
+	if crowd != null:
+		_walk_crowd(seconds)
 	var noise: String = player.step_noise(rules, time)
-	if noise != "":
+	if noise != "" and not _steps_covered():
 		sounds.emit(self, noise, player.position, -1, Vector2.INF, 0.0, float(rules.player["noise_every"]))
 	PlayerActions.apply(self, intent)
 	var belief_due: bool = time >= next_belief
@@ -112,6 +123,23 @@ func step(intent: PlayerIntent) -> void:
 	if director != null:
 		director.step(self)
 	_end_when_over()
+
+
+# True when the player's footsteps are lost in the crowd's: it walks in step
+# inside a group (T152). Never on a level with no crowd.
+func _steps_covered() -> bool:
+	return crowd != null and crowd.cover.figure == InfiltrationCrowd.BLENDS_IN
+
+
+# The civilians step clear of the player and the standing guards, and the
+# player's place among them is read for the guards' eyes this step.
+func _walk_crowd(seconds: float) -> void:
+	var others: Array[Vector2] = [player.position]
+	for guard: InfiltrationGuard in guards:
+		if guard.alive():
+			others.append(guard.position)
+	crowd.step(level, others, seconds)
+	crowd.read_cover(player, rules, seconds)
 
 
 # Each decision: the team shares out the work, then every guard weighs.

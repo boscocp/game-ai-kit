@@ -20,6 +20,11 @@
 ## (`GuardSuspicion`). They close no way -- a door is evidence here, not a
 ## wall: the walk grid, sight and sound pass as if it were not there.
 ##
+## A crowded level (T152) also names its civilians' groups, each a number of
+## people, a start and a wander loop; `InfiltrationCrowd` walks them. The
+## crowded levels are offered apart from `HAND_MADE`, the levels the guards'
+## properties are held on, so those stay exactly as they were.
+##
 ## When not to use it: a level whose doors must block the way, or floors
 ## above floors. The walk grid has one floor per cell, and no door in it.
 class_name InfiltrationLevel
@@ -29,6 +34,9 @@ const WAREHOUSE: String = "res://game3d/infiltration/levels/the_warehouse.json"
 const COURTYARD: String = "res://game3d/infiltration/levels/the_courtyard.json"
 ## The hand-made levels, in the order the demo offers them.
 const HAND_MADE: Array[String] = [WAREHOUSE, COURTYARD]
+const MARKET: String = "res://game3d/infiltration/levels/the_market.json"
+## The levels with a crowd (T152), offered after the generated ones.
+const CROWDED: Array[String] = [MARKET]
 ## How far a body's centre keeps from a box, as the bot match's rules say.
 const BODY_RADIUS: float = 0.4
 
@@ -49,6 +57,8 @@ var reserve_specs: Array[Dictionary] = []
 ## The doors (T115): each a `place` on a walk cell beside a box, and the
 ## way it `faces` out of the box, in radians. All start shut.
 var doors: Array[Dictionary] = []
+## The civilians' groups (T152), as the data writes them; empty, no crowd.
+var crowd: Array = []
 ## The free walk cells, and each one's index; their neighbour list.
 var cells: Array[Vector2i] = []
 var index_of: Dictionary[Vector2i, int] = {}
@@ -71,6 +81,7 @@ static func read(source: Variant, level_name: String = "") -> InfiltrationLevel:
 		level.reserve_specs.append(_reserve_spec(spec))
 	for door: Dictionary in data.get("doors", []):
 		level.doors.append({"place": _place([door["x"], door["z"]]), "faces": deg_to_rad(float(door.get("facing", 0.0)))})
+	level.crowd = data.get("crowd", [])
 	level._index_cells()
 	return level
 

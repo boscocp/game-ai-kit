@@ -39,6 +39,7 @@ GUARD = {"variables": [
     variable("noise", ["intruder"], [[0.7, 0.3], [0.1, 0.9]]),
     variable("open_door", ["intruder"], [[0.5, 0.5], [0.005, 0.995]]),
     variable("partner_quiet", ["intruder", "radio_fault"], [[0.95, 0.05], [0.6, 0.4], [0.9, 0.1], [0.01, 0.99]]),
+    variable("figure", ["intruder"], [[0.5, 0.5], [0.98, 0.02]], ("blends_in", "stands_out")),
 ]}
 
 # Values of three and of two, so a row read with the wrong parent varying
@@ -108,6 +109,10 @@ def vector(description, network, queries=(), problem=""):
 def every_vector():
     guard_evidence = [{"noise": noise, "open_door": door, "partner_quiet": quiet}
                       for noise, door, quiet in itertools.product((YES, NO), repeat=3)]
+    # T152: the figure picked out of a crowd, each way, with each sign alone.
+    guard_evidence += [{"noise": noise, "open_door": door, "partner_quiet": NO, "figure": figure}
+                       for figure in ("blends_in", "stands_out")
+                       for noise, door in ((NO, NO), (YES, NO), (NO, YES))]
     yield "burglary-john-and-mary-call", vector(
         "AIMA's burglary network (figure 13.2). John and Mary both call: P(burglary) is about 0.284 -- the "
         "book's answer, worked by hand in the README -- and Mary's call moved it more than John's.",
@@ -134,7 +139,8 @@ def every_vector():
                "cause", YES, {"effect": NO})])
     yield "the-guards-intruder", vector(
         "The infiltration guard's network, asked as the game asks it: every piece of evidence seen, "
-        "yes or no, all eight ways.",
+        "yes or no, all eight ways, the crowd's figure left out and summed over; then the figure a guard "
+        "picks out of a crowd (T152), blending in and standing out, with nothing else, a noise, or a door.",
         GUARD, [query(GUARD, "intruder", YES, evidence) for evidence in guard_evidence])
     yield "refused-a-parent-after-its-child", vector(
         "A parent named before it is given, so not yet a variable: refused, B3.",

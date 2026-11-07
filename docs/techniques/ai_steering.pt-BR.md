@@ -2,12 +2,12 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-11-06
+verified_on: 2026-11-07
 tier: 2
 source: https://www.red3d.com/cwr/steer/gdc99/ ; book:Ian Millington, "AI for Games", 3rd edition, CRC Press, 2019 -- chapter 3 on movement
 invalidated_if: the kit's SteeringVehicle, SteeringBehaviour, Steering.combined or Flock signatures change, or the demos that use them are renamed
 teaches: steering
-translation_of: 9c84225376dfe46f4bb179d3a2d17b5322ee359e37361748c4b21b7013a050d8
+translation_of: 8093a4b1a0643d03bbb78e264ec8dbdea484740bf4d149bba33c40a4196e7372
 -->
 
 > English: [ai_steering.md](ai_steering.md). Os termos que ficam em inglês
@@ -47,6 +47,13 @@ bando não tem lugares nem líder, então siga um caminho ou um líder.
   branco são desenhadas em **vermelho**, **azul** e **verde**, com linhas
   **amarelas** até os vizinhos que ele contou. **Clique** põe um obstáculo,
   **Tab** observa o próximo *boid*.
+- `make demo-infiltration`, no mercado (**L** depois dos níveis gerados)
+  -- uma multidão: três grupos de civis, cada um um `Flock` com duas forças
+  do jogo somadas por `Steering.combined` (o alvo do passeio dele, e ficar
+  longe dos outros grupos, de você e dos guardas). As paredes não são uma
+  força: cada passo é dado na grade de células por onde se anda no nível, deslizando ao longo de
+  uma barraca. Ande no passo dentro de um grupo e ele fica circulado no
+  chão: você se mistura.
 - `make demo-racing` -- o piloto faz *seek* num ponto à frente na linha de
   corrida; **1-3** escolhem a IA, **Tab** assiste às três. `make demo-racing3d`
   esterça com o controlador PID (**1**) e a *heat line* (**2**).

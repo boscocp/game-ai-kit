@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-11-06
+verified_on: 2026-11-07
 tier: 2
 source: https://www.red3d.com/cwr/steer/gdc99/ ; book:Ian Millington, "AI for Games", 3rd edition, CRC Press, 2019 -- chapter 3 on movement
 invalidated_if: the kit's SteeringVehicle, SteeringBehaviour, Steering.combined or Flock signatures change, or the demos that use them are renamed
@@ -45,6 +45,13 @@ instead.
   drawn **red**, **blue** and **green**, with **yellow** lines to the
   neighbours it counted. **Click** drops an obstacle, **Tab** watches the
   next boid.
+- `make demo-infiltration`, on the market (**L** past the generated levels)
+  -- a crowd: three groups of civilians, each a `Flock` with two forces of
+  the game's added through `Steering.combined` (its wander target, and
+  keeping clear of the other groups, you and the guards). The walls are
+  not a force: each step is taken on the level's walk grid, sliding along a
+  stall. Walk in step inside a group and it is ringed on the floor: you
+  blend in.
 - `make demo-racing` -- the driver seeks a point ahead on the racing line;
   **1-3** pick the AI, **Tab** watches the three. `make demo-racing3d` steers
   with the PID controller (**1**) and the heat line (**2**).

@@ -10,7 +10,8 @@
 ## the arbiter and the accumulator; 5
 ## the off-screen halving; 6 the director (T90), which starts the level
 ## again with its reserve guards. Tab watches the next guard, H hides the AI's
-## reasoning, L the next level (two hand-made, then generated ones), N
+## reasoning, L the next level (two hand-made, generated ones, then the
+## market with its crowd), N
 ## starts again, P pauses, Space one decision while paused. K how a
 ## generated level is made (T95): drawn and tested, solved by the constraint
 ## solver, or solved with the solver's work replayed over the screen.
@@ -18,6 +19,12 @@
 ## The watched guard's intruder network (T115) is drawn under the radar:
 ## whether it believes anyone is there, which sign says so, and the last
 ## sign that changed its mind (`SuspicionView`).
+##
+## On the market (T152) civilians walk in groups, each a flock; walking in
+## step inside one hides you, sprinting or crouching gives you away. The
+## group you are counted in is ringed on the floor, and the panel under the
+## radar says why you blend in or stand out and what the watched guard's
+## eye made of it (`InfiltrationCrowd`, `SuspicionView`).
 ##
 ## The camera's frustum says which guards are on screen, for the halving.
 extends Node3D
@@ -149,11 +156,25 @@ func decision_overlay() -> Dictionary:
 			"scores": record.get("scores", []), "role": guard.role, "spot": guard.spot,
 			"heard_help": world.time - guard.help_heard_at <= 15.0, "certainty": guard.percept.sight.certainty,
 			"intruder": guard.suspicion.belief, "signs": guard.suspicion.asked,
-			"lead": guard.suspicion.lead})
+			"lead": guard.suspicion.lead if guard.suspicion.lead != "" else "none"})  # not shown: an identifier
 	return {"time": world.time, "guards": guards, "off_screen_halving": rules.off_screen_halving,
 		"switches": {"belief": rules.use_belief, "particles": rules.use_particles, "coordinator": rules.use_coordinator,
 			"arbiter": rules.use_arbiter, "accumulator": rules.use_accumulator, "director": rules.use_director},
-		"director": director_overlay(), "generator": generator_overlay()}
+		"director": director_overlay(), "generator": generator_overlay(), "crowd": crowd_overlay()}
+
+
+## Where the player stands in the crowd, for the overlay: the group it is
+## counted in (-1, none), and how many civilians walk; in a group, why it
+## blends in or stands out, the reading, and the scale on a guard's eye.
+## Only `on`, false, on a level with no crowd.
+func crowd_overlay() -> Dictionary:
+	if world.crowd == null:
+		return {"on": false}
+	var cover: InfiltrationCrowd.Cover = world.crowd.cover
+	var found: Dictionary = {"on": true, "group": cover.group, "people": world.crowd.people.size()}
+	if cover.group != -1:
+		found.merge({"reason": cover.reason, "figure": cover.figure, "scale": cover.scale})
+	return found
 
 
 ## How the level was made, for the overlay: the mode, and for a solved one
@@ -177,7 +198,7 @@ func next_generator() -> void:
 	else:
 		rules.level_generator = LevelGenerator.DRAW
 		rules.show_generation = false
-	if _level_index >= InfiltrationLevel.HAND_MADE.size():
+	if _generated_level():
 		_new_world()
 
 
@@ -228,7 +249,7 @@ func new_world() -> void:
 
 ## Cycle to the next level.
 func next_level() -> void:
-	_level_index = (_level_index + 1) % (InfiltrationLevel.HAND_MADE.size() + GENERATED)
+	_level_index = (_level_index + 1) % (InfiltrationLevel.HAND_MADE.size() + GENERATED + InfiltrationLevel.CROWDED.size())
 	_new_world()
 
 
@@ -261,6 +282,7 @@ func _new_world() -> void:
 	_hud.camera = _camera
 	_strip.world = world
 	_suspicion.world = world
+	_suspicion.size.y = SuspicionView.CROWDED_HEIGHT if world.crowd != null else SuspicionView.HEIGHT
 	_radar.world = world
 
 
@@ -272,6 +294,9 @@ func _level() -> InfiltrationLevel:
 	if _level_index < InfiltrationLevel.HAND_MADE.size():
 		_show_made(null)
 		return InfiltrationLevel.read(InfiltrationLevel.HAND_MADE[_level_index])
+	if not _generated_level():
+		_show_made(null)
+		return InfiltrationLevel.read(InfiltrationLevel.CROWDED[_level_index - InfiltrationLevel.HAND_MADE.size() - GENERATED])
 	var generated: int = _seed + _level_index
 	if rules.level_generator != LevelGenerator.CONSTRAINTS:
 		_show_made(null)
@@ -283,6 +308,12 @@ func _level() -> InfiltrationLevel:
 		if not found.data.is_empty():
 			return InfiltrationLevel.read(found.data, "solved %d" % generated)  # not shown as written: InfiltrationWords.level words it
 	return InfiltrationLevel.read(LevelGenerator.make(generated), "generated %d" % generated)  # not shown as written: InfiltrationWords.level words it
+
+
+# True on a generated level: after the hand-made ones, before the crowded.
+func _generated_level() -> bool:
+	var first: int = InfiltrationLevel.HAND_MADE.size()
+	return _level_index >= first and _level_index < first + GENERATED
 
 
 # What the generation view and the overlay show for the level about to be
