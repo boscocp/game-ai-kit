@@ -38,8 +38,15 @@ make lint-tasks lint-status
 
 `make demo-tactical MODE=squad`, hover each kind of enemy piece, wounded
 and whole: are the chance and the number both readable? And in Advance
-Wars mode (M), does nothing move?
+Wars mode (M), does nothing move? Then watch an enemy turn with T on and
+the cursor on one of its pieces: does a weighed option's score (top centre)
+meet the chance (top right) on that piece's own cell?
 
 ## Notes
 
 - Opened by the owner's manual checks of 2026-11-06 (screenshot of round 2).
+- Wave 160's review: during the computer's turn with T on, a weighed
+  option's score label, drawn high in the cell, can meet the top-right
+  chance on the computer piece's own cell. Not a regression -- at the bottom it
+  could meet the option's own chance, drawn low -- and left for the manual
+  check above rather than moved again unseen.
