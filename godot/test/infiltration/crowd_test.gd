@@ -9,7 +9,11 @@ extends GdUnitTestSuite
 
 ## How close two civilians may come, their middles, in metres: under the
 ## separation radius, over two bodies' shoulders touching (0.25 each).
+## Held on one seed, with the player standing at the gate: a floor for this
+## run, not a bound the forces guarantee.
 const CLOSEST: float = 0.5
+## How close a civilian may come to the player or a guard: a body's radius.
+const CLOSEST_TO_OTHERS: float = 0.4
 
 var _locale_before: String
 
@@ -114,45 +118,112 @@ func test_walking_in_step_blends_in_and_the_rest_stands_out() -> void:
 
 # The market, the player put in the spine group's middle a moment in and
 # walked with it -- its heading, and back towards its middle -- sprinting
-# or not, for `steps` steps or until caught; the first time any guard was
-# alert, or -1, and how many steps the player blended in.
-func _ride_the_spine(sprint: bool, steps: int) -> Vector2:
+# or not, for `steps` steps or until caught: the first time any guard was
+# alert ("alert", -1 none), how many steps the player blended in, and the
+# closest any civilian came to the player ("to_you") and to a guard.
+func _ride_the_spine(sprint: bool, steps: int) -> Dictionary:
 	var world: InfiltrationWorld = _market()
 	for step: int in range(5):
 		world.step(PlayerIntent.new())
 	world.player.position = world.crowd.middle_of(2)
-	var blended: int = 0
+	var found: Dictionary = {"alert": -1.0, "blended": 0, "to_you": INF, "to_guards": INF}
 	for step: int in range(steps):
 		var intent := PlayerIntent.new()
 		intent.direction = (world.crowd.heading_of(2) + (world.crowd.middle_of(2) - world.player.position) * 0.5).limit_length(1.0)
 		intent.sprint = sprint
 		world.step(intent)
-		blended += 1 if world.crowd.cover.figure == InfiltrationCrowd.BLENDS_IN else 0
+		found["blended"] += 1 if world.crowd.cover.figure == InfiltrationCrowd.BLENDS_IN else 0
+		found["to_you"] = minf(found["to_you"], _closest_to(world, [world.player.position]))
+		found["to_guards"] = minf(found["to_guards"], _closest_to(world, _guard_places(world)))
 		if world.outcome != "" or world.guards.any(func(guard: InfiltrationGuard) -> bool: return guard.alert()):
-			return Vector2(world.time, blended)
-	return Vector2(-1.0, blended)
+			found["alert"] = world.time
+			return found
+	return found
+
+
+func _guard_places(world: InfiltrationWorld) -> Array[Vector2]:
+	var places: Array[Vector2] = []
+	for guard: InfiltrationGuard in world.guards:
+		if guard.alive():
+			places.append(guard.position)
+	return places
+
+
+# The distance from the closest civilian to the closest of `places`.
+func _closest_to(world: InfiltrationWorld, places: Array[Vector2]) -> float:
+	var closest: float = INF
+	for person: SteeringVehicle in world.crowd.people:
+		for place: Vector2 in places:
+			closest = minf(closest, person.position.distance_to(place))
+	return closest
+
+
+# How the ride went, for the log.
+func _said(ride: Dictionary) -> String:
+	return "alert at %.1f s, blended in %d steps, closest civilian to you %.2f m, to a guard %.2f m" % [
+		ride["alert"], ride["blended"], ride["to_you"], ride["to_guards"]]
 
 
 func test_walking_with_a_group_past_the_sentry_hides_and_sprinting_does_not() -> void:
-	var walked: Vector2 = _ride_the_spine(false, 120)
-	print("  walking in step down the spine: alert at %.1f s, blended in %d steps of 120" % [walked.x, walked.y])
-	assert_float(walked.x).override_failure_message("a guard grew alert at a player walking in step").is_equal(-1.0)
-	assert_float(walked.y).is_greater(100.0)
-	var sprinted: Vector2 = _ride_the_spine(true, 120)
-	print("  sprinting down the spine: alert at %.1f s, blended in %d steps" % [sprinted.x, sprinted.y])
-	assert_float(sprinted.x).override_failure_message("no guard noticed a player sprinting through a crowd").is_greater(0.0)
-	assert_float(sprinted.y).is_equal(0.0)
+	var walked: Dictionary = _ride_the_spine(false, 120)
+	print("  walking in step down the spine for 12 s: " + _said(walked))
+	assert_float(walked["alert"]).override_failure_message("a guard grew alert at a player walking in step").is_equal(-1.0)
+	assert_int(walked["blended"]).is_greater(100)
+	assert_float(walked["to_guards"]).is_greater(CLOSEST_TO_OTHERS)
+	assert_float(walked["to_you"]).is_greater(CLOSEST_TO_OTHERS)
+	var sprinted: Dictionary = _ride_the_spine(true, 120)
+	print("  sprinting down the spine: " + _said(sprinted))
+	assert_float(sprinted["alert"]).override_failure_message("no guard noticed a player sprinting through a crowd").is_greater(0.0)
+	assert_int(sprinted["blended"]).is_equal(0)
+	assert_float(sprinted["to_guards"]).is_greater(CLOSEST_TO_OTHERS)
+	assert_float(sprinted["to_you"]).is_greater(CLOSEST_TO_OTHERS)
 
 
-func test_footsteps_in_step_are_lost_in_the_crowd() -> void:
+func test_in_step_a_footstep_reaches_a_quarter_as_far() -> void:
+	var crowd: InfiltrationCrowd = _market().crowd
+	crowd.cover = InfiltrationCrowd.Cover.new()
+	crowd.cover.group = 0
+	crowd.cover.ear = float(crowd.spec["footstep_scale"][InfiltrationCrowd.BLENDS_IN])
+	var near: GuardPercept = _heard("footstep", 0.9)
+	crowd.weigh(near, -1)
+	# 0.1 of the reach used up of the quarter left: 1 - 0.1 / 0.25.
+	assert_float(near.loudness).is_equal_approx(0.6, 0.0001)
+	var far: GuardPercept = _heard("footstep", 0.5)
+	crowd.weigh(far, -1)
+	assert_float(far.loudness).override_failure_message("a footstep beyond the crowd's reach was heard").is_equal(0.0)
+	var a_guards: GuardPercept = _heard("footstep", 0.5)
+	crowd.weigh(a_guards, 1)
+	assert_float(a_guards.loudness).is_equal(0.5)
+	var a_throw: GuardPercept = _heard("thrown_object", 0.5)
+	crowd.weigh(a_throw, -1)
+	assert_float(a_throw.loudness).is_equal(0.5)
+	crowd.cover.ear = float(crowd.spec["footstep_scale"][InfiltrationCrowd.STANDS_OUT])
+	var standing_out: GuardPercept = _heard("footstep", 0.5)
+	crowd.weigh(standing_out, -1)
+	assert_float(standing_out.loudness).is_equal(0.5)
+
+
+func _heard(kind: String, loudness: float) -> GuardPercept:
+	var percept := GuardPercept.new()
+	percept.heard_kind = kind
+	percept.loudness = loudness
+	return percept
+
+
+func test_the_overlay_carries_the_cover() -> void:
 	var world: InfiltrationWorld = _market()
+	for step: int in range(5):
+		world.step(PlayerIntent.new())
 	world.player.position = world.crowd.middle_of(2)
-	world.crowd.cover = InfiltrationCrowd.Cover.new()
-	assert_bool(world._steps_covered()).is_false()
-	world.crowd.cover.figure = InfiltrationCrowd.BLENDS_IN
-	assert_bool(world._steps_covered()).is_true()
-	world.crowd.cover.figure = InfiltrationCrowd.STANDS_OUT
-	assert_bool(world._steps_covered()).is_false()
+	var intent := PlayerIntent.new()
+	intent.direction = world.crowd.heading_of(2)
+	world.step(intent)
+	var shown: Dictionary = world.crowd.overlay()
+	assert_int(int(shown["group"])).is_equal(2)
+	for field: String in ["reason", "figure", "scale", "ear"]:
+		assert_bool(shown.has(field)).override_failure_message("the overlay has no %s" % field).is_true()
+	assert_str(str(shown["figure"])).is_equal(InfiltrationCrowd.BLENDS_IN)
+	assert_float(float(shown["ear"])).is_less(1.0)
 
 
 func test_away_from_every_group_there_is_no_cover() -> void:
@@ -167,24 +238,24 @@ func test_the_cover_weighs_a_guards_look() -> void:
 	var seen := GuardPercept.new()
 	seen.sight.certainty = 0.8
 	crowd.cover = InfiltrationCrowd.Cover.new()
-	crowd.weigh(seen)
+	crowd.weigh(seen, 0)
 	assert_float(seen.sight.certainty).is_equal(0.8)
 	assert_str(seen.figure).is_empty()
 	crowd.cover.group = 0
 	crowd.cover.figure = InfiltrationCrowd.BLENDS_IN
 	crowd.cover.reason = InfiltrationCrowd.IN_STEP
 	crowd.cover.scale = float(crowd.spec["certainty_scale"][InfiltrationCrowd.BLENDS_IN])
-	crowd.weigh(seen)
+	crowd.weigh(seen, 0)
 	assert_float(seen.sight.certainty).is_equal_approx(0.8 * crowd.cover.scale, 0.0001)
 	assert_str(seen.figure).is_equal(InfiltrationCrowd.BLENDS_IN)
 	var unseen := GuardPercept.new()
-	crowd.weigh(unseen)
+	crowd.weigh(unseen, 0)
 	assert_float(unseen.sight.certainty).is_equal(0.0)
 	assert_str(unseen.figure).is_empty()
 	var standing_out := GuardPercept.new()
 	standing_out.sight.certainty = 0.9
 	crowd.cover.scale = float(crowd.spec["certainty_scale"][InfiltrationCrowd.STANDS_OUT])
-	crowd.weigh(standing_out)
+	crowd.weigh(standing_out, 0)
 	assert_float(standing_out.sight.certainty).is_equal(1.0)
 
 
@@ -243,15 +314,15 @@ func test_the_view_says_why() -> void:
 	var guard: InfiltrationGuard = world.guard(0)
 	var cover := InfiltrationCrowd.Cover.new()
 	TranslationServer.set_locale("en")
-	assert_str(SuspicionView.crowd_line(cover, guard)).is_equal("you: in no group; its eye -")
+	assert_str(SuspicionView.crowd_line(cover, guard)).is_equal("you: in no group; its eye -, its ear -")
 	cover.group = 1
 	cover.reason = InfiltrationCrowd.IN_STEP
 	guard.percept.sight.certainty = 0.25
-	assert_str(SuspicionView.crowd_line(cover, guard)).is_equal("you: in group 2, ringed: walking in step; its eye 0.25")
+	assert_str(SuspicionView.crowd_line(cover, guard)).is_equal("you: in group 2, ringed: walking in step; its eye 0.25, its ear -")
 	var suspicion: GuardSuspicion = _suspicion("", "")
 	suspicion.notice_figure(InfiltrationCrowd.BLENDS_IN, Vector2(5, 5), 2.0)
 	suspicion.reconsider(2.0)
-	assert_str(SuspicionView.last_line(suspicion)).starts_with("last change: figure blends_in, ")
+	assert_str(SuspicionView.last_line(suspicion)).starts_with("last change: figure blends in, ")
 	TranslationServer.set_locale("pt_BR")
-	assert_str(SuspicionView.crowd_line(cover, guard)).is_equal("você: no grupo 2, circulado: andando no passo; o olho dele 0.25")
+	assert_str(SuspicionView.crowd_line(cover, guard)).is_equal("você: no grupo 2, circulado: andando no passo; o olho dele 0.25, o ouvido dele -")
 	assert_str(SuspicionView.last_line(suspicion)).starts_with("última mudança: vulto se mistura, ")

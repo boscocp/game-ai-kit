@@ -29,7 +29,9 @@
 ## left out of the evidence -- summed over, so it changes nothing -- while
 ## the guard has not picked anyone out, which on every other level is
 ## always. Walking in step lowers the belief; sprinting or crouching in a
-## crowd raises it. The crowd is evidence here, not a second rule.
+## crowd raises it. The guard's sight and hearing are weighed by the crowd
+## in its percept (`InfiltrationCrowd.weigh`), as the task asked; here the
+## network is given that reading as evidence, so it can say why.
 ##
 ## Asked again only when what is seen changes: three signs and the figure,
 ## so at most 2^3 * 3 answers a guard, each a sum over the hidden variables.

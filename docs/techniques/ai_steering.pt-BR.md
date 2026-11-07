@@ -7,7 +7,7 @@ tier: 2
 source: https://www.red3d.com/cwr/steer/gdc99/ ; book:Ian Millington, "AI for Games", 3rd edition, CRC Press, 2019 -- chapter 3 on movement
 invalidated_if: the kit's SteeringVehicle, SteeringBehaviour, Steering.combined or Flock signatures change, or the demos that use them are renamed
 teaches: steering
-translation_of: 8093a4b1a0643d03bbb78e264ec8dbdea484740bf4d149bba33c40a4196e7372
+translation_of: e95286923e4af5afecba5c49cf7d42f0c200ffd1466252fe22fa5540ca6195a8
 -->
 
 > English: [ai_steering.md](ai_steering.md). Os termos que ficam em inglês
@@ -48,9 +48,10 @@ bando não tem lugares nem líder, então siga um caminho ou um líder.
   **amarelas** até os vizinhos que ele contou. **Clique** põe um obstáculo,
   **Tab** observa o próximo *boid*.
 - `make demo-infiltration`, no mercado (**L** depois dos níveis gerados)
-  -- uma multidão: três grupos de civis, cada um um `Flock` com duas forças
+  -- uma multidão: três grupos de civis, cada um um `Flock` com três forças
   do jogo somadas por `Steering.combined` (o alvo do passeio dele, e ficar
-  longe dos outros grupos, de você e dos guardas). As paredes não são uma
+  longe dos outros grupos, e abrir caminho para você e os guardas, que não
+  desviam de ninguém). As paredes não são uma
   força: cada passo é dado na grade de células por onde se anda no nível, deslizando ao longo de
   uma barraca. Ande no passo dentro de um grupo e ele fica circulado no
   chão: você se mistura.

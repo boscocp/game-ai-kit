@@ -3,10 +3,11 @@
 ##
 ## Each group is a flock -- `ai_steering`'s `Flock` (T150): separation,
 ## alignment and cohesion over the civilians of the same group within
-## `sees_within` -- plus two forces of this game, added with them through
+## `sees_within` -- plus three forces of this game, added with them through
 ## `Steering.combined`: a seek towards the group's next point on its wander
-## loop, and a separation from strangers -- the other groups, the player
-## and the guards -- so a group parts round them. The steering is 2D, on the
+## loop, a separation from the other groups, and a stronger, shorter one
+## from the player and the guards, who do not steer round anyone -- so a
+## group parts round them. The steering is 2D, on the
 ## floor (x, z); the walls are not a steering force: a civilian's step is
 ## taken on the level's walk grid, sliding along a wall as the player does,
 ## so no one walks through a stall whatever the forces say. Every force is
@@ -16,11 +17,20 @@
 ## Hiding: the player is counted in the group with the most civilians near
 ## (at least `fewest` within `counts_within`). Walking upright with the
 ## group's heading blends in; sprinting, crouching, lying down, standing
-## still or walking against it stands out. `weigh` scales a guard's sight
-## certainty by the reading and names it in the percept, which
-## `GuardSuspicion` asks the intruder network about as its `figure` sign.
+## still or walking against it stands out. That is one rule, at one site:
+## `weigh` scales a guard's percept by the reading -- its sight certainty
+## (`certainty_scale`) and, when what it heard is the player's footstep,
+## the footstep's reach (`footstep_scale`) -- and names the reading in the
+## percept.
+## The intruder network then gets that reading as its `figure` sign: the
+## percept is weighed as the task asked, and the network is told why.
 ## These are rules of this game, numbers in crowd.json; nothing is learned
 ## (invariant 6).
+##
+## Not done: with the accumulator off (key 4) sight is yes-or-no, and a
+## certainty weighed down to 0.25 is still a yes -- the guard is alert at
+## once while the panel says 0.25. The weighing is for the accumulator, the
+## game's default.
 ##
 ## Cost: O(n^2) a step for n civilians -- every one against every other;
 ## fine for the sixteen here. Use a neighbour grid
@@ -42,7 +52,7 @@ const STILL: String = "standing still"  # shown through tr()
 const SPRINTING: String = "sprinting"  # shown through tr()
 const LOW: String = "crouching or lying down"  # shown through tr()
 ## The order of the forces added for each civilian, as in crowd.json's weights.
-enum Force { SEPARATION, ALIGNMENT, COHESION, WANDER, STRANGERS }
+enum Force { SEPARATION, ALIGNMENT, COHESION, WANDER, STRANGERS, MAKE_WAY }
 
 
 ## Where the player stands among the civilians, one step: the group it is
@@ -53,6 +63,7 @@ class Cover:
 	var reason: String = ""
 	var figure: String = ""
 	var scale: float = 1.0
+	var ear: float = 1.0
 
 
 var spec: Dictionary = {}
@@ -64,6 +75,7 @@ var loops: Array[Array] = []
 var heading_to: PackedInt32Array = PackedInt32Array()
 var flock: Flock
 var strangers: SeparationBehaviour
+var make_way: SeparationBehaviour
 var wander: SeekBehaviour
 var weights: PackedFloat64Array
 ## This step's reading of the player, as `cover` last made it.
@@ -75,8 +87,9 @@ var cover := Cover.new()
 func _init(groups: Array, speed: float, path: String = FILE) -> void:
 	spec = JSON.parse_string(FileAccess.get_file_as_string(path))
 	weights = PackedFloat64Array(spec["weights"])
-	flock = Flock.new(float(spec["too_close"]), 1.0)
+	flock = Flock.new(float(spec["too_close"]), float(spec["match_within_seconds"]))
 	strangers = SeparationBehaviour.new(float(spec["strangers_within"]))
+	make_way = SeparationBehaviour.new(float(spec["make_way_within"]))
 	wander = SeekBehaviour.new(Vector2.ZERO)
 	for index: int in range(groups.size()):
 		_place_group(index, groups[index], speed)
@@ -94,7 +107,7 @@ func _place_group(index: int, group: Dictionary, speed: float) -> void:
 	var count: int = int(group["people"])
 	for person: int in range(count):
 		var at: Vector2 = start + Vector2.from_angle(TAU * person / count) * float(spec["too_close"])
-		var facing: Vector2 = Steering.direction_to(start, loop[0]) * speed * 0.5
+		var facing: Vector2 = Steering.direction_to(start, loop[0]) * speed * float(spec["starting_pace"])
 		people.append(SteeringVehicle.new(at, facing, speed, float(spec["strongest"])))
 		group_of.append(index)
 
@@ -121,7 +134,7 @@ func force_on(person: int, outsiders: Array[SteeringVehicle]) -> Vector2:
 	return Steering.combined(people[person], forces_on(person, outsiders), weights)
 
 
-## The five forces on civilian `person`, unweighted, in `Force` order --
+## The six forces on civilian `person`, unweighted, in `Force` order --
 ## what the view could draw, so a person sees which one pulls which way.
 func forces_on(person: int, outsiders: Array[SteeringVehicle]) -> Array[Vector2]:
 	var vehicle: SteeringVehicle = people[person]
@@ -129,10 +142,10 @@ func forces_on(person: int, outsiders: Array[SteeringVehicle]) -> Array[Vector2]
 	var found: Array[Vector2] = flock.forces(vehicle)
 	wander.target = loops[group_of[person]][heading_to[group_of[person]]]
 	found.append(wander.force(vehicle))
-	var near: Array[SteeringVehicle] = outsiders.duplicate()
-	near.append_array(strangers_near(person))
-	strangers.neighbours = near
+	strangers.neighbours = strangers_near(person)
 	found.append(strangers.force(vehicle))
+	make_way.neighbours = outsiders
+	found.append(make_way.force(vehicle))
 	return found
 
 
@@ -140,7 +153,7 @@ func forces_on(person: int, outsiders: Array[SteeringVehicle]) -> Array[Vector2]
 func group_near(person: int) -> Array[SteeringVehicle]:
 	var near: Array[SteeringVehicle] = []
 	for other: int in range(people.size()):
-		var seen: bool = people[person].position.distance_to(people[other].position) <= float(spec["sees_within"])
+		var seen: bool = people[person].position.distance_to(people[other].position) < float(spec["sees_within"])
 		if other != person and group_of[other] == group_of[person] and seen:
 			near.append(people[other])
 	return near
@@ -210,6 +223,7 @@ func read_cover(player: InfiltrationPlayer, rules: InfiltrationRules, seconds: f
 	cover.reason = reason_for(player, rules, seconds, heading_of(cover.group))
 	cover.figure = BLENDS_IN if cover.reason == IN_STEP else STANDS_OUT
 	cover.scale = float(spec["certainty_scale"][cover.figure])
+	cover.ear = float(spec["footstep_scale"][cover.figure])
 	return cover
 
 
@@ -218,7 +232,7 @@ func read_cover(player: InfiltrationPlayer, rules: InfiltrationRules, seconds: f
 func group_counting(place: Vector2) -> int:
 	var counts: Dictionary[int, int] = {}
 	for person: int in range(people.size()):
-		if people[person].position.distance_to(place) <= float(spec["counts_within"]):
+		if people[person].position.distance_to(place) < float(spec["counts_within"]):
 			counts[group_of[person]] = counts.get(group_of[person], 0) + 1
 	var best: int = -1
 	for group: int in range(loops.size()):
@@ -241,11 +255,32 @@ func reason_for(player: InfiltrationPlayer, rules: InfiltrationRules, seconds: f
 	return IN_STEP if off <= float(spec["in_step_degrees"]) else AGAINST
 
 
-## A guard's look, `percept`, weighed by this step's cover: when its eye
-## picked the player out of a group, its certainty is scaled, at most 1,
-## and the reading and its reason are written into the percept.
-func weigh(percept: GuardPercept) -> void:
-	if cover.group == -1 or not percept.sight.perceived():
+## This step's cover, for the demo's overlay: the group the player is
+## counted in (-1, none) and how many civilians walk; in a group, why it
+## blends in or stands out, the reading, and the scales on a guard's eye
+## and on the reach of the player's footstep.
+func overlay() -> Dictionary:
+	var found: Dictionary = {"on": true, "group": cover.group, "people": people.size()}
+	if cover.group != -1:
+		found.merge({"reason": cover.reason, "figure": cover.figure, "scale": cover.scale, "ear": cover.ear})
+	return found
+
+
+## A guard's percept weighed by this step's cover, the player in a group:
+## when its eye picked the player out, its certainty is scaled, at most 1,
+## and the reading and its reason are written into the percept; when what
+## it heard is the player's (`heard_from` -1) and of a kind the crowd
+## covers, the footstep is heard as if its reach were `footstep_scale` of
+## what it is: `PathHearing`'s own falloff, over the share of the reach the
+## sound had left -- so a guard beyond the shorter reach hears nothing.
+## Nothing changes outside a group.
+func weigh(percept: GuardPercept, heard_from: int) -> void:
+	if cover.group == -1:
+		return
+	var footstep: bool = heard_from == -1 and (spec["covers_sounds"] as Array).has(percept.heard_kind)
+	if percept.loudness > 0.0 and footstep:
+		percept.loudness = PathHearing.loudness(1.0 - percept.loudness, 1.0, cover.ear)
+	if not percept.sight.perceived():
 		return
 	percept.sight.certainty = minf(percept.sight.certainty * cover.scale, 1.0)
 	percept.figure = cover.figure

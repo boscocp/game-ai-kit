@@ -1,13 +1,18 @@
 {
-  "about": "The civilians of a crowded infiltration level, and when the player hides among them (T152). Each group is a flock (ai_steering's Flock, T150): too_close is the separation radius, sees_within the radius inside which a civilian counts the rest of its group, and weights are separation, alignment, cohesion, the group's wander target and keeping clear of strangers -- the other groups, the player and the guards, within strangers_within -- in that order; strongest is the largest force a civilian applies. A group walks its level's wander loop and turns to the next point once its middle is within next_point_within metres. Its top speed is the player's walk, read from rules.json, so a person can keep in step. The player is counted in a group when at least fewest of its civilians are within counts_within metres; walking upright, heading within in_step_degrees of the group's heading, blends in; sprinting, crouching, lying down, standing still or walking against the group stands out. A guard's eye that picks out the player multiplies its certainty by certainty_scale for that reading, and the reading becomes the figure sign of intruder_network.json. While the player blends in, its footsteps are lost in the crowd's and no guard hears them. Every number is the kit's own, chosen by playing, not learned (invariant 6).",
+  "about": "The civilians of a crowded infiltration level, and when the player hides among them (T152). Each group is a flock (ai_steering's Flock, T150): too_close is the separation radius, sees_within the radius inside which a civilian counts the rest of its group, and weights are separation, alignment, cohesion, the group's wander target keeping clear of the other groups within strangers_within, and making way for the player and the guards, who do not steer round anyone, within make_way_within -- in that order; strongest is the largest force a civilian applies. A group walks its level's wander loop and turns to the next point once its middle is within next_point_within metres. Its top speed is the player's walk, read from rules.json, so a person can keep in step. The player is counted in a group when at least fewest of its civilians are within counts_within metres; walking upright, heading within in_step_degrees of the group's heading, blends in; sprinting, crouching, lying down, standing still or walking against the group stands out. In a group, a guard's percept is weighed by the reading, in one place: an eye that picks out the player multiplies its certainty by certainty_scale, and an ear that hears the player's footstep (covers_sounds) hears it as if its reach were footstep_scale of its own -- a footstep's 6 m becomes 1.5 m among the crowd's own steps; footstep_scale and certainty_scale were chosen by measuring the walk down the spine in crowd_test.gd. The reading also becomes the figure sign of intruder_network.json. match_within_seconds is how quickly alignment and cohesion answer (the flock's time to target), starting_pace the share of the walk a civilian starts at. Distances compare strictly: within means closer than. Every number is the kit's own, chosen by playing, not learned (invariant 6).",
   "too_close": 1.2,
   "sees_within": 4.0,
-  "weights": [2.0, 0.8, 0.6, 1.0, 3.0],
+  "weights": [2.0, 0.8, 0.6, 1.0, 3.0, 5.0],
   "strongest": 12.0,
   "strangers_within": 2.0,
+  "make_way_within": 1.2,
   "next_point_within": 2.5,
   "counts_within": 3.0,
   "fewest": 2,
   "in_step_degrees": 45.0,
-  "certainty_scale": {"blends_in": 0.25, "stands_out": 1.3}
+  "certainty_scale": {"blends_in": 0.25, "stands_out": 1.3},
+  "footstep_scale": {"blends_in": 0.25, "stands_out": 1.0},
+  "covers_sounds": ["footstep"],
+  "match_within_seconds": 1.0,
+  "starting_pace": 0.5
 }

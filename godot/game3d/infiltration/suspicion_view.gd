@@ -15,8 +15,8 @@
 ## On a crowded level (T152) two rows more: the figure the guard's eye
 ## picked out of a group, blending in or standing out, with what it did to
 ## the belief; and where you stand in the crowd -- the group you are counted
-## in, why you blend in or stand out, and the certainty the watched guard's
-## eye was left with. On the other levels neither row is drawn.
+## in, why you blend in or stand out, and what the watched guard's eye and
+## ear were left with once the crowd weighed them. On the other levels neither row is drawn.
 ##
 ## When not to use it: for where the player is. That is the belief map.
 class_name SuspicionView
@@ -41,8 +41,8 @@ const LAST_NOT_SEEN: String = "last change: {sign} not seen, {before} to {after}
 const FIGURE_READ: String = "{sign}: {reading}, {moved}"  # shown through tr()
 const FIGURE_NONE: String = "{sign}: no one picked out"  # shown through tr()
 const LAST_FIGURE: String = "last change: {sign} {reading}, {before} to {after}"  # shown through tr()
-const IN_GROUP: String = "you: in group {group}, ringed: {reason}; its eye {certainty}"  # shown through tr()
-const NO_GROUP: String = "you: in no group; its eye {certainty}"  # shown through tr()
+const IN_GROUP: String = "you: in group {group}, ringed: {reason}; its eye {certainty}, its ear {loudness}"  # shown through tr()
+const NO_GROUP: String = "you: in no group; its eye {certainty}, its ear {loudness}"  # shown through tr()
 ## How tall the view is, without a crowd and with one.
 const HEIGHT: float = 112.0
 const CROWDED_HEIGHT: float = 144.0
@@ -81,14 +81,16 @@ func _draw() -> void:
 
 
 ## Where you stand in the crowd, as the view says it: the group you are
-## counted in and why you blend in or stand out, or no group; and the
-## certainty `guard`'s eye was left with this step, "-" when it saw nothing.
+## counted in and why you blend in or stand out, or no group; and what
+## `guard`'s percept was left with this step, weighed: its eye's certainty
+## and how loud it heard you, "-" for nothing seen or heard.
 static func crowd_line(cover: InfiltrationCrowd.Cover, guard: InfiltrationGuard) -> String:
 	var certainty: String = "%.2f" % guard.percept.sight.certainty if guard.percept.sight.perceived() else "-"
+	var loudness: String = "%.2f" % guard.percept.loudness if guard.percept.loudness > 0.0 else "-"
 	if cover.group == -1:
-		return TranslationServer.translate(NO_GROUP).format({certainty = certainty})
+		return TranslationServer.translate(NO_GROUP).format({certainty = certainty, loudness = loudness})
 	return TranslationServer.translate(IN_GROUP).format({group = cover.group + 1,
-		reason = TranslationServer.translate(cover.reason), certainty = certainty})
+		reason = TranslationServer.translate(cover.reason), certainty = certainty, loudness = loudness})
 
 
 # True when `variable` is the crowd's figure sign in `suspicion`'s file.

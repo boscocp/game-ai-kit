@@ -46,9 +46,10 @@ instead.
   neighbours it counted. **Click** drops an obstacle, **Tab** watches the
   next boid.
 - `make demo-infiltration`, on the market (**L** past the generated levels)
-  -- a crowd: three groups of civilians, each a `Flock` with two forces of
-  the game's added through `Steering.combined` (its wander target, and
-  keeping clear of the other groups, you and the guards). The walls are
+  -- a crowd: three groups of civilians, each a `Flock` with three forces of
+  the game's added through `Steering.combined` (its wander target,
+  keeping clear of the other groups, and making way for you and the
+  guards, who do not steer round anyone). The walls are
   not a force: each step is taken on the level's walk grid, sliding along a
   stall. Walk in step inside a group and it is ringed on the floor: you
   blend in.

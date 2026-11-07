@@ -34,6 +34,23 @@ _The owner asked for this task on 2026-11-06. The decisions below are this sessi
   network reads it. The crowd becomes one more piece of evidence in that
   network, not a second, separate rule.
 
+## Notes
+
+_Wave 159, after the fresh-context review of PR #117._
+
+- The first version stopped emitting the player's footstep while it
+  blended in. The review found that a second rule, hidden and with no
+  number in data, and it carried the result: without it, walking in step
+  was alert at 10.7 s. Decided (the coordinator): one rule at one site, in
+  data, shown. The footstep is always emitted; `InfiltrationCrowd.weigh`
+  weighs the guard's percept -- the sight certainty by `certainty_scale`
+  and the footstep's reach by `footstep_scale`, both in `crowd.json` --
+  and the crowd line says what the eye and the ear were left with.
+- Sight and hearing are weighed in the percept, as this task's decision
+  says; the network gets the reading as its `figure` evidence.
+- With the accumulator off, a weighed certainty still counts as seen: left
+  as is and written under "Not done" in `docs/godot/infiltration.md`.
+
 ## Acceptance
 
 ```bash

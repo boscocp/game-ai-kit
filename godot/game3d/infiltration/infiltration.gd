@@ -163,18 +163,10 @@ func decision_overlay() -> Dictionary:
 		"director": director_overlay(), "generator": generator_overlay(), "crowd": crowd_overlay()}
 
 
-## Where the player stands in the crowd, for the overlay: the group it is
-## counted in (-1, none), and how many civilians walk; in a group, why it
-## blends in or stands out, the reading, and the scale on a guard's eye.
-## Only `on`, false, on a level with no crowd.
+## Where the player stands in the crowd, for the overlay
+## (`InfiltrationCrowd.overlay`); only `on`, false, on a level with no crowd.
 func crowd_overlay() -> Dictionary:
-	if world.crowd == null:
-		return {"on": false}
-	var cover: InfiltrationCrowd.Cover = world.crowd.cover
-	var found: Dictionary = {"on": true, "group": cover.group, "people": world.crowd.people.size()}
-	if cover.group != -1:
-		found.merge({"reason": cover.reason, "figure": cover.figure, "scale": cover.scale})
-	return found
+	return world.crowd.overlay() if world.crowd != null else {"on": false}
 
 
 ## How the level was made, for the overlay: the mode, and for a solved one

@@ -24,7 +24,7 @@
 ##
 ## On a crowded level (T152) the civilians walk after the player moves, and
 ## the player's place among them is read once a step (`InfiltrationCrowd`),
-## before any guard looks; on every other level `crowd` is null and nothing
+## before any guard looks or listens; on every other level `crowd` is null and nothing
 ## of this runs.
 ##
 ## When not to use it: as the view. Drawing is `InfiltrationDrawing`'s.
@@ -104,7 +104,7 @@ func step(intent: PlayerIntent) -> void:
 	if crowd != null:
 		_walk_crowd(seconds)
 	var noise: String = player.step_noise(rules, time)
-	if noise != "" and not _steps_covered():
+	if noise != "":
 		sounds.emit(self, noise, player.position, -1, Vector2.INF, 0.0, float(rules.player["noise_every"]))
 	PlayerActions.apply(self, intent)
 	var belief_due: bool = time >= next_belief
@@ -123,12 +123,6 @@ func step(intent: PlayerIntent) -> void:
 	if director != null:
 		director.step(self)
 	_end_when_over()
-
-
-# True when the player's footsteps are lost in the crowd's: it walks in step
-# inside a group (T152). Never on a level with no crowd.
-func _steps_covered() -> bool:
-	return crowd != null and crowd.cover.figure == InfiltrationCrowd.BLENDS_IN
 
 
 # The civilians step clear of the player and the standing guards, and the
