@@ -11,6 +11,9 @@
 ## spots searched. With the accumulator switched off, sight is a plain
 ## yes-or-no: the peak when anything is perceived, nothing when not.
 ##
+## Its signs -- a noise, a door seen open, a partner gone quiet -- are then
+## asked of the intruder network (`GuardSuspicion`, T115).
+##
 ## A partner checks in by radio every `check_in_every` seconds; one heard
 ## at least twice and then silent for `quiet_after` is a partner gone quiet
 ## [Walsh 2015], an event the guard alone notices, at where it was last heard.
@@ -38,6 +41,7 @@ static func sense(guard: InfiltrationGuard, world: InfiltrationWorld, seconds: f
 		guard.mind.awareness["sight"].value = float(guard.type.awareness["peak"]) if perceived else 0.0
 	_track_alert(guard, world)
 	_find_bodies(guard, world)
+	guard.suspicion.sense(guard, world)
 	if belief_due:
 		_update_belief(guard, world, perceived)
 

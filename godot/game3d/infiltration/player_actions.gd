@@ -1,5 +1,5 @@
 ## What the player does besides moving: throw a distraction, take a guard
-## down from behind, or shoot.
+## down from behind, shoot, or open and shut a door (T115).
 ##
 ## A thrown object is a T69 event where it lands, heard along the level by
 ## whoever is near it -- a guard who hears it goes to look, if its scores
@@ -15,6 +15,8 @@ extends RefCounted
 ## The radius of a guard's body against a shot, in metres.
 const BODY: float = 0.4
 const CHEST: float = 1.2
+## How near a door the player must stand to open or shut it, in metres.
+const DOOR_REACH: float = 1.5
 
 
 ## Carry out `intent`'s throw, takedown and shot in `world`.
@@ -26,6 +28,21 @@ static func apply(world: InfiltrationWorld, intent: PlayerIntent) -> void:
 		_take_down(world)
 	if intent.shoot != Vector3.ZERO:
 		_shoot(world, intent.shoot.normalized())
+	if intent.use_door:
+		var door: int = door_within_reach(world)
+		if door != -1:
+			world.doors_open[door] = not world.doors_open[door]
+
+
+## The door the player could open or shut now, by index -- the nearest
+## within `DOOR_REACH` -- or -1.
+static func door_within_reach(world: InfiltrationWorld) -> int:
+	var nearest: int = -1
+	for index: int in range(world.level.doors.size()):
+		var away: float = world.player.position.distance_to(world.level.doors[index]["place"])
+		if away <= DOOR_REACH and (nearest == -1 or away < world.player.position.distance_to(world.level.doors[nearest]["place"])):
+			nearest = index
+	return nearest
 
 
 ## The guard the player could take down now, or null: within reach, the

@@ -17,6 +17,8 @@ extends RefCounted
 var id: int = 0
 var type: GuardType
 var mind: GuardMind
+## Whether it believes anyone is there at all, and which sign says so (T115).
+var suspicion := GuardSuspicion.new()
 var belief: BeliefMap
 var particles: ParticleBelief
 var position: Vector2 = Vector2.ZERO

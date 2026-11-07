@@ -1,0 +1,23 @@
+{
+ "description": "A row whose chances sum to 1.1: refused, B5.",
+ "network": {
+  "variables": [
+   {
+    "name": "cause",
+    "values": [
+     "yes",
+     "no"
+    ],
+    "parents": [],
+    "table": [
+     [
+      0.6,
+      0.5
+     ]
+    ]
+   }
+  ]
+ },
+ "problem": "B5",
+ "queries": []
+}

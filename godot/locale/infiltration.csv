@@ -100,3 +100,15 @@ every guard place can be walked to,dá para andar até todo lugar de guarda
 no post in sight of the start,nenhum posto à vista da partida
 a hiding place near each route,um esconderijo perto de cada rota
 a dark way to the exit,um caminho escuro até a saída
+check the evidence,verificar os indícios
+intruder,intruso
+radio_fault,rádio com defeito
+noise,barulho
+is anyone there? guard {guard}: {chance},tem alguém aí? guarda {guard}: {chance}
+"{sign}: seen, {moved}","{sign}: visto, {moved}"
+"{sign}: not seen, {moved}","{sign}: não visto, {moved}"
+last change: none yet,última mudança: nenhuma ainda
+"last change: {sign} seen, {before} to {after}","última mudança: {sign} visto, de {before} para {after}"
+"last change: {sign} not seen, {before} to {after}","última mudança: {sign} não visto, de {before} para {after}"
+F: open the door,F: abrir a porta
+F: shut the door,F: fechar a porta
