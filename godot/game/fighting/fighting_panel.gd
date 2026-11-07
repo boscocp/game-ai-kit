@@ -18,6 +18,8 @@ extends RefCounted
 
 ## How many rows of a learner's table the panel prints.
 const ROWS_SHOWN: int = 8
+## How many of a forest's votes go on one line: 25 trees are five lines.
+const VOTES_PER_LINE: int = 5
 ## The longest a bandit's bar is drawn, in characters, a tenth of payoff
 ## each: a mean of 1 and an exploration term of 1.5.
 const BAR_LONGEST: int = 25
@@ -125,9 +127,12 @@ static func _opponent_lines(state: FightState, seat: FightDelay) -> PackedString
 	lines.append(TranslationServer.translate("  saw frame {frame}, {ago} frames ago: {situation}").format({frame = opponent.seen_frame,
 		ago = state.frame - opponent.seen_frame, situation = FightWords.word(opponent.situation)}))
 	lines.append(TranslationServer.translate("  drew: {choice}").format({choice = _drew(opponent)}))
+	var voter := opponent as FightForestOpponent
 	var reader := opponent as FightTreeOpponent
 	var learner := opponent as FightModelOpponent
-	if reader != null:
+	if voter != null:
+		lines.append_array(_forest_lines(voter))
+	elif reader != null:
 		lines.append_array(_tree_lines(reader))
 	elif learner != null:
 		lines.append_array(_model_lines(learner))
@@ -284,17 +289,50 @@ static func _tree_lines(reader: FightTreeOpponent) -> PackedStringArray:
 # counts, in `classes` order, the order the tree settles a tie in.
 static func _tree_step(step: Dictionary, classes: PackedStringArray) -> String:
 	if step.has("counts"):
-		var counts: Dictionary = step["counts"]
-		var names: Array = Array(classes).filter(func(name: String) -> bool: return counts.has(name))
-		names.sort_custom(func(one: String, other: String) -> bool:
-			return counts[one] > counts[other] or (counts[one] == counts[other] and classes.find(one) < classes.find(other)))
-		var cells: PackedStringArray = []
-		for name: String in names:
-			cells.append("%s %d" % [FightWords.word(name), counts[name]])
-		return TranslationServer.translate("  leaf: {counts}").format({counts = ", ".join(cells)})
+		return TranslationServer.translate("  leaf: {counts}").format({counts = _heaviest_first(step["counts"], classes)})
 	var values: Dictionary = {feature = step["feature"], word = FightWords.word(str(step["against"])),
 		seen = FightWords.word(str(step["seen"]))}
 	if step["went"] == LearnedTree.UNREAD:
 		return TranslationServer.translate("  {feature}: it read {seen}, which it cannot test -- the walk stops").format(values)
 	values["went"] = TranslationServer.translate(WENT[0 if step["went"] == LearnedTree.YES else 1])
 	return TranslationServer.translate(TREE_TESTS[0 if step["test"] == "is" else 1]).format(values)
+
+
+# Counts by answer, written heaviest first -- of equal counts, in `classes`
+# order, the order a tree settles a tie in, and a forest its vote.
+static func _heaviest_first(counts: Dictionary, classes: PackedStringArray) -> String:
+	var names: Array = Array(classes).filter(func(name: String) -> bool: return counts.has(name))
+	names.sort_custom(func(one: String, other: String) -> bool:
+		return counts[one] > counts[other] or (counts[one] == counts[other] and classes.find(one) < classes.find(other)))
+	var cells: PackedStringArray = []
+	for name: String in names:
+		cells.append("%s %d" % [FightWords.word(name), counts[name]])
+	return ", ".join(cells)
+
+
+# The forest's last vote (T114): every tree's vote, `VOTES_PER_LINE` to a
+# line, "-" for a tree that could not read your situation; the tally; and
+# what it expects, beside what the n-gram expects and how often each has
+# been right at the same decisions.
+static func _forest_lines(voter: FightForestOpponent) -> PackedStringArray:
+	if voter.forest == null:
+		return PackedStringArray(["", TranslationServer.translate("it reads you with no forest: {why}").format({why = TranslationServer.translate(voter.refusal)})])
+	var score: Array[int] = voter.forest_score()
+	var ngram_score: Array[int] = voter.ngram_score()
+	var lines: PackedStringArray = ["", TranslationServer.translate(
+		"its random forest of {trees} trees, right {right} of its last {last}; the n-gram, asked at the same decisions, {ngram_right} of {ngram_last}:").format({
+		trees = voter.forest.trees.size(), right = score[0], last = score[1], ngram_right = ngram_score[0], ngram_last = ngram_score[1]})]
+	if voter.cast.is_empty():
+		lines.append(TranslationServer.translate("  has read nothing yet"))
+		return lines
+	for first: int in range(0, voter.cast.size(), VOTES_PER_LINE):
+		var votes: PackedStringArray = []
+		for vote: String in voter.cast.slice(first, first + VOTES_PER_LINE):
+			votes.append(FightWords.word(vote) if vote != "" else "-")
+		lines.append(TranslationServer.translate("  trees {first} to {last} voted: {votes}").format({first = first + 1,
+			last = first + votes.size(), votes = ", ".join(votes)}))
+	lines.append(TranslationServer.translate("  tally: {counts}").format({counts = _heaviest_first(voter.tally, voter.forest.classes)}))
+	lines.append(TranslationServer.translate("  so it expects {action}, {percent}% of the votes; the n-gram expects {ngram}, {ngram_percent}%").format({
+		action = FightWords.word(voter.expected), percent = roundi(voter.confidence * 100.0),
+		ngram = FightWords.word(voter.ngram_expected), ngram_percent = roundi(voter.ngram_confidence * 100.0)}))
+	return lines

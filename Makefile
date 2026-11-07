@@ -446,6 +446,14 @@ test-tree-vectors: import ## T113: the decision-tree vectors' walks, against ai_
 	@$(PYTHON) scripts/godot_checked.py res://test/ai_learning/tree_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/tree
 
+.PHONY: test-forest-vectors
+test-vectors: test-forest-vectors
+test-forest-vectors: import ## T114: the random-forest vectors' votes, against ai_learning's LearnedForest
+	@# The fits in the same files are Python's alone, in `make test-python`
+	@# through gameaikit.training.forest: only Python fits (invariant 6).
+	@$(PYTHON) scripts/godot_checked.py res://test/ai_learning/forest_vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/forest
+
 .PHONY: test-combat-vectors
 test-vectors: test-combat-vectors
 test-combat-vectors: import ## The combat vectors, against the tactical board's fight
@@ -1080,6 +1088,20 @@ train-tree: ## T113: fit the decision tree on the person's recordings and publis
 .PHONY: tree-report
 tree-report: ## T113: the tree at each depth, on the rows it was fitted on and on held-out fights, beside the n-gram (a table, not a gate)
 	@PYTHONPATH=python $(PYTHON) -m gameaikit.cloning.opponent_tree --report
+
+# --- the random forest that reads the opponent (T114) -----------------------
+#
+# The same rows, player and split as the tree, its depth and leaf size too;
+# Python fits the forest, seeded (invariant 6, N18), and the fighting game's
+# "forest:" modes ask its trees for their votes.
+
+.PHONY: train-forest
+train-forest: ## T114: fit the random forest on the person's recordings and publish it for the fighting game
+	@PYTHONPATH=python $(PYTHON) -m gameaikit.cloning.opponent_forest --write $(CURDIR)/godot/game/fighting
+
+.PHONY: forest-report
+forest-report: ## T114: one tree against forests of 1, 5, 25 and 100, held out and over five seeds, beside the n-gram (a table, not a gate)
+	@PYTHONPATH=python $(PYTHON) -m gameaikit.cloning.opponent_forest --report
 
 # --- the fighters' pictures (T35, ADR 0015) ---------------------------------
 #

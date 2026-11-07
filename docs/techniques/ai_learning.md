@@ -2,10 +2,10 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-11-06
+verified_on: 2026-11-07
 tier: 2
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 19, linear and logistic regression ; https://docs.godotengine.org/en/stable/classes/class_json.html
-invalidated_if: the kit's LearnedModel, LearnedTree, ModelFile, SoftmaxModel, CaseTable or ClonedPlayer signatures change, or the demos that use them are renamed
+invalidated_if: the kit's LearnedModel, LearnedTree, LearnedForest, ModelFile, SoftmaxModel, CaseTable or ClonedPlayer signatures change, or the demos that use them are renamed
 teaches: learning
 -->
 
@@ -23,19 +23,26 @@ and a bias -- `w·x + b` -- answering a yes-or-no question as a probability
 `LearnedTree` is a decision tree (T113): one question a level -- is this
 word that word, is this number at most that one -- down to a leaf that
 counts the answers the training rows gave there, so the path reads as a
-rule. `CaseTable` is a ghost: what a recorded player did in each situation it met,
+rule. `LearnedForest` is a random forest (T114): many such trees, each
+fitted on its own sample of the rows, voting -- the most votes win.
+`CaseTable` is a ghost: what a recorded player did in each situation it met,
 looked up rather than fitted. Nothing here changes a weight (invariant 6).
 The book: Russell and Norvig, *AIMA*, chapter 19.
 
 ## When not to use it {#when-not}
 
-A hidden layer, or a structure other than one weight per feature or one
-tree -- these classes cannot hold it. A single tree, deep, on few rows: it
+A hidden layer, or a structure other than one weight per feature, one
+tree, or trees voting -- these classes cannot hold it. A single tree, deep, on few rows: it
 learns the rows rather than the player: on the fighting game's few
 recordings no deeper tree does better on fights it never saw, and the
 n-gram beats them all
 ([concepts/learning.md](../concepts/learning.md#a-decision-tree)); many
-trees voting is the usual answer (T114). Features that
+trees voting is the usual answer. A forest when the reason must be
+readable -- its reason is a tally -- or to rescue features that say
+little: it steadies the guess and adds nothing, and on those recordings
+its steadiest guess is the commonest action -- the published forest
+answers "step in" on 129 of 133 held-out decisions
+([concepts/learning.md](../concepts/learning.md#a-random-forest)). Features that
 matter only together ("a low kick when close, unless cornered"): these
 models add, so the product has to be written in as a feature of its own.
 And any learning during play: fitting is Python's, on a desk, reviewed --
@@ -54,7 +61,9 @@ the one exception is `ai_opponent`'s n-gram (ADR 0016).
   "tree: easy", "tree: medium" and "tree: hard" read you with a
   `LearnedTree` fitted to your recordings: the panel shows each test on
   its path, the word it read and which way it went, the leaf's counts, and
-  what the n-gram beside it expects.
+  what the n-gram beside it expects. "forest: easy", "forest: medium" and
+  "forest: hard" read you with a `LearnedForest` of 25 such trees: the
+  panel shows every tree's vote, five to a line, and the tally.
 - `make run` (checkers) declares this module for its Python half: the
   trainer fits with `gameaikit.training`. The game uses none of the addon's
   classes -- its learned weights are read by its own `CheckersWeights` (see
@@ -73,8 +82,11 @@ against a threshold.
 `godot/game/fighting/fight_clone_opponent.gd` plays a `ClonedPlayer`, and
 `godot/game/fighting/fight_tree_opponent.gd` reads you with the tree in
 `opponent_tree.json`, which `python/gameaikit/cloning/opponent_tree.py`
-fits (`make train-tree`; `make tree-report` prints it at every depth). The
-knobs that matter:
+fits (`make train-tree`; `make tree-report` prints it at every depth).
+`godot/game/fighting/fight_forest_opponent.gd` reads you with the forest
+in `opponent_forest.json`, which `python/gameaikit/cloning/opponent_forest.py`
+fits (`make train-forest`; `make forest-report` puts one tree beside
+forests of 5, 25 and 100). The knobs that matter:
 
 | knob | where | what it changes |
 |---|---|---|
@@ -83,6 +95,7 @@ knobs that matter:
 | the features | `LearnedModel.features` | read from the file, in the file's order; `predict_named` matches by name |
 | exact or nearest | `CaseTable.exact` or `CaseTable.nearest` | what a ghost does in a situation the player never met |
 | a tree's depth and leaf size | `MAX_DEPTH`, `MIN_LEAF` in `opponent_tree.py` | how many tests a path has, and how few rows a leaf may count; deeper fits the rows better and new fights worse |
+| a forest's size and seed | `TREES`, `SEED` in `opponent_forest.py` | how many trees vote -- more vote steadier, at one walk each per decision -- and which forest the draws make |
 
 ## In your own project {#your-project}
 
@@ -95,8 +108,9 @@ the Python wheel too. Or copy it from a checkout:
 One folder: `godot/addons/ai_learning/`. It needs nothing else, not even
 `ai_core`. Open the project once, or run `godot --headless --import`, so
 Godot registers its classes. The fitting is Python's: `python/gameaikit/`
-(`training/` for the regressions, `training/tree.py` for a tree and
-`training/model_file.py` to write the file, `cloning/` for a cloned player) -- copy what you fit with, and keep it
+(`training/` for the regressions, `training/tree.py` for a tree,
+`training/forest.py` for a forest -- which draws with `core/xorshift.py`,
+so copy that too -- and `training/model_file.py` to write the file, `cloning/` for a cloned player) -- copy what you fit with, and keep it
 out of the game.
 
 ### A minimal example {#example}
@@ -154,7 +168,9 @@ The weights apply to raw game numbers: the Python side folds its scaling
 back in before publishing, so there is nothing to scale here. The file is
 `models`, each with `kind`, `features`, `weights` and `bias` -- or, for a
 tree, `kind` "tree", `features`, `classes` and `nodes`, read with
-`ModelFile.tree(name)`; anything else in it is yours, handed over unread in `ModelFile.extra`. If your features
+`ModelFile.tree(name)`, or, for a forest, `kind` "forest", `features`,
+`classes` and `trees`, one list of nodes per tree, read with
+`ModelFile.forest(name)`; anything else in it is yours, handed over unread in `ModelFile.extra`. If your features
 need numbers that are not weights -- a radius, what "alone" reads as --
 publish them there and check them yourself on top of `ModelFile`, as the
 tactical game's `TacticalWeights` does with its four `feature_conventions`.
@@ -163,6 +179,6 @@ writes.
 
 ## Deeper {#deeper}
 
-- The two regressions and the tree, fitted and read: [concepts/learning.md](../concepts/learning.md).
+- The two regressions, the tree and the forest, fitted and read: [concepts/learning.md](../concepts/learning.md).
 - The file's shape and the Godot side: [godot/learning.md](../godot/learning.md).
 - A player cloned from recordings: [behaviour_cloning](behaviour_cloning.md).

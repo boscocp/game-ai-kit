@@ -3,7 +3,9 @@
 A JSON object whose `models` maps a name to `kind`, `features`, `weights`
 and `bias` -- one weight per feature, applying to raw game numbers -- or,
 for a decision tree (`kind` "tree", T113), to `kind`, `features`, `classes`
-and `nodes`. That is the whole format, and it belongs to no game. Anything else at the top level
+and `nodes` -- or, for a random forest (`kind` "forest", T114), to `kind`,
+`features`, `classes` and `trees`, one list of nodes per tree. That is the
+whole format, and it belongs to no game. Anything else at the top level
 is the publishing game's own (the tactical board's `feature_conventions`,
 say), written here unread and checked by that game, on both sides.
 
@@ -18,18 +20,22 @@ import json
 import math
 import pathlib
 
-from . import tree
+from . import forest, tree
 from .models import PREDICTORS, Model
 
 #: The fields every published model carries.
 MODEL_FIELDS = ("kind", "features", "weights", "bias")
 #: The fields a published tree carries instead.
 TREE_FIELDS = ("kind", "features", "classes", "nodes")
-#: Every kind a file may publish: the weighted ones, and the tree.
-KINDS = (*PREDICTORS, tree.KIND)
+#: The fields a published forest carries: its trees share its features and classes.
+FOREST_FIELDS = ("kind", "features", "classes", "trees")
+#: Every kind a file may publish: the weighted ones, the tree and the forest.
+KINDS = (*PREDICTORS, tree.KIND, forest.KIND)
+#: Which fields each kind must carry; the weighted kinds carry `MODEL_FIELDS`.
+FIELDS_OF = {tree.KIND: TREE_FIELDS, forest.KIND: FOREST_FIELDS}
 
 
-def as_json(models: dict[str, Model | tree.Tree], generated_by: str, **fields: object) -> dict:
+def as_json(models: dict[str, Model | tree.Tree | forest.Forest], generated_by: str, **fields: object) -> dict:
     """A model file: what wrote it, the game's own fields, then the models.
 
     In that order, so a person opening the file reads what it is before the
@@ -93,7 +99,7 @@ def _why_model_is_wrong(name: str, entry: object) -> str:
         return f"M4 model `{name}` has no `kind`"
     if str(entry["kind"]) not in KINDS:
         return f"M5 model `{name}` is of kind `{entry['kind']}`, which nothing here can evaluate"
-    for field in TREE_FIELDS if entry["kind"] == tree.KIND else MODEL_FIELDS:
+    for field in FIELDS_OF.get(entry["kind"], MODEL_FIELDS):
         if field not in entry:
             return f"M4 model `{name}` has no `{field}`"
     features = _why_features_are_wrong(name, entry["features"])
@@ -101,6 +107,8 @@ def _why_model_is_wrong(name: str, entry: object) -> str:
         return features
     if entry["kind"] == tree.KIND:
         return _why_tree_is_wrong(name, entry)
+    if entry["kind"] == forest.KIND:
+        return _why_forest_is_wrong(name, entry)
     weights = entry["weights"]
     if not isinstance(weights, list) or len(weights) != len(entry["features"]):
         count = len(weights) if isinstance(weights, list) else "no"
@@ -117,15 +125,44 @@ def _why_tree_is_wrong(name: str, entry: dict) -> str:
     The nodes are walked once, first to last, each checked whole before the
     next, so the first wrong node is the one reported, in both languages.
     """
-    classes = entry["classes"]
-    if not isinstance(classes, list) or not classes or not all(isinstance(answer, str) for answer in classes) \
-            or len(set(classes)) != len(classes):
+    if not _are_distinct_words(entry["classes"]):
         return f"M11 tree `{name}` does not name its answers: `classes` must be distinct words"
     nodes = entry["nodes"]
     if not isinstance(nodes, list) or not nodes:
         return f"M12 tree `{name}` has no nodes"
+    return _why_nodes_are_wrong(f"tree `{name}`", nodes, entry["features"], entry["classes"])
+
+
+def _why_forest_is_wrong(name: str, entry: dict) -> str:
+    """A forest: its answers named, at least one tree, and every tree's nodes as a tree's must be.
+
+    The trees are checked first to last, and each tree's nodes first to
+    last, so the first wrong node of the first wrong tree is the one reported.
+    """
+    if not _are_distinct_words(entry["classes"]):
+        return f"M11 forest `{name}` does not name its answers: `classes` must be distinct words"
+    trees = entry["trees"]
+    if not isinstance(trees, list) or not trees:
+        return f"M16 forest `{name}` has no trees"
+    for number, nodes in enumerate(trees):
+        if not isinstance(nodes, list) or not nodes:
+            return f"M16 forest `{name}` tree {number} has no nodes"
+        wrong = _why_nodes_are_wrong(f"forest `{name}` tree {number}", nodes, entry["features"], entry["classes"])
+        if wrong:
+            return wrong
+    return ""
+
+
+def _are_distinct_words(classes: object) -> bool:
+    """A non-empty list of words, none of them twice: what `classes` must be."""
+    return isinstance(classes, list) and bool(classes) and all(isinstance(answer, str) for answer in classes) \
+        and len(set(classes)) == len(classes)
+
+
+def _why_nodes_are_wrong(owner: str, nodes: list, features: list, classes: list) -> str:
+    """One tree's nodes, first to last, each checked whole before the next."""
     for index, node in enumerate(nodes):
-        wrong = _why_node_is_wrong(f"tree `{name}` node {index}", index, node, entry["features"], classes, len(nodes))
+        wrong = _why_node_is_wrong(f"{owner} node {index}", index, node, features, classes, len(nodes))
         if wrong:
             return wrong
     return ""

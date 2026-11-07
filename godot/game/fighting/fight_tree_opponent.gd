@@ -54,6 +54,12 @@ var _person_action: String = ""
 ## drawing its chances from `chance_seed`.
 func _init(level_name: String, published: ModelFile, data: FightData, chance_seed: int = 0) -> void:
 	super(level_name, data, chance_seed)
+	_take_model(published)
+
+
+# The model it reads you with, out of `published`, or why there is none.
+# The one place the file is read, so the forest (T114) reads its own kind.
+func _take_model(published: ModelFile) -> void:
 	reader = published.tree(MODEL_NAME) if published.is_loaded() else null
 	if not published.is_loaded():
 		refusal = published.error
@@ -80,7 +86,7 @@ func new_fight() -> void:
 ## of the frame it reads -- as `FightRecording.last_seen` writes the rows.
 func watch(seen: FightState, me: int) -> void:
 	var action: String = FightAction.of(seen, 1 - me, _data)
-	if action != "" and action != _person_action and not walked.is_empty():
+	if action != "" and action != _person_action and has_read():
 		tree_guesses.append(expected == action)
 		ngram_guesses.append(ngram_expected == action)
 	_person_action = action
@@ -105,22 +111,30 @@ static func _scored(list: Array[bool]) -> Array[int]:
 	return [recent.count(true), recent.size()]
 
 
+## True once it has read a situation it can answer from: a guess to score.
+func has_read() -> bool:
+	return not walked.is_empty()
+
+
 # Your situation, read off the late frame, before the learner decides.
 func _decide(seen: FightState, me: int) -> void:
 	person_situation = FightSituation.of(seen, 1 - me, _person_last, _data)
+	_read(person_situation)
+	super(seen, me)
+
+
+# The tree's walk through `situation`, one walk per decision; none with no tree.
+func _read(situation: Dictionary) -> void:
 	walked = []
 	if reader != null:
-		walked = reader.steps(person_situation)
-	super(seen, me)
+		walked = reader.steps(situation)
 
 
 # The tree's answer, in the learner's fields: what it expects, and the
 # leaf's share for it. With no tree, or a walk it could not finish, it
 # expects nothing and leans nothing. The n-gram's guess is kept beside it.
 func _expect() -> void:
-	ngram_expected = model.likeliest()
-	ngram_confidence = model.probabilities()[ngram_expected]
-	expected_after = ""
+	_keep_ngram_guess()
 	var leaf: Dictionary = walked.back().get("counts", {}) if not walked.is_empty() else {}
 	if leaf.is_empty():
 		expected = "nothing yet"  # not shown: an identifier
@@ -128,6 +142,14 @@ func _expect() -> void:
 		return
 	expected = reader.likeliest_in(leaf)
 	confidence = reader.shares_of(leaf)[expected]
+
+
+# What the n-gram beside it expects at this decision, and how sure; the
+# answer it leans on is the model's, so `expected_after` names no context.
+func _keep_ngram_guess() -> void:
+	ngram_expected = model.likeliest()
+	ngram_confidence = model.probabilities()[ngram_expected]
+	expected_after = ""
 
 
 ## The surest a leaf can be: all of its rows one action.

@@ -29,6 +29,7 @@ const SHOWN: Array[String] = [  # shown through tr()
 	"stand", "jab", "low kick", "anti-air (sees you now)", "opponent: easy", "opponent: medium", "opponent: hard",
 	"learner: easy", "learner: medium", "learner: hard", "bandit: easy", "bandit: medium", "bandit: hard",
 	"ghost: exact", "ghost: nearest", "clone", "tree: easy", "tree: medium", "tree: hard",
+	"forest: easy", "forest: medium", "forest: hard",
 	"easy", "medium", "hard",
 	"standing", "crouching", "air",
 	"light_punch", "heavy_punch", "light_kick", "heavy_kick",

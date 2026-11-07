@@ -150,7 +150,7 @@
       "file": {
         "models": {
           "only": {
-            "kind": "random_forest",
+            "kind": "boosted_trees",
             "features": [
               "one"
             ],
@@ -1350,6 +1350,239 @@
         }
       },
       "refused": "M15"
+    },
+    {
+      "why": "A random forest (T114): its trees share its features and classes, each tree's nodes as a tree's are. A tree that is a single leaf is a tree too.",
+      "file": {
+        "models": {
+          "votes": {
+            "kind": "forest",
+            "features": [
+              "distance",
+              "health"
+            ],
+            "classes": [
+              "high",
+              "low"
+            ],
+            "trees": [
+              [
+                {
+                  "feature": "distance",
+                  "is": "close",
+                  "yes": 1,
+                  "no": 2
+                },
+                {
+                  "counts": {
+                    "low": 3
+                  }
+                },
+                {
+                  "counts": {
+                    "high": 1
+                  }
+                }
+              ],
+              [
+                {
+                  "counts": {
+                    "high": 2,
+                    "low": 1
+                  }
+                }
+              ]
+            ]
+          }
+        }
+      },
+      "loads": [
+        "votes"
+      ],
+      "extra": []
+    },
+    {
+      "why": "A forest with no `trees` field: which fields a model must have depends on its kind.",
+      "file": {
+        "models": {
+          "votes": {
+            "kind": "forest",
+            "features": [
+              "distance",
+              "health"
+            ],
+            "classes": [
+              "high",
+              "low"
+            ]
+          }
+        }
+      },
+      "refused": "M4"
+    },
+    {
+      "why": "A forest whose answers are named twice: the vote would count one answer under two names.",
+      "file": {
+        "models": {
+          "votes": {
+            "kind": "forest",
+            "features": [
+              "distance",
+              "health"
+            ],
+            "classes": [
+              "high",
+              "high"
+            ],
+            "trees": [
+              [
+                {
+                  "feature": "distance",
+                  "is": "close",
+                  "yes": 1,
+                  "no": 2
+                },
+                {
+                  "counts": {
+                    "low": 3
+                  }
+                },
+                {
+                  "counts": {
+                    "high": 1
+                  }
+                }
+              ],
+              [
+                {
+                  "counts": {
+                    "high": 2,
+                    "low": 1
+                  }
+                }
+              ]
+            ]
+          }
+        }
+      },
+      "refused": "M11"
+    },
+    {
+      "why": "A forest of no trees: nobody votes, and every answer would be nothing.",
+      "file": {
+        "models": {
+          "votes": {
+            "kind": "forest",
+            "features": [
+              "distance",
+              "health"
+            ],
+            "classes": [
+              "high",
+              "low"
+            ],
+            "trees": []
+          }
+        }
+      },
+      "refused": "M16"
+    },
+    {
+      "why": "A forest one of whose trees has no nodes: a voter with nothing to walk.",
+      "file": {
+        "models": {
+          "votes": {
+            "kind": "forest",
+            "features": [
+              "distance",
+              "health"
+            ],
+            "classes": [
+              "high",
+              "low"
+            ],
+            "trees": [
+              [
+                {
+                  "feature": "distance",
+                  "is": "close",
+                  "yes": 1,
+                  "no": 2
+                },
+                {
+                  "counts": {
+                    "low": 3
+                  }
+                },
+                {
+                  "counts": {
+                    "high": 1
+                  }
+                }
+              ],
+              []
+            ]
+          }
+        }
+      },
+      "refused": "M16"
+    },
+    {
+      "why": "A forest whose second tree points back at its root: each tree's nodes are held to a tree's rules, in every tree, not only the first.",
+      "file": {
+        "models": {
+          "votes": {
+            "kind": "forest",
+            "features": [
+              "distance",
+              "health"
+            ],
+            "classes": [
+              "high",
+              "low"
+            ],
+            "trees": [
+              [
+                {
+                  "feature": "distance",
+                  "is": "close",
+                  "yes": 1,
+                  "no": 2
+                },
+                {
+                  "counts": {
+                    "low": 3
+                  }
+                },
+                {
+                  "counts": {
+                    "high": 1
+                  }
+                }
+              ],
+              [
+                {
+                  "feature": "distance",
+                  "is": "close",
+                  "yes": 1,
+                  "no": 0
+                },
+                {
+                  "counts": {
+                    "low": 3
+                  }
+                },
+                {
+                  "counts": {
+                    "high": 1
+                  }
+                }
+              ]
+            ]
+          }
+        }
+      },
+      "refused": "M14"
     }
   ]
 }

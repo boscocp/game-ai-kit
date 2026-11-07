@@ -16,7 +16,8 @@
     "godot/locale/fighting.csv",
     "godot/locale/fighting.csv.import",
     "godot/locale/fighting.pt_BR.translation",
-    "python/tests/test_opponent_tree.py"
+    "python/tests/test_opponent_tree.py",
+    "python/tests/test_opponent_forest.py"
   ],
   "depends_on": [
     "ai_bandit",
@@ -34,6 +35,7 @@
   ],
   "retrain": [
     "N10",
-    "N16"
+    "N16",
+    "N18"
   ]
 }
