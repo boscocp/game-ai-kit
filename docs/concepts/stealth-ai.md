@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: concept
-verified_on: 2026-10-30
+verified_on: 2026-11-06
 tier: 1
 source: https://www.gameaipro.com/
 invalidated_if: T69 or T70 stops doing what the last section says, T67's selector stops being how a bot chooses, or T90's director stops pacing by the reserve as its section says
@@ -577,6 +577,35 @@ says so rather than tuning it into the rule.
 When not to use one: as difficulty. A director that made the guards see
 further when you are doing well would be a rubber band, and players feel
 those. This one only changes how many there are, and when.
+
+## Is anyone there at all? A Bayesian network (T115)
+
+Everything above asks *where* the player is. A guard first asks whether
+anyone is there, and the signs it has are not sightings: a noise, a door
+it knows was shut standing open, a partner who stopped answering the radio.
+Each alone is weak -- rats make noise, colleagues forget doors, radios
+fail -- and together they are strong. A Bayesian network says exactly how
+strong, and why (AIMA 4th ed., ch. 13): the intruder and a faulty radio as
+causes, the three signs as their effects, a table of chances for each, and
+P(intruder | the signs) by enumeration (`ai_bayes`).
+
+The network is written by hand in `intruder_network.json`, and its numbers
+are the kit's own, chosen against one requirement: a noise alone (0.07)
+must not send a guard looking -- footsteps are the commonest sign, and the
+awareness already handles them -- while a door found open (0.42) must. The
+threshold, 0.3, is a step in the guard's action list, not a branch in code.
+Two things it shows that the awareness bar cannot. **Explaining away**: a
+partner gone quiet raises the belief, unless the radio is at fault -- the
+same silence, explained by the other cause, means less. And **which sign
+moved it**: what the belief would be without each sign, so the panel names
+the open door as the reason, and the player learns what the guard reads.
+
+A sign is kept for a while (`remember_for`) and let go once the guard has
+walked to where it was and found nothing, so the belief falls again on its
+own: the guard shuts the door, and goes back to its route. That is a
+choice, not the network's: a network is asked about what is seen now. A
+belief that follows time on its own -- someone was here a minute ago, so may
+be there now -- is a dynamic network (AIMA ch. 14), and not here.
 
 ## Could not be checked
 

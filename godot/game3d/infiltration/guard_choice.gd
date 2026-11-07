@@ -49,6 +49,8 @@ static func numbers_of(guard: InfiltrationGuard, world: InfiltrationWorld) -> Di
 		"body_unraised": 1.0 if guard.body_unraised != Vector2.INF else 0.0,
 		"partner_quiet": 1.0 if guard.quiet_place != Vector2.INF else 0.0,
 		"away": clampf(_away(guard) / reads.reading("away_scale"), 0.0, 1.0),
+		"intruder": guard.suspicion.belief,
+		"has_lead": 1.0 if guard.suspicion.lead_place() != Vector2.INF else 0.0,
 	}
 
 

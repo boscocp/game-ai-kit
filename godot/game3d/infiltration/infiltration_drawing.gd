@@ -3,7 +3,7 @@
 ##
 ## The level: the floor tinted by its light, cell by cell -- the player's
 ## own measure of safety [Leonard 2003] -- the boxes, the hiding places in
-## green, and the exit. The bodies: Kenney's survivor or the primitive
+## green, the exit, and the doors (`DoorDrawing`, T115). The bodies: Kenney's survivor or the primitive
 ## humanoid (`BotBody`), the player blue and the guards red, a downed guard
 ## lying flat. The decisions: each guard's vision zones as outlines on the
 ## floor, in its phase's colour; for a guard looking at the player, a line
@@ -45,6 +45,7 @@ var _ghost: Node3D
 var _belief: MultiMeshInstance3D
 var _particles: MultiMeshInstance3D
 var _drawn_at: float = 0.0
+var _doors: DoorDrawing
 
 
 ## Build the level and the bodies once, for `world`.
@@ -59,6 +60,9 @@ func build(world: InfiltrationWorld) -> void:
 		var body := BotBody.new(shelf, GUARD)
 		add_child(body)
 		_guards.append(body)
+	_doors = DoorDrawing.new()
+	_doors.build(world.level)
+	add_child(_doors)
 	_ghost = AssetShelf.primitive("humanoid", BotBody.HEIGHT, GHOST)
 	add_child(_ghost)
 	_belief = InfiltrationGround.belief_tiles(self, world.level)
@@ -84,6 +88,7 @@ func refresh(world: InfiltrationWorld, watched: int, thinking: bool) -> void:
 		var body: BotBody = _guards[guard.id]
 		body.stand(world.level.arena.above(guard.position, 0.0), guard.facing, false, delta)
 		body.rotation.z = 0.0 if guard.alive() else PI / 2.0
+	_doors.refresh(world)
 	_lines.clear_surfaces()
 	_ghost.visible = false
 	_belief.visible = thinking and world.rules.use_belief and not world.rules.use_particles

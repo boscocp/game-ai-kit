@@ -1,0 +1,53 @@
+{
+ "description": "Evidence whose chance is 0 has no answer: the distribution and the influence are empty.",
+ "network": {
+  "variables": [
+   {
+    "name": "cause",
+    "values": [
+     "yes",
+     "no"
+    ],
+    "parents": [],
+    "table": [
+     [
+      1.0,
+      0.0
+     ]
+    ]
+   },
+   {
+    "name": "effect",
+    "values": [
+     "yes",
+     "no"
+    ],
+    "parents": [
+     "cause"
+    ],
+    "table": [
+     [
+      1.0,
+      0.0
+     ],
+     [
+      0.0,
+      1.0
+     ]
+    ]
+   }
+  ]
+ },
+ "problem": "",
+ "queries": [
+  {
+   "query": "cause",
+   "value": "yes",
+   "evidence": {
+    "effect": "no"
+   },
+   "distribution": [],
+   "influence": {}
+  }
+ ]
+}
