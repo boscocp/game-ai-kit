@@ -1,5 +1,9 @@
 # game-ai-kit
 
+[![PyPI](https://img.shields.io/pypi/v/gameaikit)](https://pypi.org/project/gameaikit/)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+[![Godot 4.7](https://img.shields.io/badge/Godot-4.7-478cbf)](https://godotengine.org/)
+
 Teaching AI in games, one readable piece at a time.
 
 > Em português: [README.pt-BR.md](README.pt-BR.md).
@@ -11,9 +15,10 @@ unreadable, it loses to the slow and readable one.
 
 > Status: every technique in the table below has a page explaining it, in
 > English and Portuguese, and at least one demo where it decides something;
-> `make menu` opens them all. Nothing is published to the Godot Asset Store
-> or PyPI yet; `make release` builds the zips and the wheel, and
-> [docs/howto/publish.md](docs/howto/publish.md) is how they will be published.
+> `make menu` opens them all. The Python half is on PyPI
+> (`pip install gameaikit`); the addons, as one kit, are in review at the
+> Godot Asset Store. [docs/howto/publish.md](docs/howto/publish.md) is how a
+> release is built and published.
 
 ## What it covers
 
