@@ -9,7 +9,7 @@
 
 Ensinar IA em jogos, uma peça legível por vez.
 
-**Veja antes:** [treze das demos em três minutos](https://youtu.be/1tvfXbz6LJQ),
+**Assista primeiro:** [treze das demos em três minutos](https://youtu.be/1tvfXbz6LJQ),
 no YouTube, cada uma mostrando a decisão enquanto ela é tomada. O vídeo é em
 inglês.
 
