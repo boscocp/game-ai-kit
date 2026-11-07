@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: structure
-verified_on: 2026-10-29
+verified_on: 2026-11-07
 tier: 1
 source: https://github.com/boscocp/game-ai-kit
 invalidated_if: the reply's shape changes, or a refusal code changes meaning
@@ -31,13 +31,22 @@ suites green. This is where "every refusal is refused by both validators" is
 held -- by running them; `check_llm_validated.py`, which reads code and runs
 nothing, cannot.
 
+`format_controls` lists Unicode's format controls (category Cf, Unicode
+16.0) as runs of code points: what R9 refuses beside the controls and the
+line separators (T139). Each validator names the same runs by hand, so
+neither leans on a Unicode table the other lacks, and both suites compare
+their list to this one. Python's also compares it to its own Unicode table
+when that table is the version named here, and is skipped on another.
+
 ## Where the two parsers had to be made to agree
 
 Measured on Godot 4.7.2 and Python 3, each now a case: Godot's JSON parser
 accepts a trailing comma and the numbers `01` and `1.`, which Python's
 refuses, so `LlmValidator` refuses them itself, outside strings; Python's
 keeps a lone UTF-16 surrogate and `NaN`, which Godot's refuses, so
-`gameaikit.llm` refuses them; both keep the last of a key written twice;
+`gameaikit.llm` refuses them; a surrogate pair written as escapes is one
+character to both (U+E0041, a tag character, is a case); both keep the last
+of a key written twice;
 both count a speech's length in characters, so 280 `ã` pass. Found by
 review, each a case too: a `\u0000` escape becomes U+FFFD in Godot and a
 real NUL in Python, so both refuse it before parsing (R1); lists nested a

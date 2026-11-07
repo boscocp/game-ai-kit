@@ -7,7 +7,7 @@ tier: 2
 source: https://www.cp.eng.chula.ac.th/~vishnu/gameResearch/story_november_2005/MateasSternTIDSE04.pdf ; https://docs.godotengine.org/en/4.7/classes/class_httprequest.html ; https://ollama.com/blog/structured-outputs
 invalidated_if: the kit's LlmValidator, LlmReply, LlmRuntime, RecordedRuntime, HttpRuntime or LlmConversation signatures change, the reply's shape or its refusal codes change, or T94's game lands and this page does not name it
 teaches: language-models
-translation_of: 4fcade74814fcf54592322a72d4d856f22ef6159b9d9b0da9c85a73444d9816d
+translation_of: 3b8abfd31220b5ff846bba6bb85c25bba3e2c0b8fd4941940bd399fa41f6d59c
 -->
 
 > English: [ai_llm.md](ai_llm.md). Os termos que ficam em inglês estão
@@ -82,7 +82,7 @@ estado de "pensando". As regras:
 | R6 | `intent` não é um que o jogo declarou |
 | R7 | `argument` não é vazio e não é um dos valores daquele `intent` |
 | R8 | `speech` é vazio, ou passa de 280 caracteres |
-| R9, R10 | `speech` tem quebra de linha ou caractere de controle, ou marcação (`<>[]*` e a crase) |
+| R9, R10 | `speech` tem quebra de linha ou caractere de controle, ou um caractere de formatação (o Cf do Unicode: os de largura zero, as marcas bidirecionais e as que invertem o resto da linha, o hífen suave), ou marcação (`<>[]*` e a crase) |
 | R11 | `speech` contém um dos segredos do jogo, ignorando maiúsculas e minúsculas de A a Z (só essas letras: Python e Godot tratam as outras de jeitos diferentes) |
 | F1 | nenhuma resposta chegou: o *runtime* falhou ou estourou o tempo |
 | F2 | o servidor recusou o próprio pedido, e disse por quê (qualquer erro HTTP menos 503): vai recusar todo turno até o pedido ser corrigido, por isso não é F1 |

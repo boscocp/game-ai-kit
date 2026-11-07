@@ -21,6 +21,96 @@
       "Ölmez"
     ]
   },
+  "format_controls": {
+    "why": "Unicode's format controls, category Cf as Unicode 16.0 lists it, each run as its first and last code point in hex. R9 refuses every one (T139). Both validators name the same runs, and both suites compare their own list to this one; Python's also compares it to its Unicode table when that table is 16.0.",
+    "unicode": "16.0.0",
+    "runs": [
+      [
+        "00AD",
+        "00AD"
+      ],
+      [
+        "0600",
+        "0605"
+      ],
+      [
+        "061C",
+        "061C"
+      ],
+      [
+        "06DD",
+        "06DD"
+      ],
+      [
+        "070F",
+        "070F"
+      ],
+      [
+        "0890",
+        "0891"
+      ],
+      [
+        "08E2",
+        "08E2"
+      ],
+      [
+        "180E",
+        "180E"
+      ],
+      [
+        "200B",
+        "200F"
+      ],
+      [
+        "202A",
+        "202E"
+      ],
+      [
+        "2060",
+        "2064"
+      ],
+      [
+        "2066",
+        "206F"
+      ],
+      [
+        "FEFF",
+        "FEFF"
+      ],
+      [
+        "FFF9",
+        "FFFB"
+      ],
+      [
+        "110BD",
+        "110BD"
+      ],
+      [
+        "110CD",
+        "110CD"
+      ],
+      [
+        "13430",
+        "1343F"
+      ],
+      [
+        "1BCA0",
+        "1BCA3"
+      ],
+      [
+        "1D173",
+        "1D17A"
+      ],
+      [
+        "E0001",
+        "E0001"
+      ],
+      [
+        "E0020",
+        "E007F"
+      ]
+    ]
+  },
   "cases": [
     {
       "why": "The smallest reply that passes: a greeting, an intent with no argument.",
@@ -178,7 +268,7 @@
     },
     {
       "why": "A byte-order mark before the object. Both parsers refuse it.",
-      "raw": "﻿{\"speech\": \"Evening.\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "raw": "\ufeff{\"speech\": \"Evening.\", \"intent\": \"greet\", \"argument\": \"\"}",
       "refused": "R1"
     },
     {
@@ -311,7 +401,7 @@
     },
     {
       "why": "DEL, the control character past the printable ones.",
-      "raw": "{\"speech\": \"Evening.\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "raw": "{\"speech\": \"Evening.\u007f\", \"intent\": \"greet\", \"argument\": \"\"}",
       "refused": "R9"
     },
     {
@@ -349,6 +439,64 @@
       "raw": "{\"speech\": \"Evening, sir.\", \"intent\": \"greet\", \"argument\": \"\"}",
       "accepted": {
         "speech": "Evening, sir.",
+        "intent": "greet",
+        "argument": ""
+      }
+    },
+    {
+      "why": "U+200D, ZERO WIDTH JOINER, inside a secret: R11 reads `owl-eyes` nowhere in it, and the screen shows it whole. A format control (Unicode's Cf), so R9 refuses the speech before R11 reads it (T139).",
+      "raw": "{\"speech\": \"The word is owl\u200d-eyes.\", \"intent\": \"ask\", \"argument\": \"the_gate\"}",
+      "refused": "R9"
+    },
+    {
+      "why": "U+200B, ZERO WIDTH SPACE, written as JSON's escape: the zero-width family, which shows nothing and splits a word for any search.",
+      "raw": "{\"speech\": \"Even\\u200bing.\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R9"
+    },
+    {
+      "why": "U+202E, RIGHT-TO-LEFT OVERRIDE: the bidirectional family. The rest of the line is shown reversed, so the screen and the string say different things.",
+      "raw": "{\"speech\": \"Evening. \u202esey\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R9"
+    },
+    {
+      "why": "U+2066, LEFT-TO-RIGHT ISOLATE, written as JSON's escape: a bidirectional isolate, the newer kind of the same family.",
+      "raw": "{\"speech\": \"Evening, \\u2066sir.\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R9"
+    },
+    {
+      "why": "U+00AD, SOFT HYPHEN: shown only where a line wraps, so the speech holds a character the person may never see.",
+      "raw": "{\"speech\": \"Even\u00ading.\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R9"
+    },
+    {
+      "why": "U+FEFF, ZERO WIDTH NO-BREAK SPACE, the byte-order mark, inside the speech rather than before the object (that one is R1).",
+      "raw": "{\"speech\": \"Evening.\ufeff\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R9"
+    },
+    {
+      "why": "U+E0041, TAG LATIN CAPITAL LETTER A, written as itself: four bytes in UTF-8, one character to both validators, past the 16-bit range. Tag characters are invisible.",
+      "raw": "{\"speech\": \"Evening.\udb40\udc41\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R9"
+    },
+    {
+      "why": "The same tag character written as JSON's escape, a surrogate pair. Both parsers join the pair into one character, U+E0041, and R9 refuses it.",
+      "raw": "{\"speech\": \"Evening.\\udb40\\udc41\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "refused": "R9"
+    },
+    {
+      "why": "U+200A, HAIR SPACE, the character just before the zero-width family: a visible space (Zs), not a format control. Accepted.",
+      "raw": "{\"speech\": \"Evening, sir.\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "accepted": {
+        "speech": "Evening, sir.",
+        "intent": "greet",
+        "argument": ""
+      }
+    },
+    {
+      "why": "U+202F, NARROW NO-BREAK SPACE, just after the bidirectional overrides: the space a French line puts before `?`. Accepted.",
+      "raw": "{\"speech\": \"Vraiment ?\", \"intent\": \"greet\", \"argument\": \"\"}",
+      "accepted": {
+        "speech": "Vraiment ?",
         "intent": "greet",
         "argument": ""
       }

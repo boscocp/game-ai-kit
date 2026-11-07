@@ -27,7 +27,12 @@ and the C1 range, U+0080 to U+009F), and a line break includes U+2028
 and U+2029, the line and paragraph separators. The file writes those two
 as JSON escapes, so the pattern it decodes to holds the characters
 themselves: Godot's `RegEx` refuses a `\u2028` in a pattern, and every
-reader of this one takes the character. The schema still cannot say that a speech holds no secret, and a
+reader of this one takes the character. Since T139 the class also leaves
+out Unicode's format controls (category Cf: zero-width characters,
+bidirectional marks and overrides, the soft hyphen, the tag characters),
+named by range in `FORMAT_CONTROLS` in both validators and written the same
+way, as JSON escapes; past U+FFFF an escape is a surrogate pair, which
+every JSON reader joins into one character. The schema still cannot say that a speech holds no secret, and a
 runtime may ignore it, which is why the validator checks every reply anyway.
 
 The pattern is **stricter than the validator** in one place: it also leaves
