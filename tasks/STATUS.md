@@ -1588,7 +1588,7 @@ review.
 | T150 | A flock from three rules | done | wave 157 (#112): separation, alignment and cohesion and a `Flock` in `ai_steering`; `make demo-flocking`, a hundred boids, 1-3 switch the rules; one-frame time to target like Shiffman; `make measure-flocking` prints the page's table |
 | T151 | An RTS group moves as a flock | done | wave 158 (#116): a `GakRtsCrowd` port in the core, `RtsFlock` in the game; G flocks a group's move order, off by default and byte-identical when off; `make test-rts-flock` holds T19's wall-gap jam; a G-on match is not kept as a recording |
 | T152 | A crowd to hide in | done | wave 159 (#117): a market level with sixteen civilians in three flocks; walking in step inside a group scales a guard's sight certainty and the reach of the player's steps, both in `crowd.json` and shown; the figure is evidence in T115's network |
-| T153 | A video of the demos, for YouTube | todo | the owner, 2026-11-06; after T150-T152, made last from a current main: Godot's Movie Maker records each demo in English with its overlay, ffmpeg edits a 2-4 minute video with captions, a title and an end card, no music; delivered to `$HOME/Videos/game-ai-kit/` with a thumbnail and chapters; nothing uploaded |
+| T153 | A video of the demos, for YouTube | done | the owner, 2026-11-06; after T150-T152, made last from a current main: Godot's Movie Maker records each demo in English with its overlay, ffmpeg edits a 2-4 minute video with captions, a title and an end card, no music; delivered to `$HOME/Videos/game-ai-kit/` with a thumbnail and chapters; the owner posted it, https://youtu.be/1tvfXbz6LJQ |
 
 ---
 
