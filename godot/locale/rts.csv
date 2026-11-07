@@ -217,3 +217,4 @@ recording: {count} match(es) kept in data/rts/,gravando: {count} partida(s) guar
 "G flock: towards their middle","G bando: para o meio deles"
 "G flock: on","G bando: ligado"
 "G flock: off","G bando: desligado"
+"(not this one: G walked a flock, which a recording cannot replay)","(esta não: G fez um bando andar, e uma gravação não sabe repetir isso)"

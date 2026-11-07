@@ -21,9 +21,14 @@
 #
 #     python3 scripts/godot_checked.py res://test/rts/rts_flock_gap.gd
 #
+# One fixed scene: the armies stand on a grid and nothing in a tick of
+# theirs rolls a die, so the seed changes nothing (7, 42 and 151 measured
+# the same). The margin is one scene's -- 19 jammed against none.
+#
 # Exit codes: 0 the jam was seen and the flock had none; 1 otherwise.
 extends SceneTree
 
+## The budget's seed. It moves nothing here: see the header.
 const SEED: int = 19
 const PER_SIDE: int = 100
 const TICKS: int = 1200

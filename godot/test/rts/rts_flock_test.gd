@@ -91,6 +91,23 @@ func test_the_watched_unit_shows_its_three_forces_and_who_it_counted() -> void:
 	assert_bool(pushed).is_true()
 
 
+func test_a_flock_carried_into_a_new_world_walks_as_a_fresh_one() -> void:
+	# A restart builds a new world whose ids start from 1 again; the game
+	# keeps its flock across it, and `reset` is what keeps the old world's
+	# units out of the new one.
+	var fresh: RtsWorld = _sent(_flock_on())
+	_play(fresh, 120)
+	for resetting: bool in [false, true]:
+		var carried: RtsFlock = _flock_on()
+		_play(_sent(carried), 100)
+		if resetting:
+			carried.reset()
+		var again: RtsWorld = _sent(carried)
+		_play(again, 120)
+		# Without the reset the old world leaks in: the case `reset` exists for.
+		assert_bool(again.digest() == fresh.digest()).is_equal(resetting)
+
+
 func test_switched_off_mid_walk_the_column_takes_over() -> void:
 	var flock: RtsFlock = _flock_on()
 	var world: RtsWorld = _sent(flock)
@@ -107,6 +124,7 @@ func test_g_switches_the_games_flock_and_the_overlay_shows_the_watched_unit() ->
 	assert_bool(game.flock.on).is_false()
 	game._on_key(KEY_G)
 	assert_bool(game.flock.on).is_true()
+	assert_bool(game.flock_used).is_true()
 	var ids: Array[int] = []
 	for unit: Dictionary in RtsSnapshot.of(game.world, RtsScenario.WEST).mine(RtsKinds.WORKER):
 		ids.append(unit["id"])

@@ -77,6 +77,26 @@ var _vehicles: Dictionary = {}
 var _forces: Dictionary = {}
 # Id -> where it stood a tick ago: its velocity, without a field for one.
 var _was: Dictionary = {}
+# The unit `watched_counted` was counted for: a new watched unit's list
+# starts empty, not with the last one's, until it next decides.
+var _counted_for: int = 0
+
+
+## Forgets every unit it has seen: where each stood, its forces, the
+## watched unit's. A new world's ids start again from 1, so a flock carried
+## into one without this reads the last world's units as its own.
+func reset() -> void:
+	_vehicles.clear()
+	_forces.clear()
+	_was.clear()
+	watched_forces = []
+	watched_counted = []
+	_counted_for = 0
+
+
+## True when unit `id` walked as a flock on the last tick.
+func is_flocking(id: int) -> bool:
+	return _forces.has(id)
 
 
 ## The flocking units' forces, from where everybody stands now: a third of
@@ -84,12 +104,11 @@ var _was: Dictionary = {}
 func before_moves(world: RtsWorld) -> void:
 	_graph = world.graph
 	if not on:
-		_vehicles.clear()
-		_forces.clear()
-		_was.clear()
-		watched_forces = []
-		watched_counted = []
+		reset()
 		return
+	if watched != _counted_for:
+		watched_counted = []
+		_counted_for = watched
 	var groups: Dictionary = _groups(world)
 	var vehicles: Dictionary = {}
 	for key: Vector3i in groups:
