@@ -2,12 +2,12 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-11-06
+verified_on: 2026-11-07
 tier: 2
 source: https://www.red3d.com/cwr/steer/gdc99/ ; book:Ian Millington, "AI for Games", 3rd edition, CRC Press, 2019 -- chapter 3 on movement
 invalidated_if: the kit's SteeringVehicle, SteeringBehaviour, Steering.combined or Flock signatures change, or the demos that use them are renamed
 teaches: steering
-translation_of: 9c84225376dfe46f4bb179d3a2d17b5322ee359e37361748c4b21b7013a050d8
+translation_of: cc5eca5d23a300fabae485682135c3e87e5e5411d640599c7f3292dfe6673977
 -->
 
 > English: [ai_steering.md](ai_steering.md). Os termos que ficam em inglês
@@ -47,6 +47,10 @@ bando não tem lugares nem líder, então siga um caminho ou um líder.
   branco são desenhadas em **vermelho**, **azul** e **verde**, com linhas
   **amarelas** até os vizinhos que ele contou. **Clique** põe um obstáculo,
   **Tab** observa o próximo *boid*.
+- `make demo-rts` -- **G** faz um grupo mandado a uma célula andar como um
+  bando em vez de virar uma coluna; a primeira unidade da sua seleção num
+  bando desenha as suas três forças, em **magenta**, **ciano** e **lima**
+  (vermelho e azul ali são os dois lados).
 - `make demo-racing` -- o piloto faz *seek* num ponto à frente na linha de
   corrida; **1-3** escolhem a IA, **Tab** assiste às três. `make demo-racing3d`
   esterça com o controlador PID (**1**) e a *heat line* (**2**).
@@ -132,6 +136,14 @@ todos os outros é O(n^2), bom para algumas dezenas; uma grade de células da
 largura do raio de visão, como o `NeighbourGrid` da demo, é cerca de O(n).
 Calcule a força de todos antes de mover qualquer um, e duas execuções a
 partir do mesmo começo concordam.
+
+Um bando que também precisa chegar a algum lugar soma uma quarta força para
+o caminho, com peso próprio: peça as três a `flock.forces(vehicle)`, ponha a
+do caminho primeiro e passe os seus próprios pesos a `Steering.combined`. O
+RTS faz isso (`godot/game/rts/rts_flock.gd`): o caminho é a seta do *flow
+field* sob a unidade, e os vizinhos vêm do *spatial hash* do mundo, só os do
+grupo. A seta, não a linha até o meio da próxima célula -- todas as unidades
+buscando aquele único ponto são a coluna de novo.
 
 ## Para ir mais fundo {#deeper}
 

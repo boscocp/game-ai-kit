@@ -60,6 +60,9 @@ var delivered: Dictionary = {}
 ## Buildings each side has finished raising, by side: kept because a
 ## building raised and then lost leaves no other trace.
 var raised: Dictionary = {}
+## How a unit on a flow field takes its step among the others. The base is
+## the core's own walk; the RTS game puts its flock here (`GakRtsCrowd`).
+var crowd := GakRtsCrowd.new()
 
 ## Cells a shot cannot pass: walls the map put there. Buildings stop a shot
 ## too, and are known from what they cover. Water is blocked to walking but
@@ -215,14 +218,16 @@ func command(side: int, order: RtsCommand) -> String:
 
 
 ## One tick: settle flow fields up to their share, let every unit act on its
-## order, and bury the dead. `budget`, when given, times the two layers; it
-## never changes what they do.
+## order -- the crowd shown where everybody stands first -- and bury the
+## dead. `budget`, when given, times the two layers; it never changes what
+## they do.
 func step(budget: FrameBudget = null) -> void:
 	var started: int = Time.get_ticks_usec()
 	_settle_fields()
 	if budget != null:
 		budget.record(FrameBudget.FLOW_FIELDS, Time.get_ticks_usec() - started)
 	started = Time.get_ticks_usec()
+	crowd.before_moves(self)
 	for acting: RtsUnit in units():
 		RtsOrders.act(self, acting)
 	_keep_apart()
@@ -311,9 +316,9 @@ static func _ring(centre: Vector2i, ring: int) -> Array[Vector2i]:
 # another is nudged away from it. Not on a move: a column following one
 # flow field converges on each cell's middle, and nudging it there jammed
 # T19's two armies in the wall's gaps for the whole of the budget's
-# twenty seconds. In id order so two runs
-# agree. Two on the very same point part by their ids, the lower to the
-# west. A nudge into a blocked cell is not taken. `ai_steering` teaches the
+# twenty seconds; a group that should spread walks as a flock through
+# `crowd` instead (T151). In id order so two runs agree. Two on the very
+# same point part by their ids, the lower to the west. A nudge into a blocked cell is not taken. `ai_steering` teaches the
 # full set; an addon may not depend on another, so this is written here.
 func _keep_apart() -> void:
 	for moving: RtsUnit in units():

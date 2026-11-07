@@ -2,12 +2,12 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-10-26
+verified_on: 2026-11-07
 tier: 2
 source: https://ojs.aaai.org/index.php/AIIDE/article/view/12435/12294 ; book:Elijah Emerson, "Crowd Pathfinding and Steering Using Flow Field Tiles", in Steve Rabin (ed.), "Game AI Pro", CRC Press, 2013
-invalidated_if: the kit's FlowField, SpatialHash, FrameBudget, RtsWorld or RtsController signatures change, or the demos that use them are renamed
+invalidated_if: the kit's FlowField, SpatialHash, FrameBudget, RtsWorld, RtsController or GakRtsCrowd signatures change, or the demos that use them are renamed
 teaches: strategy-ai
-translation_of: d4b6621ae427ee68837dacf078993be1ac3093daa8c7cb6e4afe3fb2ae6dfe6b
+translation_of: 12690fe96ef54ac4002d204d1029a32b539b1f037e2518ff68e9b960d88b73fc
 -->
 
 > English: [ai_rts_core.md](ai_rts_core.md). Os termos que ficam em inglês
@@ -31,6 +31,14 @@ determinística -- uma semente e uma lista de comandos sempre terminam
 iguais --, que uma IA só vê por um `RtsSnapshot` congelado e só muda por
 `RtsCommand`s que ele pode recusar.
 
+Uma unidade anda sozinha: do meio de uma célula ao meio da outra, então um
+grupo mandado a um ponto vira uma coluna. O núcleo não a desvia das outras
+-- empurrados uns dos outros numa ordem de mover, os dois exércitos da T19
+emperraram nas brechas de um muro --, mas o `crowd` de um mundo
+(`GakRtsCrowd`) dá cada passo ao longo de um campo, e algo acima do núcleo
+pode pôr ali o seu: o bando do jogo de RTS (`RtsFlock`, **G**), feito com
+`ai_steering`, que o núcleo nunca carrega.
+
 ## Quando não usar {#when-not}
 
 Poucas unidades com muitos objetivos diferentes: cada campo é montado para
@@ -47,7 +55,8 @@ muda no lugar, então uma busca não consegue tentar uma jogada e desfazê-la
   field* compartilhado; **arrastar** seleciona, **clique direito** dá a
   ordem. **V** assiste a dois computadores jogando, **I** mostra a
   influência que o comandante lê, **F** liga e desliga a névoa que
-  `RtsWorld.visible_to` calcula.
+  `RtsWorld.visible_to` calcula, **G** faz a ordem de mover de um grupo
+  andar como um bando em vez de uma coluna.
 - Qual demo usa qual técnica, nos dois sentidos: [o catálogo](catalogue.pt-BR.md#ai_rts_core).
 
 ## Neste kit {#in-this-kit}
@@ -65,6 +74,7 @@ importam:
 | tamanho do balde | `SpatialHash.new(size)` | mais ou menos o raio que a maioria das perguntas usa; menor lê mais baldes, maior descarta mais |
 | as partes | `FrameBudget.SHARES` | os milissegundos que cada camada pode ocupar dos 16,7 |
 | a frequência das decisões da IA | `RtsMatch.decide_every` | *ticks* entre decisões; meio segundo por padrão |
+| como uma unidade dá o passo entre as outras | `RtsWorld.crowd`, um `GakRtsCrowd` | a base anda reto até o meio da próxima célula, como o núcleo sempre fez; o `RtsFlock` do jogo soma três forças dentro de um grupo. Uma gravação só se repete num mundo com o mesmo `crowd` |
 
 ## No seu projeto {#your-project}
 

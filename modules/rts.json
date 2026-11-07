@@ -19,10 +19,12 @@
     "ai_core",
     "ai_planning",
     "ai_rts_core",
+    "ai_steering",
     "game_shared"
   ],
   "gates": [
     "test-rts-exit",
-    "test-rts-match"
+    "test-rts-match",
+    "test-rts-flock"
   ]
 }

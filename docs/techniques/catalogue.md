@@ -31,7 +31,7 @@ A row per demo, a column per technique; each mark links the technique's page, an
 | [Infiltration](#demo-infiltration) |  |  | [●](ai_bayes.md) |  | [●](ai_constraints.md) | [●](ai_fuzzy.md) |  |  |  | [●](ai_perception.md) |  |  | [●](ai_search.md) |  | [●](ai_teamwork.md) | [●](ai_utility.md) |  |  |  |  |
 | [Bot match](#demo-botmatch) |  |  |  |  |  |  |  |  |  | [●](ai_perception.md) |  |  | [●](ai_search.md) |  | [●](ai_teamwork.md) | [●](ai_utility.md) |  |  |  |  |
 | [One guard, four ways to decide](#demo-behaviour) |  |  |  | [●](ai_behaviour.md) |  | [◐](ai_fuzzy.md) |  |  |  | [●](ai_perception.md) |  |  | [●](ai_search.md) |  |  |  |  |  |  |  |
-| [Real-time strategy](#demo-rts) |  |  |  | [●](ai_behaviour.md) |  |  |  |  |  |  | [●](ai_planning.md) | [●](ai_rts_core.md) |  |  |  |  |  |  |  |  |
+| [Real-time strategy](#demo-rts) |  |  |  | [●](ai_behaviour.md) |  |  |  |  |  |  | [●](ai_planning.md) | [●](ai_rts_core.md) |  | [●](ai_steering.md) |  |  |  |  |  |  |
 | [Tactics](#demo-tactical) | [●](ai_adversarial.md) |  |  | [●](ai_behaviour.md) | [●](ai_constraints.md) |  | [●](ai_learning.md) |  |  |  | [●](ai_planning.md) |  |  |  |  | [●](ai_utility.md) |  |  |  |  |
 | [Pac-Man, a small maze](#demo-maze) |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | [Talk your way past the guard](#demo-talk) |  |  |  |  |  |  |  | [●](ai_llm.md) |  |  |  |  |  |  |  |  |  |  |  |  |
@@ -79,8 +79,8 @@ A row per demo, a column per technique; each mark links the technique's page, an
   - keys: 1-4 swap the state machine, the behaviour tree, GOAP and HTN mid-round; space a turn.
   - techniques: ● [ai_behaviour](ai_behaviour.md) (state machine, behaviour tree, GOAP, HTN); ◐ [ai_fuzzy](ai_fuzzy.md) (through `stealth`); ● [ai_perception](ai_perception.md); ● [ai_search](ai_search.md).
 - <a id="demo-rts"></a>**Real-time strategy**, `make demo-rts` -- like StarCraft or Age of Empires, against a commander that plans.
-  - keys: V watches two computers; H the planner; I the influence map; F lifts the fog.
-  - techniques: ● [ai_behaviour](ai_behaviour.md) (HTN, state machine); ● [ai_planning](ai_planning.md) (STRIPS over PDDL); ● [ai_rts_core](ai_rts_core.md) (flow fields).
+  - keys: V watches two computers; H the planner; I the influence map; F lifts the fog; G a group moves as a flock.
+  - techniques: ● [ai_behaviour](ai_behaviour.md) (HTN, state machine); ● [ai_planning](ai_planning.md) (STRIPS over PDDL); ● [ai_rts_core](ai_rts_core.md) (flow fields); ● [ai_steering](ai_steering.md) (flocking).
   - written inside the example itself: priority queue of wishes, utility over regions, influence map.
 - <a id="demo-tactical"></a>**Tactics**, `make demo-tactical` -- like Advance Wars, or XCOM.
   - keys: C changes the computer, whose next decision is drawn in pink before space plays it; S swaps sides; in XCOM, N a new map and B its build, a cell at a time.
@@ -113,7 +113,7 @@ A row per demo, a column per technique; each mark links the technique's page, an
 - <a id="ai_planning"></a>[ai_planning](ai_planning.md) -- the steps to a goal nobody wrote down. Watch it in: ● [`make demo-rts`](#demo-rts) (STRIPS over PDDL); ● [`make demo-tactical`](#demo-tactical) (STRIPS over PDDL).
 - <a id="ai_rts_core"></a>[ai_rts_core](ai_rts_core.md) -- many units, one frame. Watch it in: ● [`make demo-rts`](#demo-rts) (flow fields).
 - <a id="ai_search"></a>[ai_search](ai_search.md) -- finding a route. Watch it in: ● [`make demo-skirmish`](#demo-skirmish) (A*); ● [`make demo-search`](#demo-search) (BFS, DFS, Dijkstra, A*); ● [`make demo-stealth`](#demo-stealth) (A*); ● [`make demo-infiltration`](#demo-infiltration) (A*); ● [`make demo-botmatch`](#demo-botmatch) (A*); ● [`make demo-behaviour`](#demo-behaviour).
-- <a id="ai_steering"></a>[ai_steering](ai_steering.md) -- which way to push, and how hard. Watch it in: ● [`make demo-steering`](#demo-steering) (seek, arrive, pursue, avoid); ● [`make demo-flocking`](#demo-flocking) (flocking, avoid); ● [`make demo-racing`](#demo-racing) (seek); ● [`make demo-racing3d`](#demo-racing3d) (PID controller, heat line).
+- <a id="ai_steering"></a>[ai_steering](ai_steering.md) -- which way to push, and how hard. Watch it in: ● [`make demo-steering`](#demo-steering) (seek, arrive, pursue, avoid); ● [`make demo-flocking`](#demo-flocking) (flocking, avoid); ● [`make demo-racing`](#demo-racing) (seek); ● [`make demo-racing3d`](#demo-racing3d) (PID controller, heat line); ● [`make demo-rts`](#demo-rts) (flocking).
 - <a id="ai_teamwork"></a>[ai_teamwork](ai_teamwork.md) -- a team that shares the work. Watch it in: ● [`make demo-infiltration`](#demo-infiltration) (a shared search, role arbiter); ● [`make demo-botmatch`](#demo-botmatch) (tactical positions with claims, team commander over influence, squad confidence and retreat in waves).
 - <a id="ai_utility"></a>[ai_utility](ai_utility.md) -- weighing every option at once. Watch it in: ● [`make demo-infiltration`](#demo-infiltration) (utility-weighed actions); ● [`make demo-botmatch`](#demo-botmatch) (utility-weighed actions); ● [`make demo-tactical`](#demo-tactical) (utility-weighed actions).
 - <a id="menace"></a>[MENACE](menace.md) -- the matchbox machine that learns noughts and crosses. Watch it in: ● [`make demo-tictactoe`](#demo-tictactoe) (MENACE's matchboxes).
