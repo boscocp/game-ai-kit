@@ -1542,6 +1542,7 @@ review.
 | T150 | A flock from three rules | todo | the owner, 2026-11-06, after T113 and T115: separation, alignment and cohesion in `ai_steering`, each switchable; `make demo-flocking`, a hundred boids, the watched boid's forces and neighbours drawn; the neighbour query is the caller's |
 | T151 | An RTS group moves as a flock | todo | the owner, 2026-11-06; after T150: a group's move order flocks in `godot/game/rts/` (the core may not depend on `ai_steering`); T19's wall-gap jam is the planted case; `test-rts-budget` still holds |
 | T152 | A crowd to hide in | todo | the owner, 2026-11-06; after T150 and T115: civilians flocking in one infiltration level; walking in step inside a group lowers the guard's certainty, as evidence in T115's network; shown with its reason |
+| T153 | A video of the demos, for YouTube | todo | the owner, 2026-11-06; after T150-T152, made last from a current main: Godot's Movie Maker records each demo in English with its overlay, ffmpeg edits a 2-4 minute video with captions, a title and an end card, no music; delivered to `$HOME/Videos/game-ai-kit/` with a thumbnail and chapters; nothing uploaded |
 
 ---
 
