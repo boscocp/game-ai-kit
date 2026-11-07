@@ -7,7 +7,7 @@ tier: 2
 source: https://www.red3d.com/cwr/steer/gdc99/ ; book:Ian Millington, "AI for Games", 3rd edition, CRC Press, 2019 -- chapter 3 on movement
 invalidated_if: the kit's SteeringVehicle, SteeringBehaviour, Steering.combined or Flock signatures change, or the demos that use them are renamed
 teaches: steering
-translation_of: e95286923e4af5afecba5c49cf7d42f0c200ffd1466252fe22fa5540ca6195a8
+translation_of: d9244770aa9cec05fa1c2ec314eb369d318375abef6c2389e8dbd21696817218
 -->
 
 > English: [ai_steering.md](ai_steering.md). Os termos que ficam em inglês
@@ -55,6 +55,10 @@ bando não tem lugares nem líder, então siga um caminho ou um líder.
   força: cada passo é dado na grade de células por onde se anda no nível, deslizando ao longo de
   uma barraca. Ande no passo dentro de um grupo e ele fica circulado no
   chão: você se mistura.
+- `make demo-rts` -- **G** faz um grupo mandado a uma célula andar como um
+  bando em vez de virar uma coluna; a primeira unidade da sua seleção num
+  bando desenha as suas três forças, em **magenta**, **ciano** e **lima**
+  (vermelho e azul ali são os dois lados).
 - `make demo-racing` -- o piloto faz *seek* num ponto à frente na linha de
   corrida; **1-3** escolhem a IA, **Tab** assiste às três. `make demo-racing3d`
   esterça com o controlador PID (**1**) e a *heat line* (**2**).
@@ -140,6 +144,14 @@ todos os outros é O(n^2), bom para algumas dezenas; uma grade de células da
 largura do raio de visão, como o `NeighbourGrid` da demo, é cerca de O(n).
 Calcule a força de todos antes de mover qualquer um, e duas execuções a
 partir do mesmo começo concordam.
+
+Um bando que também precisa chegar a algum lugar soma uma quarta força para
+o caminho, com peso próprio: peça as três a `flock.forces(vehicle)`, ponha a
+do caminho primeiro e passe os seus próprios pesos a `Steering.combined`. O
+RTS faz isso (`godot/game/rts/rts_flock.gd`): o caminho é a seta do *flow
+field* sob a unidade, e os vizinhos vêm do *spatial hash* do mundo, só os do
+grupo. A seta, não a linha até o meio da próxima célula -- todas as unidades
+buscando aquele único ponto são a coluna de novo.
 
 ## Para ir mais fundo {#deeper}
 

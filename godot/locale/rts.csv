@@ -212,3 +212,9 @@ recording: {count} match(es) kept in data/rts/,gravando: {count} partida(s) guar
 "late view: the enemy as it stood {ms} ms ago, {count} unit(s)","visão atrasada: o inimigo como estava há {ms} ms, {count} unidade(s)"
 "waiting under the cap: {count} command(s), the oldest for {ms} ms","esperando sob o limite: {count} comando(s), o mais antigo há {ms} ms"
 {ms} ms ago,há {ms} ms
+"G flock: away from the too close","G bando: longe dos perto demais"
+"G flock: towards their heading","G bando: para onde eles apontam"
+"G flock: towards their middle","G bando: para o meio deles"
+"G flock: on","G bando: ligado"
+"G flock: off","G bando: desligado"
+"(not this one: G walked a flock, which a recording cannot replay)","(esta não: G fez um bando andar, e uma gravação não sabe repetir isso)"

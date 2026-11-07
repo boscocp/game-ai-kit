@@ -180,8 +180,8 @@
         "pt-BR": "StarCraft ou Age of Empires, contra um comandante que planeja"
       },
       "keys": {
-        "en": "V watches two computers; H the planner; I the influence map; F lifts the fog",
-        "pt-BR": "V assiste a dois computadores; H o planejador; I o mapa de influência; F tira a névoa"
+        "en": "V watches two computers; H the planner; I the influence map; F lifts the fog; G a group moves as a flock",
+        "pt-BR": "V assiste a dois computadores; H o planejador; I o mapa de influência; F tira a névoa; G um grupo anda como um bando (*flocking*)"
       }
     },
     "demo-tactical": {
