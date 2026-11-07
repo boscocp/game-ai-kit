@@ -70,10 +70,11 @@ vectors = dict([
  fitted("fit-by-hand", "Eight rows, a word and a number, depth 2, a leaf of one row allowed. The README works the root by hand: "
         "of every test, 'distance is far' leaves the two sides least mixed; below it, 'health at most 2.5'. Asked: a row it "
         "was fitted on, one it never saw, a word it never saw (it goes 'no'), a number where a word is asked (the walk stops "
-        "at the root, and answers nothing), a feature missing that no test on the path asks about, and one that the root asks.",
+        "at the root, and answers nothing), a feature missing that no test on the path asks about, one that the root asks, and a health of exactly "
+        "2.5 -- at most includes the threshold, so it goes 'yes'.",
         rows, ["distance", "health"], ["high", "low", "throw"], 2, 1,
         [{"distance": "close", "health": 1}, {"distance": "near", "health": 3.5}, {"distance": "corner", "health": 0},
-         {"distance": 7, "health": 0}, {"distance": "far"}, {"health": 1}]),
+         {"distance": 7, "health": 0}, {"distance": "far"}, {"health": 1}, {"distance": "close", "health": 2.5}]),
  fitted("fit-capped", "The same rows, held back: depth 1, and no leaf under three rows. The cap is what keeps a tree from "
         "learning the rows themselves: one test, and a leaf where high and throw tie at two -- the first in classes, high, "
         "is its answer.",

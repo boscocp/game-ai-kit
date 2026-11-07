@@ -1,5 +1,5 @@
 {
- "description": "Eight rows, a word and a number, depth 2, a leaf of one row allowed. The README works the root by hand: of every test, 'distance is far' leaves the two sides least mixed; below it, 'health at most 2.5'. Asked: a row it was fitted on, one it never saw, a word it never saw (it goes 'no'), a number where a word is asked (the walk stops at the root, and answers nothing), a feature missing that no test on the path asks about, and one that the root asks.",
+ "description": "Eight rows, a word and a number, depth 2, a leaf of one row allowed. The README works the root by hand: of every test, 'distance is far' leaves the two sides least mixed; below it, 'health at most 2.5'. Asked: a row it was fitted on, one it never saw, a word it never saw (it goes 'no'), a number where a word is asked (the walk stops at the root, and answers nothing), a feature missing that no test on the path asks about, one that the root asks, and a health of exactly 2.5 -- at most includes the threshold, so it goes 'yes'.",
  "rows": [
   [
    "close",
@@ -167,6 +167,22 @@
    ],
    "counts": {},
    "likeliest": ""
+  },
+  {
+   "situation": {
+    "distance": "close",
+    "health": 2.5
+   },
+   "path": [
+    0,
+    2,
+    3
+   ],
+   "counts": {
+    "low": 1,
+    "throw": 2
+   },
+   "likeliest": "throw"
   }
  ]
 }

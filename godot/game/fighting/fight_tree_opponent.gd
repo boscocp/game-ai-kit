@@ -39,9 +39,12 @@ var walked: Array[Dictionary] = []
 ## What the n-gram beside it expected at the same decision, and how sure.
 var ngram_expected: String = "nothing yet"  # not shown: an identifier
 var ngram_confidence: float = 0.0
-## For each action it has seen you start: whether the tree had expected it.
-## Newest last; `guesses` keeps the n-gram's.
+## For each action it has seen you start: whether the tree had expected it
+## at its last decision, and whether the n-gram had, at that same decision.
+## Both are asked at the same moment, so the two scores are a fair contest;
+## `guesses` keeps the learner's own, scored on every frame's table.
 var tree_guesses: Array[bool] = []
+var ngram_guesses: Array[bool] = []
 
 var _person_last: String = ""
 var _person_action: String = ""
@@ -69,6 +72,7 @@ func new_fight() -> void:
 	ngram_expected = "nothing yet"  # not shown: an identifier
 	ngram_confidence = 0.0
 	tree_guesses.clear()
+	ngram_guesses.clear()
 
 
 ## As the learner's, and the tree's last guess is scored when you start a
@@ -78,6 +82,7 @@ func watch(seen: FightState, me: int) -> void:
 	var action: String = FightAction.of(seen, 1 - me, _data)
 	if action != "" and action != _person_action and not walked.is_empty():
 		tree_guesses.append(expected == action)
+		ngram_guesses.append(ngram_expected == action)
 	_person_action = action
 	if action != "":
 		_person_last = action
@@ -86,7 +91,17 @@ func watch(seen: FightState, me: int) -> void:
 
 ## How many of its last `SCORED` guesses the tree had right, and of how many.
 func tree_score() -> Array[int]:
-	var recent: Array[bool] = tree_guesses.slice(maxi(0, tree_guesses.size() - SCORED))
+	return _scored(tree_guesses)
+
+
+## The same for the n-gram's guesses at the tree's decisions.
+func ngram_score() -> Array[int]:
+	return _scored(ngram_guesses)
+
+
+# How many of the last `SCORED` of `list` were right, and of how many.
+static func _scored(list: Array[bool]) -> Array[int]:
+	var recent: Array[bool] = list.slice(maxi(0, list.size() - SCORED))
 	return [recent.count(true), recent.size()]
 
 
@@ -106,13 +121,13 @@ func _expect() -> void:
 	ngram_expected = model.likeliest()
 	ngram_confidence = model.probabilities()[ngram_expected]
 	expected_after = ""
-	var shares: Dictionary = reader.probabilities(person_situation) if reader != null else {}
-	if shares.is_empty():
+	var leaf: Dictionary = walked.back().get("counts", {}) if not walked.is_empty() else {}
+	if leaf.is_empty():
 		expected = "nothing yet"  # not shown: an identifier
 		confidence = 0.0
 		return
-	expected = reader.likeliest(person_situation)
-	confidence = shares[expected]
+	expected = reader.likeliest_in(leaf)
+	confidence = reader.shares_of(leaf)[expected]
 
 
 ## The surest a leaf can be: all of its rows one action.

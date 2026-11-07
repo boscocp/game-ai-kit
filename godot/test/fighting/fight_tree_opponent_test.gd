@@ -110,8 +110,14 @@ func test_its_guesses_are_scored_when_you_start_a_new_action() -> void:
 	state.fighters[0].held_before = FightInput.RIGHT
 	reader.watch(state, 1)
 	assert_array(reader.tree_score()).is_equal([1, 2])
+	# The n-gram is asked at that same decision, not at each action: its
+	# table was empty then, and an empty table's likeliest is the first
+	# action, a step in -- wrong on the jab, right on the step.
+	assert_str(reader.ngram_expected).is_equal(FightAction.ACTIONS[0])
+	assert_array(reader.ngram_score()).is_equal([1, 2])
 	reader.new_fight()
 	assert_array(reader.tree_guesses).is_empty()
+	assert_array(reader.ngram_guesses).is_empty()
 	assert_array(reader.walked).is_empty()
 
 

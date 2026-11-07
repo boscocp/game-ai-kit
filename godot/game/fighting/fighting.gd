@@ -294,7 +294,7 @@ func _tree_overlay(reader: FightTreeOpponent) -> Dictionary:
 	var last: Dictionary = reader.walked.back()
 	return {"tree_path": reader.walked, "leaf": last.get("counts", "unread"),  # not shown
 			"situation_words": reader.person_situation, "ngram_expects": reader.ngram_expected,
-			"tree_score": reader.tree_score(), "ngram_score": reader.score()}
+			"tree_score": reader.tree_score(), "ngram_score": reader.ngram_score()}
 
 
 # The bandit of the situation it last named, as it stood when it chose:

@@ -31,8 +31,9 @@ The book: Russell and Norvig, *AIMA*, chapter 19.
 
 A hidden layer, or a structure other than one weight per feature or one
 tree -- these classes cannot hold it. A single tree, deep, on few rows: it
-learns the rows rather than the player, and on the fighting game's few
-recordings a deeper tree scores worse on fights it never saw
+learns the rows rather than the player: on the fighting game's few
+recordings no deeper tree does better on fights it never saw, and the
+n-gram beats them all
 ([concepts/learning.md](../concepts/learning.md#a-decision-tree)); many
 trees voting is the usual answer (T114). Features that
 matter only together ("a low kick when close, unless cornered"): these

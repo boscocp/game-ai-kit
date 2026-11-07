@@ -10,8 +10,8 @@
 ## comparison per level, so a walk costs the depth.
 ##
 ## When not to use it: alone, deep, on few rows. It learns the rows rather
-## than the player -- the fighting report shows it -- and a forest of them
-## voting (T114) is the usual answer.
+## than the player -- docs/concepts/learning.md#a-decision-tree measures it
+## -- and a forest of them voting (T114) is the usual answer.
 class_name LearnedTree
 extends RefCounted
 
@@ -111,7 +111,18 @@ func counts(values: Dictionary) -> Dictionary:
 ## The answer the leaf saw most; of equal counts, the first in `classes`;
 ## "" when the walk could not finish.
 func likeliest(values: Dictionary) -> String:
-	var counted: Dictionary = counts(values)
+	return likeliest_in(counts(values))
+
+
+## Each answer's share of the leaf, by name; empty when the walk could not finish.
+func probabilities(values: Dictionary) -> Dictionary:
+	return shares_of(counts(values))
+
+
+## The likeliest answer in a leaf's `counted` already in hand -- a caller
+## that has the walk's `steps` need not walk again. Ties go to the first in
+## `classes`; "" for no counts.
+func likeliest_in(counted: Dictionary) -> String:
 	var best: String = ""
 	for name: String in classes:
 		if int(counted.get(name, 0)) > int(counted.get(best, 0)):
@@ -119,9 +130,8 @@ func likeliest(values: Dictionary) -> String:
 	return best
 
 
-## Each answer's share of the leaf, by name; empty when the walk could not finish.
-func probabilities(values: Dictionary) -> Dictionary:
-	var counted: Dictionary = counts(values)
+## Each answer's share of `counted`, by name, in `classes` order; empty for no counts.
+func shares_of(counted: Dictionary) -> Dictionary:
 	var total: int = 0
 	for count: Variant in counted.values():
 		total += int(count)

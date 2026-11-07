@@ -22,8 +22,8 @@ Complexity: fitting is rows x candidate tests per node, per level; a walk is
 one comparison per level, so its cost is the depth.
 
 When not to use it: alone, deep, on few rows -- it overfits, learning the
-rows rather than the player (the fighting game's `make tree-report` shows
-it). Many trees voting (a random forest, T114) is the usual answer; so is a
+rows rather than the player (docs/concepts/learning.md#a-decision-tree
+measures it). Many trees voting (a random forest, T114) is the usual answer; so is a
 cap on the depth.
 """
 

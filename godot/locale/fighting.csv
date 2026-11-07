@@ -138,7 +138,7 @@ no,não
 "  {feature} is {word}? it read {seen}: {went}","  {feature} é {word}? leu {seen}: {went}"
 "  {feature} at most {word}? it read {seen}: {went}","  {feature} no máximo {word}? leu {seen}: {went}"
 it reads you with no tree: {why},ele te lê sem árvore: {why}
-"its decision tree, right {right} of its last {last}; the n-gram beside it, {ngram_right} of {ngram_last}:","sua árvore de decisão, acertou {right} dos últimos {last}; o n-gram ao lado, {ngram_right} de {ngram_last}:"
+"its decision tree, right {right} of its last {last}; the n-gram, asked at the same decisions, {ngram_right} of {ngram_last}:","sua árvore de decisão, acertou {right} dos últimos {last}; o n-gram, consultado nas mesmas decisões, {ngram_right} de {ngram_last}:"
   has read nothing yet,  ainda não leu nada
 "  so it expects {action}, {percent}%; the n-gram expects {ngram}, {ngram_percent}%","  então espera {action}, {percent}%; o n-gram espera {ngram}, {ngram_percent}%"
   leaf: {counts},  folha: {counts}

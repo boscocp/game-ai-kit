@@ -165,7 +165,8 @@ on the held-out fights, which would have made them training data.
 
 **The n-gram wins, and by a margin.** Six words of situation say little
 about what this person does next: the best tree is two points over always
-guessing the commonest action. The n-gram knows something the tree cannot:
+guessing the commonest action, and the published depth-3 tree, at 20.3%,
+is under that floor of 21.1%. The n-gram knows something the tree cannot:
 what the person is doing *this* fight. A person's habits move from fight to
 fight, and a model fitted on last week's fights reads last week's person.
 The scripted stand-ins, whose habits never move, are the other way round:

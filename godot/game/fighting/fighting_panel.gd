@@ -264,15 +264,15 @@ static func _tree_lines(reader: FightTreeOpponent) -> PackedStringArray:
 	if reader.reader == null:
 		return PackedStringArray(["", TranslationServer.translate("it reads you with no tree: {why}").format({why = TranslationServer.translate(reader.refusal)})])
 	var tree_score: Array[int] = reader.tree_score()
-	var ngram_score: Array[int] = reader.score()
+	var ngram_score: Array[int] = reader.ngram_score()
 	var lines: PackedStringArray = ["", TranslationServer.translate(
-		"its decision tree, right {right} of its last {last}; the n-gram beside it, {ngram_right} of {ngram_last}:").format({
+		"its decision tree, right {right} of its last {last}; the n-gram, asked at the same decisions, {ngram_right} of {ngram_last}:").format({
 		right = tree_score[0], last = tree_score[1], ngram_right = ngram_score[0], ngram_last = ngram_score[1]})]
 	if reader.walked.is_empty():
 		lines.append(TranslationServer.translate("  has read nothing yet"))
 		return lines
 	for step: Dictionary in reader.walked:
-		lines.append(_tree_step(step))
+		lines.append(_tree_step(step, reader.reader.classes))
 	lines.append(TranslationServer.translate("  so it expects {action}, {percent}%; the n-gram expects {ngram}, {ngram_percent}%").format({
 		action = FightWords.word(reader.expected), percent = roundi(reader.confidence * 100.0),
 		ngram = FightWords.word(reader.ngram_expected), ngram_percent = roundi(reader.ngram_confidence * 100.0)}))
@@ -280,12 +280,14 @@ static func _tree_lines(reader: FightTreeOpponent) -> PackedStringArray:
 
 
 # One step of the path: a test and which way it went, the test it could
-# not read, or the leaf and its counts, the heaviest first.
-static func _tree_step(step: Dictionary) -> String:
+# not read, or the leaf and its counts, the heaviest first -- of equal
+# counts, in `classes` order, the order the tree settles a tie in.
+static func _tree_step(step: Dictionary, classes: PackedStringArray) -> String:
 	if step.has("counts"):
 		var counts: Dictionary = step["counts"]
-		var names: Array = counts.keys()
-		names.sort_custom(func(one: String, other: String) -> bool: return counts[one] > counts[other])
+		var names: Array = Array(classes).filter(func(name: String) -> bool: return counts.has(name))
+		names.sort_custom(func(one: String, other: String) -> bool:
+			return counts[one] > counts[other] or (counts[one] == counts[other] and classes.find(one) < classes.find(other)))
 		var cells: PackedStringArray = []
 		for name: String in names:
 			cells.append("%s %d" % [FightWords.word(name), counts[name]])

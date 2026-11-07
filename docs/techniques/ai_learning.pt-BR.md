@@ -7,7 +7,7 @@ tier: 2
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 19, linear and logistic regression ; https://docs.godotengine.org/en/stable/classes/class_json.html
 invalidated_if: the kit's LearnedModel, LearnedTree, ModelFile, SoftmaxModel, CaseTable or ClonedPlayer signatures change, or the demos that use them are renamed
 teaches: learning
-translation_of: c599731acdec41526f67a35a2bc82f4b32e03979c6ac7693df369a0a5ff84e93
+translation_of: 18dd89980b1f8392166d0e4e152c89473545afe595fdfa70e9031d3ef02f8312
 -->
 
 > English: [ai_learning.md](ai_learning.md). Os termos que ficam em inglês
@@ -33,9 +33,10 @@ Norvig, *AIMA*, capítulo 19.
 
 Uma camada oculta, ou uma estrutura que não seja um peso por *feature* nem
 uma árvore -- estas classes não guardam isso. Uma árvore sozinha, funda,
-com poucas linhas: ela aprende as linhas e não o jogador, e com as poucas
-gravações do jogo de luta uma árvore mais funda acerta menos nas lutas que
-nunca viu ([concepts/learning.md](../concepts/learning.md#a-decision-tree),
+com poucas linhas: ela aprende as linhas e não o jogador: com as poucas
+gravações do jogo de luta nenhuma árvore mais funda acerta mais nas lutas
+que nunca viu, e o *n-gram* ganha de todas
+([concepts/learning.md](../concepts/learning.md#a-decision-tree),
 em inglês); várias árvores votando é a resposta de costume (T114).
 *Features* que só importam juntas ("um chute baixo quando perto, a não ser
 que esteja encurralado"): estes modelos somam, então o produto precisa
