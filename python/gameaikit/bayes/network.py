@@ -11,6 +11,7 @@ holds both to the same answers.
 from __future__ import annotations
 
 import json
+import math
 import pathlib
 from typing import Any
 
@@ -54,7 +55,11 @@ class BayesNetwork:
         return self._problem
 
     def probability(self, variable: str, value: str, assignment: dict[str, str]) -> float:
-        """P(`variable` = `value` | its parents as `assignment` has them)."""
+        """P(`variable` = `value` | its parents as `assignment` has them).
+
+        A value the network does not have, for the variable or a parent, is
+        a ValueError (from `list.index`), never a neighbouring row.
+        """
         row = 0
         for parent in self.parents[variable]:
             row = row * len(self.values[parent]) + self.values[parent].index(assignment[parent])
@@ -119,7 +124,9 @@ class BayesNetwork:
         if not isinstance(row, dict):
             return "B2 a variable is not an object"
         name = str(row.get("name", ""))
-        own = [str(value) for value in row.get("values", [])]
+        if not isinstance(row.get("values"), list):
+            return f"B2 the values of '{name}' are not a list"
+        own = [str(value) for value in row["values"]]
         if not name or name in self.values or len(own) < 2 or len(set(own)) != len(own):
             return f"B2 the variable '{name}' has no name, a name taken, or fewer than two distinct values"
         above = [str(parent) for parent in row.get("parents", [])]
@@ -145,7 +152,8 @@ class BayesNetwork:
         for entry in table:
             if not isinstance(entry, list) or len(entry) != len(own):
                 return f"B4 a row of '{name}' does not give one chance for each of its {len(own)} values"
-            if any(isinstance(chance, bool) or not isinstance(chance, (int, float)) or chance < 0 for chance in entry):
+            if any(isinstance(chance, bool) or not isinstance(chance, (int, float)) or not math.isfinite(chance)
+                   or chance < 0 for chance in entry):
                 return f"B5 a row of '{name}' has an entry that is not a chance"
             if abs(sum(float(chance) for chance in entry) - 1.0) > ROW_SUM_SLACK:
                 return f"B5 a row of '{name}' sums to {sum(entry)}, not 1"

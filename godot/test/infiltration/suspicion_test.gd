@@ -29,11 +29,17 @@ func test_a_noise_alone_stays_under_the_threshold_and_a_door_goes_over() -> void
 	heard.reconsider(1.0)
 	assert_float(heard.belief).is_greater(GuardSuspicion.new().belief)
 	assert_float(heard.belief).is_less(threshold)
+	# The lead is the sign seen that raised the belief, not the largest change:
+	# here "partner not quiet" lowers it more than the noise raises it.
+	assert_str(heard.lead).is_equal("noise")
+	assert_str(heard.strongest).is_equal("partner_quiet")
+	assert_float(float(heard.moved["partner_quiet"])).is_less(0.0)
 	var found := GuardSuspicion.new()
 	found.notice_kind("open_door", Vector2(5, 5), 1.0)
 	found.reconsider(1.0)
 	assert_float(found.belief).is_greater_equal(threshold)
 	assert_str(found.strongest).is_equal("open_door")
+	assert_str(found.lead).is_equal("open_door")
 	assert_str(str(found.last_change["by"])).is_equal("open_door")
 	assert_vector(found.lead_place()).is_equal(Vector2(5, 5))
 
@@ -62,7 +68,7 @@ func _first_checker(world: InfiltrationWorld, steps: int) -> int:
 		world.step(PlayerIntent.new())
 		var checking: Array = world.guards.filter(func(guard: InfiltrationGuard) -> bool: return guard.action == "check the evidence")
 		if not checking.is_empty():
-			assert_str((checking[0] as InfiltrationGuard).suspicion.strongest).is_equal("open_door")
+			assert_str((checking[0] as InfiltrationGuard).suspicion.lead).is_equal("open_door")
 			return (checking[0] as InfiltrationGuard).id
 	return -1
 
@@ -108,3 +114,10 @@ func test_the_player_opens_and_shuts_a_door_within_reach() -> void:
 	world.player.position = world.level.start
 	PlayerActions.apply(world, intent)
 	assert_bool(world.doors_open.has(true)).is_false()
+
+
+func test_with_nothing_seen_there_is_no_lead() -> void:
+	var suspicion := GuardSuspicion.new()
+	assert_str(suspicion.lead).is_empty()
+	assert_vector(suspicion.lead_place()).is_equal(Vector2.INF)
+	assert_str(str(suspicion.asked["noise"])).is_equal(GuardSuspicion.NOT_SEEN)

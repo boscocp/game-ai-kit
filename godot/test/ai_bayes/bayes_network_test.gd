@@ -67,7 +67,16 @@ func test_each_malformed_network_is_named_by_its_rule() -> void:
 		["B4", _one(["yes", "no"], [[1.0]])],
 		["B5", _one(["yes", "no"], [[0.7, 0.7]])],
 		["B5", _one(["yes", "no"], [[1.5, -0.5]])],
+		["B5", _one(["yes", "no"], [[NAN, 1.0]])],
+		["B5", _one(["yes", "no"], [[INF, 0.0]])],
+		["B2", BayesNetwork.new({"variables": [{"name": "one", "values": "yn", "parents": [], "table": [[0.5, 0.5]]}]})],
 	]
 	for case: Array in cases:
 		assert_str((case[1] as BayesNetwork).problem()).starts_with(case[0])
 	assert_str(_burglary().problem()).is_empty()
+
+
+func test_a_value_the_table_lacks_reads_zero_not_another_row() -> void:
+	var network: BayesNetwork = _burglary()
+	assert_float(network.probability("alarm", "maybe", {"burglary": "yes", "earthquake": "yes"})).is_equal(0.0)
+	assert_float(network.probability("alarm", "yes", {"burglary": "maybe", "earthquake": "yes"})).is_equal(0.0)

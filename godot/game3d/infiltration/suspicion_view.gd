@@ -1,7 +1,10 @@
 ## The watched guard's intruder network on the infiltration HUD (T115): is
 ## anyone there at all, the chance of each hidden variable, each sign seen
-## or not with what it did to the belief, the one that moved it most marked
-## `>`, and the last change -- which sign, and the belief before and after.
+## or not with what it did to the belief, the lead -- the sign seen that
+## raised it most, the one a guard checking the evidence walks to -- marked
+## `>`, and the last change: which sign, and the belief before and after.
+## Signs and numbers both come from the guard's last question (`asked`), so
+## they cannot disagree for a step.
 ##
 ## The bar is the belief, the tick on it the threshold where checking the
 ## evidence starts, read from the action's own consideration in
@@ -44,11 +47,11 @@ func _draw() -> void:
 	_text(0, title, Color.WHITE)
 	_draw_bar(suspicion.belief)
 	var row: int = 1
-	var evidence: Dictionary = suspicion.seen(world.time)
+	var evidence: Dictionary = suspicion.asked
 	for variable: String in suspicion.network.names:
 		if variable == str(suspicion.spec["query"]):
 			continue
-		var mark: String = "> " if variable == suspicion.strongest else "  "
+		var mark: String = "> " if variable == suspicion.lead else "  "
 		if evidence.has(variable):
 			_text(row, mark + _sign_line(variable, evidence[variable], suspicion), SEEN_COLOUR if evidence[variable] == GuardSuspicion.SEEN else UNSEEN_COLOUR)
 		else:

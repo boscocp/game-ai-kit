@@ -42,10 +42,10 @@ agree:
    that piece): positive, it raised the belief; empty when the evidence
    cannot happen;
 5. a network is refused, by the first rule it breaks, variable by variable:
-   **B1** no variables; **B2** a variable with no name, a name taken, or
-   fewer than two distinct values; **B3** a parent not given before it;
+   **B1** no variables; **B2** a variable with no name, a name taken,
+   values that are not a list, or fewer than two distinct values; **B3** a parent not given before it;
    **B4** a table without one row per combination, or a row without one
-   chance per value; **B5** an entry that is not a chance of 0 or more, or
+   chance per value; **B5** an entry that is not a finite chance of 0 or more, or
    a row not summing to 1 within 1e-9.
 
 `derive.py` wrote every file. It imports nothing from the repository, and it

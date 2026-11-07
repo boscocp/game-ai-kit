@@ -596,9 +596,13 @@ awareness already handles them -- while a door found open (0.42) must. The
 threshold, 0.3, is a step in the guard's action list, not a branch in code.
 Two things it shows that the awareness bar cannot. **Explaining away**: a
 partner gone quiet raises the belief, unless the radio is at fault -- the
-same silence, explained by the other cause, means less. And **which sign
-moved it**: what the belief would be without each sign, so the panel names
-the open door as the reason, and the player learns what the guard reads.
+same silence, explained by the other cause, means less; on the panel, the
+radio's chance of a fault reads 0.548 with only the silence, and 0.047 once
+a door is also found open -- the intruder now explains it. And **which
+sign moved it**: what the belief would be without each sign, so the panel
+marks the open door as the reason -- the sign seen that raised the belief
+most, which is also where the guard walks -- and the player learns what the
+guard reads.
 
 A sign is kept for a while (`remember_for`) and let go once the guard has
 walked to where it was and found nothing, so the belief falls again on its

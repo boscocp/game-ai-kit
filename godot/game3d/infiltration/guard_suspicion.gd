@@ -8,12 +8,17 @@
 ## mind (its `remember_for`) and no otherwise, and the network gives
 ## P(intruder | everything seen). Every time what is seen changes, it is
 ## asked again: the belief, each hidden variable's chance, what each sign
-## did to the belief (`BayesNetwork.influence`), the sign that moved it most,
-## and the last change -- which sign, and the belief before and after. That
-## is what the view draws (invariant 13).
+## did to the belief (`BayesNetwork.influence`), the *lead* -- the sign seen
+## that raised it most, where a guard checking the evidence walks -- and
+## the last change: which sign, and the belief before and after. The view
+## draws exactly what was asked, and marks the lead it acts on (invariant
+## 13). `strongest`, the largest change either way, can be a sign *not*
+## seen -- "no noise" lowering the belief -- so it is kept, not acted on.
 ##
 ## A sign is let go when the guard has walked to where it was and found
-## nothing there (`settled_within`), or when it is too old. So a door left
+## nothing there (`settled_within`), or when it is too old. Being there is
+## enough, whichever way the guard faces: a guard's eyes cover its walk,
+## and turning to look is the action's, not the evidence's. So a door left
 ## open raises the belief, the guard goes to look, shuts it, and the belief
 ## falls again. The tables are data, read once; nothing here changes them
 ## (invariant 6).
@@ -46,8 +51,12 @@ var chances: Dictionary = {}
 ## last change: {"by", "seen", "from", "to", "at"}; {} before any.
 var moved: Dictionary = {}
 var strongest: String = ""
+## The sign seen that raised the belief most -- the one acted on; "" none.
+var lead: String = ""
 var last_change: Dictionary = {}
-var _asked: Dictionary = {}
+## The evidence the belief was last asked from, each sign yes or no: what
+## the view draws, so the numbers and the signs beside them always agree.
+var asked: Dictionary = {}
 
 
 ## A guard's suspicion over `with_network` and its `with_spec`; the
@@ -95,14 +104,21 @@ func seen(now: float) -> Dictionary:
 	return found
 
 
-## Where the sign that raised the belief most was noticed: where a guard
-## checking the evidence walks. INF when no sign seen raised it.
+## Where the lead was noticed: where a guard checking the evidence walks.
+## INF when no sign seen raised the belief.
 func lead_place() -> Vector2:
+	return held[lead]["place"] if lead != "" and held.has(lead) else Vector2.INF
+
+
+# The sign seen in `evidence` whose influence in `moved` is the largest
+# rise; "" when none rose it. The first of equal ones.
+static func _lead_of(evidence: Dictionary, moved_by: Dictionary) -> String:
 	var best: String = ""
-	for variable: String in moved:
-		if held.has(variable) and float(moved[variable]) > 0.0 and (best == "" or float(moved[variable]) > float(moved[best])):
+	for variable: String in moved_by:
+		var rose: bool = evidence.get(variable, NOT_SEEN) == SEEN and float(moved_by[variable]) > 0.0
+		if rose and (best == "" or float(moved_by[variable]) > float(moved_by[best])):
 			best = variable
-	return held[best]["place"] if best != "" else Vector2.INF
+	return best
 
 
 # Let go of every sign noticed before `now` within `settled_within` of
@@ -119,10 +135,10 @@ func _settle(position: Vector2, now: float) -> void:
 
 ## Ask the network again, `now`, when what is seen changed since the last
 ## time: the belief, each hidden chance, each sign's influence, the
-## strongest, and the last change.
+## strongest, the lead, and the last change.
 func reconsider(now: float) -> void:
 	var evidence: Dictionary = seen(now)
-	if evidence == _asked and not chances.is_empty():
+	if evidence == asked and not chances.is_empty():
 		return
 	var query: String = spec["query"]
 	var suspected: int = network.values[query].find(str(spec["suspected"]))
@@ -130,13 +146,14 @@ func reconsider(now: float) -> void:
 	belief = network.ask(query, evidence)[suspected]
 	moved = network.influence(query, str(spec["suspected"]), evidence)
 	strongest = BayesNetwork.most_moved(moved)
+	lead = _lead_of(evidence, moved)
 	for variable: String in network.names:
 		if not evidence.has(variable):
 			chances[variable] = belief if variable == query else network.ask(variable, evidence)[0]
 	for variable: String in evidence:
-		if _asked.has(variable) and _asked[variable] != evidence[variable]:
+		if asked.has(variable) and asked[variable] != evidence[variable]:
 			last_change = {"by": variable, "seen": evidence[variable], "from": before, "to": belief, "at": now}
-	_asked = evidence
+	asked = evidence
 
 
 static func _read_shared() -> void:

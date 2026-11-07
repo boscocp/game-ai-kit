@@ -482,8 +482,12 @@ light: it is tall and pale.
 On screen, under the radar: "is anyone there?" and the belief as a bar,
 the tick at 0.3; the radio's chance of a fault; each sign seen or not, with
 what it did to the belief -- the belief with all of it, less the belief
-without that sign -- the one that moved it most marked `>`; and the last
-change, which sign and the belief before and after. A door left open is
+without that sign -- the lead marked `>`: the sign seen that raised the
+belief most, the one the guard walks to (the largest change either way can
+be a sign not seen, "no noise", and is not what it acts on); and the last
+change, which sign and the belief before and after. Explaining away is the
+radio's line: with only a partner gone quiet, its chance of a fault is
+0.548; find a door open as well and it falls to 0.047. A door left open is
 orange and swung out; the corner says when F can open or shut one. The
 legend has no line for it: one more line ran it past the window's gutter.
 

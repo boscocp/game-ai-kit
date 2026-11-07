@@ -82,12 +82,22 @@ func problem() -> String:
 
 
 ## P(`variable` = `value` | its parents as `assignment` has them): one entry
-## of its table. Every parent must be in `assignment`.
+## of its table. Every parent must be in `assignment`; a value the network
+## does not have, for the variable or a parent, is an error and reads 0 --
+## never a neighbouring row read in silence.
 func probability(variable: String, value: String, assignment: Dictionary) -> float:
 	var row: int = 0
 	for parent: String in parents[variable]:
-		row = row * values[parent].size() + values[parent].find(str(assignment[parent]))
-	return float(tables[variable][row][values[variable].find(value)])
+		var found: int = values[parent].find(str(assignment.get(parent, "")))
+		if found == -1:
+			push_error("BayesNetwork: '%s' has no value '%s'" % [parent, assignment.get(parent, "")])
+			return 0.0
+		row = row * values[parent].size() + found
+	var column: int = values[variable].find(value)
+	if column == -1:
+		push_error("BayesNetwork: '%s' has no value '%s'" % [variable, value])
+		return 0.0
+	return float(tables[variable][row][column])
 
 
 ## P(`query` | `evidence`): one chance for each of the query's values, in
@@ -182,7 +192,9 @@ func _add(row: Variant) -> String:
 	if not row is Dictionary:
 		return "B2 a variable is not an object"
 	var name: String = str(row.get("name", ""))
-	var own := PackedStringArray(row.get("values", []))
+	if not row.get("values") is Array:
+		return "B2 the values of '%s' are not a list" % name
+	var own := PackedStringArray(row["values"])
 	if name == "" or values.has(name) or own.size() < 2 or _repeats(own):
 		return "B2 the variable '%s' has no name, a name taken, or fewer than two distinct values" % name
 	var above := PackedStringArray(row.get("parents", []))
@@ -220,7 +232,7 @@ static func _row_problem(name: String, own: PackedStringArray, entry: Variant) -
 		return "B4 a row of '%s' does not give one chance for each of its %d values" % [name, own.size()]
 	var total: float = 0.0
 	for chance: Variant in entry:
-		if not (chance is float or chance is int) or float(chance) < 0.0:
+		if not (chance is float or chance is int) or not is_finite(float(chance)) or float(chance) < 0.0:
 			return "B5 a row of '%s' has an entry that is not a chance" % name
 		total += float(chance)
 	if absf(total - 1.0) > ROW_SUM_SLACK:

@@ -7,7 +7,7 @@ tier: 1
 source: book:Stuart Russell and Peter Norvig, "Artificial Intelligence: A Modern Approach", 4th edition, Pearson, 2020 -- chapter 13, Probabilistic Reasoning, sections 13.2 and 13.3.1, figures 13.2 and 13.10
 invalidated_if: the kit's BayesNetwork signature or its data shape changes, or the infiltration demo stops asking it
 teaches: stealth-ai
-translation_of: 5b1cc75da38846d1ea3161d85dfff2d34378b27f5aff887cb8904fb1b85fc60b
+translation_of: 8362983b2d44f97509b4123ddfd0e50f3ea7af952fa3f98b71f61cf7b4d60ce7
 -->
 
 > English: [ai_bayes.md](ai_bayes.md). Os termos que ficam em inglês
@@ -33,8 +33,11 @@ valor de toda variável que ficou escondida, e depois normaliza. O exemplo
 do livro, o alarme contra ladrão sobre o qual John e Mary telefonam, dá
 0,284, feito à mão no [README dos vetores](../../spec/vectors/bayes/README.md).
 `influence(query, value, evidence)` diz então o que cada peça de evidência
-fez: a resposta com ela, menos a resposta sem ela. A maior delas em módulo,
-`most_moved`, é "por que o guarda acha isso".
+fez: a resposta com ela, menos a resposta sem ela. A maior delas em módulo
+é `most_moved` -- para qualquer lado, então pode ser um sinal que não foi
+visto e baixou a crença ("nenhum barulho"). O que o guarda usa é mais
+estreito: o sinal que ele viu e que mais subiu a crença, a pista dele, que
+é para onde ele anda e o que o painel dele marca.
 
 Uma causa que explica um efeito torna menos prováveis as outras causas
 desse efeito: um alarme explicado por um terremoto torna um roubo menos
@@ -65,7 +68,8 @@ Aqui as tabelas são escritas à mão, em dados, e nunca mudam durante o jogo
   observado: "tem alguém aí?", com a crença numa barra e uma marca onde
   começa a verificação dos indícios (0,3); a chance de o rádio estar com
   defeito; cada sinal -- barulho, porta aberta, parceiro em silêncio --
-  visto ou não, com o que fez à crença, o que mais a moveu marcado com `>`;
+  visto ou não, com o que fez à crença, a pista -- o sinal visto que mais a
+  subiu, para onde o guarda vai andar -- marcada com `>`;
   e a última mudança, qual sinal e a crença antes e depois. Vá até uma
   porta, aperte **F** para abri-la e saia: um guarda que a vê aberta passa
   da marca, vai até ela (a ação dele diz "verificar os indícios"), fecha a
@@ -82,7 +86,10 @@ O `GuardSuspicion` guarda os sinais de cada guarda -- um som de um tipo que
 o arquivo nomeia, uma porta que os olhos dele viram aberta, um parceiro que
 ele notou em silêncio --, cada um visto "yes" enquanto o arquivo o mantém,
 "no" no resto do tempo, e pergunta à rede de novo sempre que o que é visto
-muda. Um barulho sozinho dá 0,07, uma porta sozinha 0,42, os dois 0,94. O
+muda. O *explaining away* aparece no painel: só com um parceiro em
+silêncio, a chance de o rádio estar com defeito é 0,548; quando uma porta
+também é encontrada aberta, ela cai para 0,047 -- agora o intruso explica o
+silêncio. Um barulho sozinho dá 0,07, uma porta sozinha 0,42, os dois 0,94. O
 seletor do guarda (`ai_utility`) lê a crença como mais um número: a ação
 "verificar os indícios" pontua de 0,3 para cima, e o guarda anda até o sinal
 que mais subiu a crença. Lá o sinal se resolve -- uma porta que ele encontra

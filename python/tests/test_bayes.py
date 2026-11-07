@@ -60,6 +60,12 @@ class TestBayesNetwork(unittest.TestCase):
         self.assertEqual(network.ask("cause", {"effect": NO}), [])
         self.assertEqual(network.influence("cause", YES, {"effect": NO}), {})
 
+    def test_a_value_the_table_lacks_is_an_error_not_another_row(self) -> None:
+        with self.assertRaises(ValueError):
+            burglary().probability("alarm", "maybe", {"burglary": YES, "earthquake": YES})
+        with self.assertRaises(ValueError):
+            burglary().probability("alarm", YES, {"burglary": "maybe", "earthquake": YES})
+
     def test_asking_what_is_not_there_is_an_error(self) -> None:
         with self.assertRaises(ValueError):
             burglary().ask("thief", {})
@@ -78,6 +84,9 @@ class TestBayesNetwork(unittest.TestCase):
             ("B4", one_variable([YES, NO], [[1.0]])),
             ("B5", one_variable([YES, NO], [[0.7, 0.7]])),
             ("B5", one_variable([YES, NO], [[1.5, -0.5]])),
+            ("B5", one_variable([YES, NO], [[float("nan"), 1.0]])),
+            ("B5", one_variable([YES, NO], [[float("inf"), 0.0]])),
+            ("B2", one_variable("yn", [[0.5, 0.5]])),
         ]
         for rule, data in cases:
             with self.subTest(rule):

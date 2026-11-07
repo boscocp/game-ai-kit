@@ -32,7 +32,10 @@ example, the burglar alarm John and Mary call about, comes out at 0.284,
 worked by hand in [the vectors' README](../../spec/vectors/bayes/README.md).
 `influence(query, value, evidence)` then says what each piece of evidence
 did: the answer with it, less the answer without it. The largest of those
-by size, `most_moved`, is "why the guard thinks so".
+by size is `most_moved` -- either way, so it can be a sign *not* seen that
+lowered the belief ("no noise"). What a guard acts on is narrower: the sign
+it saw that raised the belief most, its *lead*, which is where it walks and
+what its panel marks.
 
 A cause that explains an effect makes the other causes of that effect less
 likely: an alarm explained by an earthquake makes a burglary less likely
@@ -62,7 +65,8 @@ Python, offline.
   guard's network: "is anyone there?" with the belief as a bar and a tick
   where checking the evidence starts (0.3); the radio's chance of being at
   fault; each sign -- noise, open door, partner gone quiet -- seen or not,
-  with what it did to the belief, the one that moved it most marked `>`;
+  with what it did to the belief, the lead -- the sign seen that raised it
+  most, where the guard will walk -- marked `>`;
   and the last change, which sign and the belief before and after. Walk to
   a door, press **F** to open it, and leave: a guard that sees it open
   rises over the tick, goes to it (its action reads "check the evidence"),
@@ -78,7 +82,9 @@ a door found open and a partner gone quiet as signs. `GuardSuspicion` holds
 each guard's signs -- a sound of a kind the file names, a door its eyes saw
 open, a partner it noticed silent -- each seen "yes" for as long as the
 file keeps it, "no" otherwise, and asks the network again whenever what is
-seen changes. A noise alone gives 0.07, a door alone 0.42, both 0.94. The
+seen changes. Explaining away is on the panel: with only a partner gone
+quiet, the radio's chance of a fault is 0.548; once a door is also found
+open, it falls to 0.047 -- the intruder now explains the silence. A noise alone gives 0.07, a door alone 0.42, both 0.94. The
 guard's selector (`ai_utility`) reads the belief as one more number: the
 action "check the evidence" scores from 0.3 up, so the guard walks to the
 sign that raised its belief most. There the sign is settled -- a door it

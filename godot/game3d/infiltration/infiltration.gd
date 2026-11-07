@@ -148,8 +148,8 @@ func decision_overlay() -> Dictionary:
 		guards.append({"phase": guard.mind.phase_name(), "awareness": guard.aware(), "action": guard.action,
 			"scores": record.get("scores", []), "role": guard.role, "spot": guard.spot,
 			"heard_help": world.time - guard.help_heard_at <= 15.0, "certainty": guard.percept.sight.certainty,
-			"intruder": guard.suspicion.belief, "signs": guard.suspicion.seen(world.time),
-			"moved_most": guard.suspicion.strongest})
+			"intruder": guard.suspicion.belief, "signs": guard.suspicion.asked,
+			"lead": guard.suspicion.lead})
 	return {"time": world.time, "guards": guards, "off_screen_halving": rules.off_screen_halving,
 		"switches": {"belief": rules.use_belief, "particles": rules.use_particles, "coordinator": rules.use_coordinator,
 			"arbiter": rules.use_arbiter, "accumulator": rules.use_accumulator, "director": rules.use_director},
