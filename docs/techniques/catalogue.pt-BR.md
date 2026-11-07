@@ -25,6 +25,7 @@ Uma linha por demo, uma coluna por técnica; cada marca leva à página da técn
 | [Quatro buscas](#demo-search) |  |  |  |  |  |  |  |  |  |  |  |  | [●](ai_search.pt-BR.md) |  |  |  |  |  |  |  |
 | [*Stealth*](#demo-stealth) |  |  |  |  |  | [●](ai_fuzzy.pt-BR.md) |  |  |  | [●](ai_perception.pt-BR.md) |  |  | [●](ai_search.pt-BR.md) |  |  |  |  |  |  |  |
 | [*Steering*](#demo-steering) |  |  |  |  |  |  |  |  |  |  |  |  |  | [●](ai_steering.pt-BR.md) |  |  |  |  |  |  |
+| [*Flocking*](#demo-flocking) |  |  |  |  |  |  |  |  |  |  |  |  |  | [●](ai_steering.pt-BR.md) |  |  |  |  |  |  |
 | [Corrida](#demo-racing) |  |  |  |  |  |  |  |  |  |  |  |  |  | [●](ai_steering.pt-BR.md) |  |  |  |  |  | [●](racing_driver.pt-BR.md) |
 | [Corrida em 3D](#demo-racing3d) |  |  |  |  |  |  |  |  |  |  |  |  |  | [●](ai_steering.pt-BR.md) |  |  |  |  |  | [●](racing_driver.pt-BR.md) |
 | [Infiltração](#demo-infiltration) |  |  | [●](ai_bayes.pt-BR.md) |  | [●](ai_constraints.pt-BR.md) | [●](ai_fuzzy.pt-BR.md) |  |  |  | [●](ai_perception.pt-BR.md) |  |  | [●](ai_search.pt-BR.md) |  | [●](ai_teamwork.pt-BR.md) | [●](ai_utility.pt-BR.md) |  |  |  |  |
@@ -57,6 +58,9 @@ Uma linha por demo, uma coluna por técnica; cada marca leva à página da técn
 - <a id="demo-steering"></a>***Steering***, `make demo-steering` -- parecido com os inimigos de um jogo de ação perseguindo e parando, uma força por vez.
   - teclas: o clique move um alvo; espaço pausa; . um passo.
   - técnicas: ● [ai_steering](ai_steering.pt-BR.md) (*seek*, *arrive*, *pursue*, *avoid*).
+- <a id="demo-flocking"></a>***Flocking***, `make demo-flocking` -- parecido com os pássaros e peixes de um jogo de natureza, ou um enxame de insetos espaciais, movendo-se como um só.
+  - teclas: 1-3 ligam e desligam *separation*, *alignment*, *cohesion*; o clique põe um obstáculo; Tab o próximo *boid*.
+  - técnicas: ● [ai_steering](ai_steering.pt-BR.md) (*flocking*, *avoid*).
 - <a id="demo-racing"></a>**Corrida**, `make demo-racing` -- parecido com Micro Machines, visto de cima, a IA no mesmo carro que o seu.
   - teclas: 1-3 o nível da IA; Tab assiste às três IAs correndo.
   - técnicas: ● [ai_steering](ai_steering.pt-BR.md) (*seek*); ● [O piloto de corrida](racing_driver.pt-BR.md) (*pure pursuit*, perfil de velocidade).
@@ -109,7 +113,7 @@ Uma linha por demo, uma coluna por técnica; cada marca leva à página da técn
 - <a id="ai_planning"></a>[ai_planning](ai_planning.pt-BR.md) -- os passos até um objetivo que ninguém escreveu. Veja em: ● [`make demo-rts`](#demo-rts) (STRIPS sobre PDDL); ● [`make demo-tactical`](#demo-tactical) (STRIPS sobre PDDL).
 - <a id="ai_rts_core"></a>[ai_rts_core](ai_rts_core.pt-BR.md) -- muitas unidades, um quadro. Veja em: ● [`make demo-rts`](#demo-rts) (*flow fields*).
 - <a id="ai_search"></a>[ai_search](ai_search.pt-BR.md) -- achar um caminho. Veja em: ● [`make demo-skirmish`](#demo-skirmish) (A*); ● [`make demo-search`](#demo-search) (BFS, DFS, Dijkstra, A*); ● [`make demo-stealth`](#demo-stealth) (A*); ● [`make demo-infiltration`](#demo-infiltration) (A*); ● [`make demo-botmatch`](#demo-botmatch) (A*); ● [`make demo-behaviour`](#demo-behaviour).
-- <a id="ai_steering"></a>[ai_steering](ai_steering.pt-BR.md) -- para que lado empurrar, e com que força. Veja em: ● [`make demo-steering`](#demo-steering) (*seek*, *arrive*, *pursue*, *avoid*); ● [`make demo-racing`](#demo-racing) (*seek*); ● [`make demo-racing3d`](#demo-racing3d) (controlador PID, *heat line*).
+- <a id="ai_steering"></a>[ai_steering](ai_steering.pt-BR.md) -- para que lado empurrar, e com que força. Veja em: ● [`make demo-steering`](#demo-steering) (*seek*, *arrive*, *pursue*, *avoid*); ● [`make demo-flocking`](#demo-flocking) (*flocking*, *avoid*); ● [`make demo-racing`](#demo-racing) (*seek*); ● [`make demo-racing3d`](#demo-racing3d) (controlador PID, *heat line*).
 - <a id="ai_teamwork"></a>[ai_teamwork](ai_teamwork.pt-BR.md) -- um time que divide o trabalho. Veja em: ● [`make demo-infiltration`](#demo-infiltration) (uma busca dividida, árbitro de papéis); ● [`make demo-botmatch`](#demo-botmatch) (posições táticas com marcação, comandante do time sobre a influência, confiança do esquadrão e recuo em ondas).
 - <a id="ai_utility"></a>[ai_utility](ai_utility.pt-BR.md) -- pesar todas as opções de uma vez. Veja em: ● [`make demo-infiltration`](#demo-infiltration) (ações pesadas por *utility*); ● [`make demo-botmatch`](#demo-botmatch) (ações pesadas por *utility*); ● [`make demo-tactical`](#demo-tactical) (ações pesadas por *utility*).
 - <a id="menace"></a>[MENACE](menace.pt-BR.md) -- a máquina de caixas de fósforo que aprende jogo da velha. Veja em: ● [`make demo-tictactoe`](#demo-tictactoe) (as caixas de fósforo do MENACE).

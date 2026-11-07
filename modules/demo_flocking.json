@@ -1,0 +1,17 @@
+{
+  "module": "demo_flocking",
+  "kind": "example",
+  "about": "A hundred boids, three switchable rules, one boid's decision drawn.",
+  "owns": [
+    "godot/demos/flocking/",
+    "godot/test/demo_flocking/",
+    "godot/locale/demo_flocking.csv",
+    "godot/locale/demo_flocking.csv.import",
+    "godot/locale/demo_flocking.pt_BR.translation"
+  ],
+  "depends_on": [
+    "ai_steering",
+    "game_shared"
+  ],
+  "gates": []
+}

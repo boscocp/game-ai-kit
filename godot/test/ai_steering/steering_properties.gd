@@ -5,8 +5,9 @@
 #      once at rest, it is still at rest, and still inside, every step after;
 #   2. seek at a target that does not move never comes to rest: the defect
 #      arrive exists to fix, measured rather than claimed;
-#   3. no behaviour returns a force above the vehicle's maximum, or one that
-#      is not a number, on any input -- a target on top of the vehicle and
+#   3. no behaviour -- the flock's three rules and the flock among them --
+#      returns a force above the vehicle's maximum, or one that is not a
+#      number, on any input -- a target on top of the vehicle and
 #      targets at infinity included -- on vehicles whose limits are drawn
 #      too, most with a force under twice their top speed, where seek's own
 #      clamp is what holds it (at 20 against 10 it never has to). And from
@@ -125,7 +126,23 @@ func _pushes_towards(car: SteeringVehicle, place: Vector2, behaviours: Array, wh
 
 func _every_behaviour(place: Vector2) -> Array[GakSteeringBehaviour]:
 	return [SeekBehaviour.new(place), ArriveBehaviour.new(place, BRAKING_RADIUS),
-		PursueBehaviour.new(place, Vector2(3, -4)), AvoidBehaviour.new([place] as Array[Vector2], PackedFloat64Array([2.0]), 5.0)]
+		PursueBehaviour.new(place, Vector2(3, -4)), AvoidBehaviour.new([place] as Array[Vector2], PackedFloat64Array([2.0]), 5.0),
+		_flock_rule(SeparationBehaviour.new(BRAKING_RADIUS), place), _flock_rule(AlignmentBehaviour.new(), place),
+		_flock_rule(CohesionBehaviour.new(), place), _flock_rule(Flock.new(BRAKING_RADIUS), place)]
+
+
+# One of the flock's rules, or the flock, seeing two neighbours: one at
+# `place` and one a unit off it, both moving -- so separation has someone
+# close when `place` is the vehicle's own, and cohesion a centre at infinity
+# when it is infinite.
+func _flock_rule(rule: GakSteeringBehaviour, place: Vector2) -> GakSteeringBehaviour:
+	var neighbours: Array[SteeringVehicle] = [SteeringVehicle.new(place, Vector2(3, -4), 10.0, 20.0),
+		SteeringVehicle.new(place + Vector2(1, 0), Vector2(-2, 1), 10.0, 20.0)]
+	if rule is Flock:
+		(rule as Flock).see(neighbours)
+	else:
+		rule.set("neighbours", neighbours)
+	return rule
 
 
 # The behaviours of `behaviours` whose force is too long or not a number.
