@@ -23,14 +23,20 @@ _The owner asked for a karma system on 2026-11-10: the player's actions and choi
   to place, in `valley_rules.json` with a `why` for each rule. For
   example, a burnt barn leaves the market without bread the next day.
 - **`ValleyWorld`** is the rebuilt world, and it is never saved.
+- **`Standing`** is the player's standing, read from the record. It has
+  two or three virtues (the wave picks them, for example care and fear),
+  each a sum of fixed weights per verb and place in `standing.json`, with
+  a `why` per weight. It is never saved and never changes at game time.
+  A test rebuilds it from the record and names the deeds that sum to
+  each virtue.
 - **A Python twin with shared vectors**, as the kit's other rule sets
   have (the infiltration director's events are the pattern). The
   property tests cover three things:
   - rebuilding twice gives the same world;
-  - a record cut at day n gives the world of day n;
+  - a record cut at day n gives the world and the standing of day n;
   - an unknown verb, or a target that is a person, is refused by name.
 - **The names** (`valley`, `DeedLog`, `ValleySave`, `ValleyRules`,
-  `ValleyWorld`) are this session's proposal. The wave may change them,
+  `ValleyWorld`, `Standing`) are this session's proposal. The wave may change them,
   and must say so.
 
 ## Acceptance
@@ -45,5 +51,5 @@ make lint-modules
 
 ## Manual check
 
-- `valley_rules.json` reads as a list of consequences a designer wrote,
-  each with its reason.
+- `valley_rules.json` and `standing.json` read as consequences and weights
+  a designer wrote, each with its reason.

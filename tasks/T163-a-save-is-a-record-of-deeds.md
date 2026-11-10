@@ -21,7 +21,11 @@ _The owner asked for a karma system on 2026-11-10: the player's actions and choi
   > appended to and never edited, it has a schema version, and one class
   > of the example writes it. Nothing derived is saved. The world is
   > rebuilt each session by applying the record, in order, to fixed,
-  > authored rules, and a test rebuilds it twice and compares. No deed
+  > authored rules, and a test rebuilds it twice and compares. The
+  > player's standing is a sum of fixed, authored weights over the
+  > deeds. It is rebuilt from the record, never saved, never fitted to
+  > the player, never an estimate of skill, and it never sets
+  > difficulty. N14 still holds within a match. No deed
   > has a person as its target. Nothing about a person is saved. No
   > person reads another person's state. Nothing tunes difficulty. The
   > game has an erase button, which removes the file and starts again
@@ -31,10 +35,10 @@ _The owner asked for a karma system on 2026-11-10: the player's actions and choi
   spellings, as N9, N13 and N14 are, and not a proof. Its planted cases
   must be refused (invariant 4):
   - a save written by any other file;
-  - derived state written beside the record;
-  - an authored weight changed at game time;
+  - derived state, the standing included, written beside the record;
+  - an authored weight changed at game time, as a step toward a target;
   - a deed whose target is a person;
-  - the record read to set difficulty.
+  - the record or the standing read to set difficulty.
 - **Where the save lives, read and measured first** (invariant 8, and
   "check the documentation before writing the rule"). Two cases:
   - **In the checkout**, `user://` is `.user-data/` (ADR 0022). ADR 0022

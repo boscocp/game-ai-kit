@@ -9,7 +9,8 @@ villages, a river, a bridge, a mill, a barn, fields and a well. There is
 no combat and no opponent. The villagers live their day, and what the
 player did to the valley in earlier sessions shapes it: the bridge burnt
 in session 2 is still burnt in session 5, the bread queue moves to the
-other village, and a new well draws people.
+other village, and a new well draws people. The player's standing, read
+from the same deeds, sets what the ferryman asks and which doors open.
 
 ## Decisions written down first
 
@@ -26,10 +27,16 @@ _The owner asked for a karma system on 2026-11-10: the player's actions and choi
     checks it.
   - Nothing about a villager is saved. No villager reads another's
     state.
+- **A few people read the player's standing**: the ferryman, the
+  merchant and the priestess. Each has a fixed, authored manner
+  (`VillagerManner`, in data), which reads the standing and the world and
+  sets a price, a door or a greeting. The manner never changes and is
+  never saved. The talk is flavour and changes nothing that persists.
 - **Shown, as invariant 13 requires:** the chain from a deed to a fact
   to a replanned goal to a new A\* frontier. For example: "deed 14:
   bridge down → mill unreachable from the east → Ana's plan: bread from
-  the west village".
+  the west village". There is a second chain, from deeds to a virtue to a
+  manner: "fear 6 (deeds 3, 14, 20) → the ferryman's price ×2".
 - **Small at first:** six villagers, about eight places, one day per
   turn sequence, with the exact numbers in data. The wave chooses.
 - **Registered in full**, following "Adding an example" in
@@ -56,7 +63,7 @@ make lint-renderer
 A headless, seeded run of three sessions with a scripted player checks
 three things:
 - the world of session 3 is the one the record rebuilds;
-- no villager's saved state exists;
+- no villager's saved state exists, and no standing is saved;
 - erasing returns to day one.
 
 ## Manual check

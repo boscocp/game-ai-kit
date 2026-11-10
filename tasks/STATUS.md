@@ -66,7 +66,8 @@ red, fix it forward before anything else.
 - Whether to offer this repository as the reproduction project on
   godotengine/godot#125245. Publishing outside is the owner's call.
 - **The karma system (T163-T166).** The owner chose the design on
-  2026-11-10: the valley remembers what the player did to places. It has
+  2026-11-10: the valley remembers what the player did to places, and the
+  player's standing, read from those deeds, sets prices and doors. It has
   no combat and no opponent, and it is 2D and turn-based. A chronicle by
   story sifting comes later. **The owner approves T163's ADR, and that
   gates T164-T166.**
@@ -1717,9 +1718,9 @@ review.
 | T160 | A version is not reused | todo | `make release` refuses a published `VERSION` with changed addons; `library-check` installs the kit zip; READMEs no longer say "in review"; store Godot versions 4.7+ |
 | T161 | Release 0.2.0 | todo | after T154-T158, T162 and the follow-ups (owner): `VERSION` bumped, built from tag `v0.2.0`, sha256 in `published.json`, release notes name the new addons; the owner uploads |
 | T162 | Loading every addon closes clean | todo | the store install (2026-11-10) loaded 107 scripts with no `SCRIPT ERROR`, but the engine printed "7 resources still in use at exit"; name them, fix the addon, and make `check_published` and `library-check` fail on it; before T161 |
-| T163 | A save is a record of deeds, not a model of the player | todo | ADR 0025 amends 0016 and 0022: only an append-only record of deeds on places persists, the world is rebuilt from it, nothing about a person is saved; N20 in `check_no_training.py`; where the save lives, read and measured; **the owner approves it, and that gates T164-T166** |
-| T164 | The deed log and the valley's rules | todo | `DeedLog`, `ValleySave`, `ValleyRules`, `ValleyWorld` in `godot/game/valley/`; deeds `{day, verb, place}`, never a person; rebuilt twice, same world; Python twin and vectors |
-| T165 | The valley remembers: the example | todo | 2D turn-based, no combat, no opponent: villagers plan their day over the world's facts (GOAP/HTN, A*, ActionChoice); overlay deed → fact → plan → frontier; `make demo-valley`; concept page `karma-and-world-memory` |
+| T163 | A save is a record of deeds, not a model of the player | todo | ADR 0025 amends 0016 and 0022: only an append-only record of deeds on places persists, the world is rebuilt from it, the standing is rebuilt from it and never saved; nothing about a person is saved; N20 in `check_no_training.py`; where the save lives, read and measured; **the owner approves it, and that gates T164-T166** |
+| T164 | The deed log and the valley's rules | todo | `DeedLog`, `ValleySave`, `ValleyRules`, `ValleyWorld` in `godot/game/valley/`; deeds `{day, verb, place}`, never a person; `Standing` from fixed weights over the deeds; rebuilt twice, same world; Python twin and vectors |
+| T165 | The valley remembers: the example | todo | 2D turn-based, no combat, no opponent: villagers plan their day over the world's facts (GOAP/HTN, A*, ActionChoice); a ferryman, merchant and priestess read the standing with fixed manners; overlay deed → fact → plan → frontier, and deeds → virtue → manner; `make demo-valley`; concept page `karma-and-world-memory` |
 | T166 | A chronicle that only tells: story sifting | todo | a new addon `ai_sifting` (name to confirm), Felt-style patterns over the deed record, read-only by test; the valley's chronicle in templates |
 
 ---
