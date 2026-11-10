@@ -1,0 +1,87 @@
+{
+ "name": "equal-facts-go-by-the-seed-7-left-first",
+ "why": "Two requests equal in every fact, asked left first, seed 7: the seeded hash decides, not the order they were stored in. The same seed either way round gives the same token; another seed may give the other.",
+ "kind": "tokens",
+ "query": {
+  "config": {
+   "pools": {
+    "melee": 1,
+    "ranged": 1
+   },
+   "delays": {
+    "melee": 0.5,
+    "ranged": 2.0
+   },
+   "timeouts": {
+    "melee": 4.0,
+    "ranged": 6.0
+   },
+   "multipliers": {
+    "busy": {
+     "melee": 1.0,
+     "ranged": 2.0
+    },
+    "idle": {
+     "melee": 0.5,
+     "ranged": 0.5
+    }
+   },
+   "patience": 3,
+   "tie_seed": 7
+  },
+  "script": [
+   {
+    "do": "request",
+    "at": 0.0,
+    "id": "left",
+    "kind": "melee",
+    "cost": 1,
+    "priority": 0,
+    "distance": 5.0
+   },
+   {
+    "do": "request",
+    "at": 0.0,
+    "id": "right",
+    "kind": "melee",
+    "cost": 1,
+    "priority": 0,
+    "distance": 5.0
+   },
+   {
+    "do": "step",
+    "at": 0.0,
+    "state": "normal"
+   }
+  ]
+ },
+ "expect": {
+  "answers": [
+   "waiting",
+   "waiting",
+   {
+    "granted": [
+     "right"
+    ],
+    "free": {
+     "melee": 0,
+     "ranged": 1
+    },
+    "holders": {
+     "melee": [
+      "right"
+     ],
+     "ranged": []
+    }
+   }
+  ],
+  "events": [
+   [
+    0.0,
+    "right",
+    "melee",
+    "granted"
+   ]
+  ]
+ }
+}

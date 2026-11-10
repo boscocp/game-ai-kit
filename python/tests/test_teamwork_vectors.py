@@ -3,7 +3,8 @@
 The vectors in `spec/vectors/teamwork/` fix each technique's answer on a
 stated query: which candidate a bot takes and why the others were dropped,
 a team's influence at stated points, where a commander sends each squad,
-and a squad's states and waves over a run of facts. Both languages answer
+a squad's states and waves over a run of facts, and who holds an attack
+token after each event of a script. Both languages answer
 them and check every value against the file, never against each other. The
 answers came from neither: `derive.py` beside them is a third copy of the
 rules, importing nothing from this repository.
@@ -14,7 +15,7 @@ import math
 import pathlib
 import unittest
 
-from gameaikit.teamwork import commander, confidence, influence, passage, positions, roles, search
+from gameaikit.teamwork import commander, confidence, influence, passage, positions, roles, search, tokens
 
 VECTORS = pathlib.Path(__file__).resolve().parents[2] / "spec" / "vectors" / "teamwork"
 
@@ -25,7 +26,7 @@ FEWEST_VECTORS = 10
 #: GDScript side's 32-bit `Vector2`.
 TOLERANCE = 1e-4
 
-KINDS = ("positions", "influence", "commander", "confidence", "passage", "search", "roles")
+KINDS = ("positions", "influence", "commander", "confidence", "passage", "search", "roles", "tokens")
 
 
 def answer_positions(vector: dict) -> dict:
@@ -105,8 +106,32 @@ def answer_roles(vector: dict) -> dict:
     return {"granted": roles.grant(query["requests"], query["use_arbiter"], query["max_flankers"])}
 
 
+def play_tokens(pool: tokens.AttackTokens, event: dict):
+    """One scripted event against `pool`, and what it answers."""
+    if event["do"] == "request":
+        return pool.request(event["id"], event["kind"], event["cost"], event["priority"], event["distance"], event["at"])
+    if event["do"] == "release":
+        return pool.release(event["id"], event["reason"], event["at"])
+    if event["do"] == "withdraw":
+        return pool.withdraw(event["id"], event["at"])
+    if event["do"] == "revoke":
+        return pool.revoke_kind(event["kind"], event["at"])
+    granted = pool.step(event["at"], event["state"])
+    kinds = pool.config.pools
+    return {"granted": granted, "free": {kind: pool.free_tokens(kind) for kind in kinds},
+            "holders": {kind: pool.holders(kind) for kind in kinds}}
+
+
+def answer_tokens(vector: dict) -> dict:
+    pool = tokens.AttackTokens(tokens.Config(**vector["query"]["config"]))
+    answers = [play_tokens(pool, event) for event in vector["query"]["script"]]
+    events = [[each["at"], each["id"], each["kind"], each["what"]] for each in pool.events]
+    return {"answers": answers, "events": events}
+
+
 ANSWER = {"passage": answer_passage, "positions": answer_positions, "influence": answer_influence,
-          "commander": answer_commander, "confidence": answer_confidence, "search": answer_search, "roles": answer_roles}
+          "commander": answer_commander, "confidence": answer_confidence, "search": answer_search, "roles": answer_roles,
+          "tokens": answer_tokens}
 
 
 def misses(expected, found, where: str = "") -> list[str]:

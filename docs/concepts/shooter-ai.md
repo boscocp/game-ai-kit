@@ -441,7 +441,9 @@ manner of Splinter Cell or The Last of Us, third person):
 
 Difficulty in both is the named knobs -- reaction, turn rate, aim error,
 time to notice -- and T52's attack tokens are shown as what they are, a rule
-about which shots may land.
+about which shots may land. (T52 was split without them. The tokens the kit
+has, since T154, decide who may attack at all, not whose shots land:
+`AttackTokens`, on [the action-combat page](action-combat-ai.md).)
 
 **Left:**
 

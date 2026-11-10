@@ -1,0 +1,115 @@
+{
+ "name": "a-holder-asking-for-another-kind-is-refused",
+ "why": "a1 holds the ranged token. Asking for melee while holding it is refused by name; asking for ranged again is told it holds.",
+ "kind": "tokens",
+ "query": {
+  "config": {
+   "pools": {
+    "melee": 2,
+    "ranged": 1
+   },
+   "delays": {
+    "melee": 0.5,
+    "ranged": 2.0
+   },
+   "timeouts": {
+    "melee": 4.0,
+    "ranged": 6.0
+   },
+   "multipliers": {
+    "busy": {
+     "melee": 1.0,
+     "ranged": 2.0
+    },
+    "idle": {
+     "melee": 0.5,
+     "ranged": 0.5
+    }
+   },
+   "patience": 3,
+   "tie_seed": 7
+  },
+  "script": [
+   {
+    "do": "request",
+    "at": 0.0,
+    "id": "a1",
+    "kind": "ranged",
+    "cost": 1,
+    "priority": 0,
+    "distance": 5.0
+   },
+   {
+    "do": "step",
+    "at": 0.0,
+    "state": "normal"
+   },
+   {
+    "do": "request",
+    "at": 0.5,
+    "id": "a1",
+    "kind": "melee",
+    "cost": 1,
+    "priority": 0,
+    "distance": 5.0
+   },
+   {
+    "do": "request",
+    "at": 0.5,
+    "id": "a1",
+    "kind": "ranged",
+    "cost": 1,
+    "priority": 0,
+    "distance": 5.0
+   },
+   {
+    "do": "step",
+    "at": 0.5,
+    "state": "normal"
+   }
+  ]
+ },
+ "expect": {
+  "answers": [
+   "waiting",
+   {
+    "granted": [
+     "a1"
+    ],
+    "free": {
+     "melee": 2,
+     "ranged": 0
+    },
+    "holders": {
+     "melee": [],
+     "ranged": [
+      "a1"
+     ]
+    }
+   },
+   "refused_holding",
+   "holding",
+   {
+    "granted": [],
+    "free": {
+     "melee": 2,
+     "ranged": 0
+    },
+    "holders": {
+     "melee": [],
+     "ranged": [
+      "a1"
+     ]
+    }
+   }
+  ],
+  "events": [
+   [
+    0.0,
+    "a1",
+    "ranged",
+    "granted"
+   ]
+  ]
+ }
+}

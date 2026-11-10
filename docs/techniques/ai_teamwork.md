@@ -2,10 +2,10 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-10-30
+verified_on: 2026-11-10
 tier: 2
 source: https://www.gameaipro.com/
-invalidated_if: the kit's RoleArbiter, TeamCommander, TacticalPositions, SquadConfidence or SearchCoordinator signatures change, or the demos that use them are renamed
+invalidated_if: the kit's RoleArbiter, TeamCommander, TacticalPositions, SquadConfidence, SearchCoordinator or AttackTokens signatures change, or the demos that use them are renamed
 teaches: shooter-ai
 -->
 
@@ -20,7 +20,8 @@ a bot stands and keeps two from claiming one spot, `RoleArbiter` lets one
 bot flank while the others shoot, `SearchCoordinator` splits the places to
 search, `SquadConfidence` says when to attack, hold or retreat, and
 `PassageChoice` weighs how to get past a body in the way -- wait, go round, ask a teammate to step aside, or take
-another spot. Each keeps its numbers, so a view can show why. What one bot does
+another spot. And `AttackTokens` lets one or two of a group strike a target
+at a time while the rest wait their turn (T154). Each keeps its numbers, so a view can show why. What one bot does
 now, the errands it leaves its post for and where it aims are not here:
 since T101 and T64 they are [`ai_utility`](ai_utility.md), for nothing in them is about a team. The
 sources: the *Game AI Pro* chapters each class names.
@@ -32,6 +33,9 @@ less to explain. Roles that are places, not jobs -- who holds which door:
 that is `TacticalPositions` with claims, not `RoleArbiter`. And a team whose
 members must act in a fixed order, a breach then a sweep: that is a plan's
 (`ai_planning`), not a weighing each bot makes again every decision.
+Attack tokens are for a group against one target: a fight with one enemy
+needs no turns, and in a stealth game the enemies should not be attacking
+at all.
 
 ## Where to watch it {#watch}
 
@@ -42,6 +46,8 @@ members must act in a fixed order, a breach then a sweep: that is a plan's
 - `make demo-infiltration` -- the guards search with `SearchCoordinator`
   and fight under `RoleArbiter`; **2** and **3** switch the coordinator and
   the arbiter, **Tab** watches the next guard.
+- `AttackTokens` has no demo yet: T157's boss fight is the one that will
+  show who holds a token. Until then its vectors and its suite run it.
 - Which demo uses which technique, both ways: the
   [catalogue](catalogue.md).
 
@@ -58,6 +64,7 @@ The infiltration guards share their search through
 | claims | `TacticalPositions.choose(...)` | whether a spot another bot took is dropped |
 | the commander | `TeamCommander.assign(squads, objectives, weights)` | which objective each squad is sent to, and how many fill one |
 | retreat | `SquadConfidence.Thresholds` | when a squad attacks, holds or falls back, and the gap that stops it flickering |
+| attack tokens | `AttackTokens.Config` | how many may strike at once per kind, how long between grants, how much longer when the player is busy |
 
 ## In your own project {#your-project}
 
@@ -120,8 +127,58 @@ kind of input -- `Candidate`, `Objective`, `SquadReport` are inner classes
 you fill with numbers -- and are worth reading in the order the bot match
 uses them.
 
+## Attack tokens: one attacks at a time {#attack-tokens}
+
+A group surrounds the player, and only one or two of them strike at once;
+the rest circle and wait. Kingdoms of Amalur gave the player an *attack
+capacity* and each attack a weight, and a creature could pick only an
+attack whose weight still fit [Dawe 2013]; DOOM (2016) keeps a count of tokens per
+attack type, set by difficulty [Thompson 2018]. `AttackTokens` is that
+pool, one per target:
+
+- **A pool per kind**, `melee: 2` and `ranged: 1`, and a cost per request,
+  so a heavy attack takes both melee tokens. A cost above its kind's whole
+  pool is refused when it is asked -- `REFUSED_COST` -- not queued for ever;
+  so is a holder asking for another kind, `REFUSED_HOLDING`. Asking again
+  for the same kind and cost keeps the place in the queue; another kind or
+  cost is a new request, which waits from now.
+- **Who is served next is a rule written down**, not the order the
+  requests were stored in: first whoever was passed over `patience` times,
+  oldest first; then the highest priority (the boss above its minions);
+  then the one waiting longest; then the nearest; then a seeded hash. The
+  first in that order is served or no one is: a heavy attack that does not
+  fit yet is not overtaken by light ones. So every requester is served
+  within `patience` grants plus the number still waiting who asked no
+  later than it -- the suite holds that bound for each kind, and a planted
+  pool with no patience breaks it.
+- **A token comes back in five ways**: the attack ends, the holder is
+  interrupted or dies, the game revokes a whole kind at once
+  (`revoke_kind`, when melee pressure starts and the ranged should stop),
+  or it times out -- the net for a holder that forgot. Every kind must have
+  a timeout: a pool configured without one is refused by name. A waiter
+  that is interrupted or dies leaves the queue, and one that changed its
+  mind calls `withdraw`.
+- **A timer spaces the grants** of each kind: a base delay, times a factor
+  for the player's state -- longer when busy, shorter when idle. The state
+  is read at a grant and sets the wait until the next one. Both are data,
+  and `delay_for(kind, state)` is there to be drawn.
+
+```gdscript
+var pool := AttackTokens.new(config)  # config.pools = {"melee": 2, "ranged": 1}
+pool.request("troll", "melee", 2, 5, 3.0, now)  # cost 2, priority 5, 3 m away
+for id: String in pool.step(now, "busy"):
+	print(id, " may strike")
+pool.release("troll", AttackTokens.ENDED, now)
+```
+
+`events` logs every grant and return with its reason, for a view to draw.
+Where this sits beside rings and telegraphs, and when not to use any of
+them: [concepts/action-combat-ai.md](../concepts/action-combat-ai.md).
+
 ## Deeper {#deeper}
 
+- How action-game enemies take turns -- tokens, rings, telegraphs:
+  [concepts/action-combat-ai.md](../concepts/action-combat-ai.md).
 - How shooter AI is made: one bot, a team, a search:
   [concepts/shooter-ai.md](../concepts/shooter-ai.md).
 - The bot match, every knob and key: [godot/botmatch.md](../godot/botmatch.md).

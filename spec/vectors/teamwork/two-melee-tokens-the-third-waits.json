@@ -1,0 +1,208 @@
+{
+ "name": "two-melee-tokens-the-third-waits",
+ "why": "Three ask to strike and one to shoot. Melee 2, ranged 1, melee spaced 0.5 s: at 0 the nearest melee and the archer, at 0.5 the next nearest, at 1.0 the pool is full and the third circles. One attack ends, and at 1.5 the third strikes.",
+ "kind": "tokens",
+ "query": {
+  "config": {
+   "pools": {
+    "melee": 2,
+    "ranged": 1
+   },
+   "delays": {
+    "melee": 0.5,
+    "ranged": 2.0
+   },
+   "timeouts": {
+    "melee": 4.0,
+    "ranged": 6.0
+   },
+   "multipliers": {
+    "busy": {
+     "melee": 1.0,
+     "ranged": 2.0
+    },
+    "idle": {
+     "melee": 0.5,
+     "ranged": 0.5
+    }
+   },
+   "patience": 3,
+   "tie_seed": 7
+  },
+  "script": [
+   {
+    "do": "request",
+    "at": 0.0,
+    "id": "far",
+    "kind": "melee",
+    "cost": 1,
+    "priority": 0,
+    "distance": 9.0
+   },
+   {
+    "do": "request",
+    "at": 0.0,
+    "id": "near",
+    "kind": "melee",
+    "cost": 1,
+    "priority": 0,
+    "distance": 2.0
+   },
+   {
+    "do": "request",
+    "at": 0.0,
+    "id": "mid",
+    "kind": "melee",
+    "cost": 1,
+    "priority": 0,
+    "distance": 4.0
+   },
+   {
+    "do": "request",
+    "at": 0.0,
+    "id": "archer",
+    "kind": "ranged",
+    "cost": 1,
+    "priority": 0,
+    "distance": 20.0
+   },
+   {
+    "do": "step",
+    "at": 0.0,
+    "state": "normal"
+   },
+   {
+    "do": "step",
+    "at": 0.5,
+    "state": "normal"
+   },
+   {
+    "do": "step",
+    "at": 1.0,
+    "state": "normal"
+   },
+   {
+    "do": "release",
+    "at": 1.25,
+    "id": "near",
+    "reason": "ended"
+   },
+   {
+    "do": "step",
+    "at": 1.5,
+    "state": "normal"
+   }
+  ]
+ },
+ "expect": {
+  "answers": [
+   "waiting",
+   "waiting",
+   "waiting",
+   "waiting",
+   {
+    "granted": [
+     "near",
+     "archer"
+    ],
+    "free": {
+     "melee": 1,
+     "ranged": 0
+    },
+    "holders": {
+     "melee": [
+      "near"
+     ],
+     "ranged": [
+      "archer"
+     ]
+    }
+   },
+   {
+    "granted": [
+     "mid"
+    ],
+    "free": {
+     "melee": 0,
+     "ranged": 0
+    },
+    "holders": {
+     "melee": [
+      "mid",
+      "near"
+     ],
+     "ranged": [
+      "archer"
+     ]
+    }
+   },
+   {
+    "granted": [],
+    "free": {
+     "melee": 0,
+     "ranged": 0
+    },
+    "holders": {
+     "melee": [
+      "mid",
+      "near"
+     ],
+     "ranged": [
+      "archer"
+     ]
+    }
+   },
+   true,
+   {
+    "granted": [
+     "far"
+    ],
+    "free": {
+     "melee": 0,
+     "ranged": 0
+    },
+    "holders": {
+     "melee": [
+      "far",
+      "mid"
+     ],
+     "ranged": [
+      "archer"
+     ]
+    }
+   }
+  ],
+  "events": [
+   [
+    0.0,
+    "near",
+    "melee",
+    "granted"
+   ],
+   [
+    0.0,
+    "archer",
+    "ranged",
+    "granted"
+   ],
+   [
+    0.5,
+    "mid",
+    "melee",
+    "granted"
+   ],
+   [
+    1.25,
+    "near",
+    "melee",
+    "ended"
+   ],
+   [
+    1.5,
+    "far",
+    "melee",
+    "granted"
+   ]
+  ]
+ }
+}
