@@ -223,7 +223,7 @@ def why_speech_is_wrong(speech: str, secrets: tuple[str, ...]) -> str:
     """R8 to R11, on one line of speech. The game's fallback is held to them too."""
     if not speech or len(speech) > SPEECH_LIMIT:
         return f"R8 the speech is {len(speech)} characters; 1 to {SPEECH_LIMIT} are allowed"
-    if any(_is_refused_by_r9(character) for character in speech):
+    if any(is_refused_by_r9(character) for character in speech):
         return "R9 the speech is more than one line, or has a control or format character"
     if any(character in MARKUP for character in speech):
         return f"R10 the speech has markup in it, one of {MARKUP}"
@@ -234,12 +234,13 @@ def why_speech_is_wrong(speech: str, secrets: tuple[str, ...]) -> str:
     return ""
 
 
-def _is_refused_by_r9(character: str) -> bool:
+def is_refused_by_r9(character: str) -> bool:
     """A control character, a line or paragraph separator, or a format control.
 
     R9's test. Unicode's Cc is U+0000 to U+001F and U+007F to U+009F, NEXT
     LINE among them; Cf is FORMAT_CONTROLS. Each of these would break the
-    line a game shows, or put an invisible code in it.
+    line a game shows, or put an invisible code in it. Public, as its
+    GDScript twin is, so the two keep one name (T140).
     """
     code = ord(character)
     if code < 32 or 127 <= code <= 159 or character in LINE_SEPARATORS:
