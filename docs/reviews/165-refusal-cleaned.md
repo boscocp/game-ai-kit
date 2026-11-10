@@ -75,3 +75,11 @@ blocker and no should: two nits.**
   name the request's fault, not its prompt. If a later runtime echoed the
   prompt, that would be its own task.
 - The PR title and body carry no tooling byline.
+
+## What was done about them
+
+1. Applied. `_error_of`'s comment now says the text is "held to what R9
+   and R10 allow in a speech", and calls the markup list R10's, so it
+   claims no more than the function does.
+2. Applied. The STATUS row for T140 reads "wave 165 (#122):", as its
+   neighbours do.

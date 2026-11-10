@@ -148,11 +148,11 @@ static func _text_of(body: String) -> Dictionary:
 # The server's own sentence for why it refused a request, on one short line:
 # llama.cpp answers `{"error": {"code": 400, "message": ...}}` (measured at
 # the pinned build, docs/local-llm/server.md).
-# Text no validator read, so held to what a speech may show: whatever R9
-# refuses -- a control character, a line or paragraph separator, a format
-# control -- becomes a space, asked of R9's own test so there is one list
-# (T140); markup is dropped (the validator's own list too), and it is cut
-# to ERROR_LENGTH. T93's review found the server's words went to the
+# Text no validator read, so held to what R9 and R10 allow in a speech:
+# whatever R9 refuses -- a control character, a line or paragraph
+# separator, a format control -- becomes a space, asked of R9's own test
+# so there is one list (T140); markup is dropped (R10's list), and it is
+# cut to ERROR_LENGTH. T93's review found the server's words went to the
 # screen untouched.
 static func _error_of(body: String) -> String:
 	var reader := JSON.new()
