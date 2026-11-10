@@ -25,7 +25,9 @@ const WAITING: String = "waiting"
 const HOLDING: String = "holding"
 const REFUSED_COST: String = "refused_cost"
 const REFUSED_KIND: String = "refused_kind"
+const REFUSED_HOLDING: String = "refused_holding"
 const GRANTED: String = "granted"
+const WITHDRAWN: String = "withdrawn"
 const ENDED: String = "ended"
 const INTERRUPTED: String = "interrupted"
 const DIED: String = "died"
@@ -42,6 +44,7 @@ class Config:
 	## Seconds between two grants of a kind, before the multiplier.
 	var delays: Dictionary[String, float] = {}
 	## The longest a token may be held: the net for a holder that forgot.
+	## Required for every kind: a pool without one is refused.
 	var timeouts: Dictionary[String, float] = {}
 	## For each player state ("busy", "idle"), a factor per kind on the delay.
 	var multipliers: Dictionary[String, Dictionary] = {}
@@ -51,6 +54,8 @@ class Config:
 	var tie_seed: int = 0
 
 
+## One entry of the queue: who asks, for what, how badly, from where, since
+## when, and how many grants of its kind have gone past it.
 class Waiter:
 	extends RefCounted
 	var id: String
@@ -62,6 +67,8 @@ class Waiter:
 	var passed: int = 0
 
 
+## One token lent: of which kind, how many units, and since when -- the
+## timeout counts from `since`.
 class Holder:
 	extends RefCounted
 	var kind: String
@@ -69,9 +76,14 @@ class Holder:
 	var since: float
 
 
-## Every grant and every return, in order: {at, id, kind, what}, where
-## `what` is GRANTED or a return reason. A view draws it; a test reads it.
+## Every grant, every return and every withdrawal, in order: {at, id, kind,
+## what}, where `what` is GRANTED, WITHDRAWN or a return reason. A view
+## draws it; a test reads it.
 var events: Array[Dictionary] = []
+
+## Why the config was refused, or "". A refused pool has no kinds, so it
+## refuses every request: a holder that forgets must never block a kind.
+var refusal: String = ""
 
 var _config: Config
 var _free: Dictionary[String, int] = {}
@@ -83,27 +95,44 @@ var _now: float = 0.0
 
 func _init(config: Config) -> void:
 	_config = config
+	refusal = config_problem(config)
+	if refusal != "":
+		push_error("AttackTokens: " + refusal)
+		return
 	for kind: String in config.pools:
 		_free[kind] = config.pools[kind]
 		_next_grant[kind] = -INF
 
 
+## Why `config` cannot run a pool, or "": every kind needs a timeout, finite
+## and above zero, so no forgotten token holds its kind for ever.
+static func config_problem(config: Config) -> String:
+	for kind: String in config.pools:
+		var limit: float = config.timeouts.get(kind, INF)
+		if not is_finite(limit) or limit <= 0.0:
+			return "the kind %s has no timeout" % kind
+	return ""
+
+
 ## Ask for a token: WAITING, HOLDING, or a refusal by name. A cost above
 ## its kind's whole pool could never be granted, so it is refused now
-## rather than queued for ever. Asking again while waiting updates the
-## priority and distance and keeps the place earned by waiting.
+## rather than queued for ever; a holder asking for another kind is refused
+## too. Asking again for the same kind and cost updates the priority and
+## distance and keeps the place earned by waiting; another kind or cost is
+## a new request: the old one is withdrawn, and the new one waits from now.
 func request(id: String, kind: String, cost: int, priority: int, distance: float, now: float) -> String:
 	_now = now
-	if not _config.pools.has(kind):
+	if not _free.has(kind):
 		return REFUSED_KIND
 	if cost < 1 or cost > _config.pools[kind]:
 		return REFUSED_COST
 	if _holding.has(id):
-		return HOLDING
-	if _waiting.has(id):
+		return HOLDING if _holding[id].kind == kind else REFUSED_HOLDING
+	if _waiting.has(id) and _waiting[id].kind == kind and _waiting[id].cost == cost:
 		_waiting[id].priority = priority
 		_waiting[id].distance = distance
 		return WAITING
+	withdraw(id, now)
 	var waiter := Waiter.new()
 	waiter.id = id
 	waiter.kind = kind
@@ -115,12 +144,23 @@ func request(id: String, kind: String, cost: int, priority: int, distance: float
 	return WAITING
 
 
+## Take `id` out of the queue -- it changed its mind -- and log it; true
+## when it was waiting. A holder is not touched: that is `release`.
+func withdraw(id: String, now: float) -> bool:
+	_now = now
+	if not _waiting.has(id):
+		return false
+	events.append({"at": now, "id": id, "kind": _waiting[id].kind, "what": WITHDRAWN})
+	_waiting.erase(id)
+	return true
+
+
 ## Give a token back at once, for `reason` (ENDED, INTERRUPTED, DIED,
-## REVOKED); true when `id` held one. A requester that dies also leaves
-## the queue, so the dead are never granted.
+## REVOKED); true when `id` held one. A waiter that dies or is interrupted
+## also leaves the queue, so it is never granted a token it cannot use.
 func release(id: String, reason: String, now: float) -> bool:
 	_now = now
-	if reason == DIED:
+	if reason == DIED or reason == INTERRUPTED:
 		_waiting.erase(id)
 	if not _holding.has(id) or not (reason in RETURN_REASONS):
 		return false
@@ -139,12 +179,14 @@ func revoke_kind(kind: String, now: float) -> PackedStringArray:
 
 ## Time out the forgotten tokens, then grant what each kind's timer and
 ## pool allow, kinds in name order; the ids granted, in order. `state` is
-## the player's ("busy", "idle"), and picks the delay's multiplier.
+## the player's ("busy", "idle") and is read at a grant: the state then
+## sets the wait until the next grant of that kind, and a change of state
+## after it does not move that time.
 func step(now: float, state: String) -> PackedStringArray:
 	_now = now
 	_time_out(now)
 	var granted := PackedStringArray()
-	var kinds: Array[String] = _config.pools.keys()
+	var kinds: Array[String] = _free.keys()
 	kinds.sort()
 	for kind: String in kinds:
 		granted.append_array(_grant_kind(kind, now, state))

@@ -431,16 +431,28 @@ def run_tokens(config, script):
     for e in script:
         now = e.get("at", now)
         if e["do"] == "request":
+            mine = [w for w in waiting if w["id"] == e["id"]]
             if e["kind"] not in pools: answers.append("refused_kind")
             elif not 1 <= e["cost"] <= pools[e["kind"]]: answers.append("refused_cost")
-            elif e["id"] in holding: answers.append("holding")
-            else:
-                mine = [w for w in waiting if w["id"] == e["id"]]
-                if mine: mine[0].update(priority=e["priority"], distance=e["distance"])
-                else: waiting.append(dict(e, asked_at=now, passed=0))
+            elif e["id"] in holding:
+                answers.append("holding" if holding[e["id"]]["kind"] == e["kind"] else "refused_holding")
+            elif mine and mine[0]["kind"] == e["kind"] and mine[0]["cost"] == e["cost"]:
+                mine[0].update(priority=e["priority"], distance=e["distance"])
                 answers.append("waiting")
+            else:
+                if mine:
+                    waiting.remove(mine[0])
+                    events.append([now, e["id"], mine[0]["kind"], "withdrawn"])
+                waiting.append(dict(e, asked_at=now, passed=0))
+                answers.append("waiting")
+        elif e["do"] == "withdraw":
+            mine = [w for w in waiting if w["id"] == e["id"]]
+            if mine:
+                waiting.remove(mine[0])
+                events.append([now, e["id"], mine[0]["kind"], "withdrawn"])
+            answers.append(bool(mine))
         elif e["do"] == "release":
-            if e["reason"] == "died": waiting = [w for w in waiting if w["id"] != e["id"]]
+            if e["reason"] in ("died", "interrupted"): waiting = [w for w in waiting if w["id"] != e["id"]]
             ok = e["id"] in holding and e["reason"] in ("ended", "interrupted", "died", "revoked")
             if ok: give_back(e["id"], e["reason"])
             answers.append(ok)
@@ -509,6 +521,27 @@ def token_vectors():
                  [want("holder", 0.0, distance=2.0), tick(0.0), want("early", 0.0, distance=8.0),
                   want("late", 0.5, distance=1.0), done("holder", 1.0), tick(1.0)],
                  dict(TOKENS, pools={"melee": 1, "ranged": 1}))
+    yield tokens("withdrawn-and-interrupted-leave-the-queue",
+                 "One melee token, held. w1 changes its mind and withdraws, logged; w2 is staggered while waiting "
+                 "and is interrupted, which takes it out too; withdrawing one not waiting answers false. When the "
+                 "holder ends, w3 -- the farthest -- is the one granted.",
+                 [want("holder", 0.0), tick(0.0), want("w1", 0.0, distance=1.0), want("w2", 0.0, distance=2.0),
+                  want("w3", 0.0, distance=3.0), {"do": "withdraw", "at": 0.25, "id": "w1"},
+                  done("w2", 0.3, "interrupted"), {"do": "withdraw", "at": 0.3, "id": "nobody"},
+                  done("holder", 0.75), tick(1.0)],
+                 dict(TOKENS, pools={"melee": 1, "ranged": 1}))
+    yield tokens("asking-again-for-another-cost-waits-from-now",
+                 "Melee 2, one held by h. The troll asks for a swing (1) at 0.1, then for its charge (2) at 0.3: "
+                 "the swing is withdrawn and the charge waits from 0.3, behind mid, who asked at 0.2. mid gets "
+                 "the free token at 0.5; when h and mid end, the troll charges with both.",
+                 [want("h", 0.0), tick(0.0), want("troll", 0.1, distance=1.0), want("mid", 0.2, distance=5.0),
+                  want("troll", 0.3, cost=2, distance=1.0), tick(0.5), done("h", 0.75), done("mid", 0.9),
+                  tick(1.0)])
+    yield tokens("a-holder-asking-for-another-kind-is-refused",
+                 "a1 holds the ranged token. Asking for melee while holding it is refused by name; asking for "
+                 "ranged again is told it holds.",
+                 [want("a1", 0.0, "ranged"), tick(0.0), want("a1", 0.5, "melee"), want("a1", 0.5, "ranged"),
+                  tick(0.5)])
     yield tokens("a-cost-above-the-pool-is-refused",
                  "A cost of 3 against a melee pool of 2 is refused at once, by name, and never queued; a kind the "
                  "pool does not have is refused too; a holder asking again is told it holds.",

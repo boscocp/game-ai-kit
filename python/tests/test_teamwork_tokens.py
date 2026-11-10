@@ -7,12 +7,14 @@ every fight. `godot/test/ai_teamwork/attack_tokens_test.gd` holds the same
 promises for the GDScript side.
 """
 
+import math
 import random
 import unittest
 
 from gameaikit.teamwork import tokens
 
 FIGHTERS = 6
+MELEE_FIGHTERS = 4
 STEPS = 80
 TRIALS = 40
 
@@ -53,24 +55,57 @@ def why_broken(pool: tokens.AttackTokens) -> str:
     return ""
 
 
-def fight(pool: tokens.AttackTokens, seed: int) -> str:
-    """A random fight; the first broken promise, or ""."""
-    dice = random.Random(seed)
+def kind_of(fighter: int) -> str:
+    return "ranged" if fighter >= MELEE_FIGHTERS else "melee"
+
+
+def act_at_random(pool: tokens.AttackTokens, dice: random.Random, now: float, passes: dict) -> None:
+    """Each fighter asks, ends or dies at random; its kind and cost are its own."""
+    for fighter in range(FIGHTERS):
+        name, roll = f"f{fighter}", dice.random()
+        if roll < 0.3:
+            cost = 2 if fighter == MELEE_FIGHTERS - 1 else 1
+            asked = pool.request(name, kind_of(fighter), cost, dice.randint(0, 9), dice.uniform(1.0, 20.0), now)
+            if asked == tokens.WAITING:
+                passes.setdefault(name, 0)
+        elif roll < 0.4:
+            pool.release(name, tokens.ENDED, now)
+        elif roll < 0.42:
+            pool.release(name, tokens.DIED, now)
+            passes.pop(name, None)
+
+
+def fight(pool: tokens.AttackTokens, seed: int, served: dict | None = None) -> str:
+    """A random fight; the first broken promise, or "".
+
+    `served` gets, per kind and per grant, how many grants of that kind
+    went to others while the one granted waited -- counted here, from the
+    grants, not by the pool.
+    """
+    dice, passes, served = random.Random(seed), {}, {} if served is None else served
     for tick in range(STEPS):
         now = tick * 0.25
-        for fighter in range(FIGHTERS):
-            name, kind, roll = f"f{fighter}", "ranged" if fighter >= 4 else "melee", dice.random()
-            if roll < 0.3:
-                pool.request(name, kind, dice.randint(1, 2) if kind == "melee" else 1, dice.randint(0, 3),
-                             dice.uniform(1.0, 20.0), now)
-            elif roll < 0.4:
-                pool.release(name, tokens.ENDED, now)
-            elif roll < 0.42:
-                pool.release(name, tokens.DIED, now)
-        pool.step(now, dice.choice(["busy", "idle", "normal"]))
+        act_at_random(pool, dice, now, passes)
+        for name in pool.step(now, dice.choice(["busy", "idle", "normal"])):
+            kind = kind_of(int(name[1:]))
+            served.setdefault(kind, []).append(passes.pop(name, 0))
+            for other in pool.waiting(kind):
+                passes[other] = passes.get(other, 0) + 1
         if why_broken(pool):
             return f"step {tick}: {why_broken(pool)}"
     return ""
+
+
+def worst_passes(patience: int) -> dict:
+    """The most grants that went past one requester, per kind, over TRIALS fights."""
+    served: dict = {}
+    for trial in range(TRIALS):
+        fight(tokens.AttackTokens(config(patience)), 100 + trial, served)
+    return {kind: max(passes) for kind, passes in served.items()}
+
+
+#: Patience 3, plus the others of the kind who may have asked no later.
+BOUND = {"melee": 3 + MELEE_FIGHTERS - 1, "ranged": 3 + FIGHTERS - MELEE_FIGHTERS - 1}
 
 
 def forgetful_holder_keeps_it(pool: tokens.AttackTokens) -> bool:
@@ -93,6 +128,47 @@ class AttackTokenTests(unittest.TestCase):
 
     def test_a_pool_that_leaks_is_caught(self) -> None:
         self.assertNotEqual(fight(LeakyTokens(config()), 1), "")
+
+    def test_every_requester_is_served_within_the_bound_of_its_kind(self) -> None:
+        worst = worst_passes(3)
+        for kind, bound in BOUND.items():
+            self.assertLessEqual(worst[kind], bound, kind)
+
+    def test_a_pool_with_no_patience_breaks_the_bound(self) -> None:
+        worst = worst_passes(1000)
+        self.assertTrue(any(worst[kind] > bound for kind, bound in BOUND.items()), worst)
+
+    def test_a_waiter_withdrawn_or_interrupted_leaves_the_queue(self) -> None:
+        pool = tokens.AttackTokens(config())
+        pool.request("w1", "melee", 1, 0, 1.0, 0.0)
+        pool.request("w2", "melee", 1, 0, 2.0, 0.0)
+        self.assertTrue(pool.withdraw("w1", 0.1))
+        self.assertFalse(pool.release("w2", tokens.INTERRUPTED, 0.1))
+        self.assertEqual(pool.waiting("melee"), [])
+        self.assertEqual(pool.events[-1]["what"], tokens.WITHDRAWN)
+
+    def test_asking_again_for_another_cost_waits_from_now(self) -> None:
+        pool = tokens.AttackTokens(config())
+        pool.request("troll", "melee", 1, 0, 1.0, 0.0)
+        pool.request("troll", "melee", 2, 0, 1.0, 0.5)
+        self.assertEqual(pool.step(0.5, "normal"), ["troll"])
+        self.assertEqual(pool.held("melee"), 2)
+
+    def test_a_holder_asking_for_another_kind_is_refused(self) -> None:
+        pool = tokens.AttackTokens(config())
+        pool.request("a1", "ranged", 1, 0, 20.0, 0.0)
+        pool.step(0.0, "normal")
+        self.assertEqual(pool.request("a1", "melee", 1, 0, 2.0, 0.5), tokens.REFUSED_HOLDING)
+        self.assertEqual(pool.request("a1", "ranged", 1, 0, 20.0, 0.5), tokens.HOLDING)
+
+    def test_a_pool_without_a_timeout_is_refused(self) -> None:
+        settings = config()
+        del settings.timeouts["ranged"]
+        with self.assertRaisesRegex(ValueError, "ranged"):
+            tokens.AttackTokens(settings)
+        settings.timeouts["ranged"] = math.inf
+        with self.assertRaisesRegex(ValueError, "ranged"):
+            tokens.AttackTokens(settings)
 
     def test_a_cost_above_the_pool_is_refused_not_queued(self) -> None:
         pool = tokens.AttackTokens(config())

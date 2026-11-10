@@ -31,7 +31,7 @@ teaches: action-combat-ai
   releases it after [Thompson 2018]. This kit calls it a pool of **attack
   tokens**.
 - **Two rings make it readable**: those allowed to approach wait in an outer
-  ring, only the one attacking steps into the inner, and the rest stand
+  ring, only those attacking step into the inner, and the rest stand
   outside both [Dawe 2013].
 - **Difficulty is the pool's size**, not each enemy's numbers [Dawe 2013;
   Thompson 2018].
@@ -158,7 +158,9 @@ and is cited for no more than that.
   whole pool is refused at once. What it adds, each a decision of the
   task: a serving order written down (the passed over first, then
   priority, waiting, distance, a seeded hash), no light attack overtaking a
-  heavy one that does not fit yet, a timeout for a holder that forgot,
+  heavy one that does not fit yet, a timeout for a holder that forgot --
+  required for every kind --, a waiter that withdraws or is interrupted
+  leaving the queue,
   revoking a whole kind in one call, and a timer between grants with a
   factor for the player's state. What it leaves: stealing, which Dawe and
   DOOM both use -- a holder keeps its token until it gives it back, which
@@ -189,12 +191,12 @@ and is cited for no more than that.
   Attacks." In S. Rabin (ed.), *Game AI Pro*, ch. 28, CRC Press, 2013.
   https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter28_Beyond_the_Kung-Fu_Circle_A_Flexible_System_for_Managing_NPC_Attacks.pdf
   -- read in full, 2026-11-10.
-- Thompson, T. "Cyber Demons: The AI of DOOM (2016)." Game Developer, 2018
-  (the year as T154's sources give it; not re-read).
+- Thompson, T. "Cyber Demons: The AI of DOOM (2016)." Game Developer, 6 August 2018.
   https://www.gamedeveloper.com/design/cyber-demons-the-ai-of-doom-2016-
   -- read, 2026-11-10.
-- Erunsal, H. "Soulslike Enemy Combat" 3.2, the author's post on the Unreal
+- Erunsal, H. "Soulslike Enemy Combat", the author's thread on the Unreal
   Engine forums. https://forums.unrealengine.com/t/hakan-erunsal-soulslike-enemy-combat/2686654
-  -- read, 2026-11-10; a feature list, its date not shown.
+  -- read, 2026-11-10; a feature list. The phrases quoted come from two
+  posts, of 21 December 2025 and 28 October 2026.
 - Noonchester, A. "'Marvel's Spider-Man' AI Postmortem." GDC 2019.
   https://gdcvault.com/play/1025828 -- the session page only.

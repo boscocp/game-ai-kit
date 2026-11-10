@@ -21,7 +21,9 @@ WAITING = "waiting"
 HOLDING = "holding"
 REFUSED_COST = "refused_cost"
 REFUSED_KIND = "refused_kind"
+REFUSED_HOLDING = "refused_holding"
 GRANTED = "granted"
+WITHDRAWN = "withdrawn"
 ENDED = "ended"
 INTERRUPTED = "interrupted"
 DIED = "died"
@@ -32,7 +34,11 @@ RETURN_REASONS = (ENDED, INTERRUPTED, DIED, REVOKED)
 
 @dataclass
 class Config:
-    """The pool's numbers, all data: a difficulty table fills one."""
+    """The pool's numbers, all data: a difficulty table fills one.
+
+    Every kind needs a timeout, finite and above zero: a pool without one
+    is refused, so a holder that forgets never blocks its kind for ever.
+    """
 
     pools: dict[str, int]
     delays: dict[str, float] = field(default_factory=dict)
@@ -44,6 +50,8 @@ class Config:
 
 @dataclass
 class _Waiter:
+    """One entry of the queue: who asks, for what, since when, passed how often."""
+
     id: str
     kind: str
     cost: int
@@ -55,6 +63,8 @@ class _Waiter:
 
 @dataclass
 class _Holder:
+    """One token lent: of which kind, how many units, since when."""
+
     kind: str
     cost: int
     since: float
@@ -68,10 +78,22 @@ def fnv1a(text: str) -> int:
     return value
 
 
+def config_problem(config: Config) -> str:
+    """Why `config` cannot run a pool, or "": every kind needs a timeout."""
+    for kind in config.pools:
+        limit = config.timeouts.get(kind, math.inf)
+        if not math.isfinite(limit) or limit <= 0:
+            return f"the kind {kind} has no timeout"
+    return ""
+
+
 class AttackTokens:
-    """One target's pool: request, step, release, revoke."""
+    """One target's pool: request, step, release, revoke, withdraw."""
 
     def __init__(self, config: Config) -> None:
+        problem = config_problem(config)
+        if problem:
+            raise ValueError(f"AttackTokens: {problem}")
         self.config = config
         self.events: list[dict] = []
         self._free = dict(config.pools)
@@ -81,25 +103,40 @@ class AttackTokens:
         self._now = 0.0
 
     def request(self, id: str, kind: str, cost: int, priority: int, distance: float, now: float) -> str:
-        """WAITING, HOLDING, or a refusal by name; a cost above the pool is refused now."""
+        """WAITING, HOLDING, or a refusal by name.
+
+        A cost above the pool, or a holder asking for another kind, is
+        refused now. Asking again for the same kind and cost keeps the
+        place; another kind or cost withdraws the old request and waits
+        from now.
+        """
         self._now = now
         if kind not in self.config.pools:
             return REFUSED_KIND
         if cost < 1 or cost > self.config.pools[kind]:
             return REFUSED_COST
         if id in self._holding:
-            return HOLDING
-        if id in self._waiting:
-            self._waiting[id].priority = priority
-            self._waiting[id].distance = distance
+            return HOLDING if self._holding[id].kind == kind else REFUSED_HOLDING
+        waiter = self._waiting.get(id)
+        if waiter and waiter.kind == kind and waiter.cost == cost:
+            waiter.priority, waiter.distance = priority, distance
             return WAITING
+        self.withdraw(id, now)
         self._waiting[id] = _Waiter(id, kind, cost, priority, distance, now)
         return WAITING
 
-    def release(self, id: str, reason: str, now: float) -> bool:
-        """Give a token back at once; the dead also leave the queue."""
+    def withdraw(self, id: str, now: float) -> bool:
+        """Take a waiter that changed its mind out of the queue, and log it."""
         self._now = now
-        if reason == DIED:
+        if id not in self._waiting:
+            return False
+        self.events.append({"at": now, "id": id, "kind": self._waiting.pop(id).kind, "what": WITHDRAWN})
+        return True
+
+    def release(self, id: str, reason: str, now: float) -> bool:
+        """Give a token back at once; the dead and interrupted also leave the queue."""
+        self._now = now
+        if reason in (DIED, INTERRUPTED):
             self._waiting.pop(id, None)
         if id not in self._holding or reason not in RETURN_REASONS:
             return False
@@ -114,7 +151,11 @@ class AttackTokens:
         return revoked
 
     def step(self, now: float, state: str) -> list[str]:
-        """Time out the forgotten, then grant what each kind's timer and pool allow."""
+        """Time out the forgotten, then grant what each kind's timer and pool allow.
+
+        `state` is read at a grant: it sets the wait until the next grant
+        of that kind, and a later change of state does not move that time.
+        """
         self._now = now
         self._time_out(now)
         granted = []

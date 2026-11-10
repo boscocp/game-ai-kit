@@ -31,11 +31,13 @@ and back), in both languages, and each flip fails a vector -- but one: the
 influence radius, where a cell exactly at `radius` takes `strength x 0`
 either way, so no vector can tell the two apart. T68's hiding query was
 asked the same in the Python twin: its SEEN condition removed fails a
-vector. T154's attack tokens were asked eleven in the Python twin and four
+vector. T154's attack tokens were asked sixteen in the Python twin and five
 in GDScript -- patience's and the timeout's `>=` for `>`, the priority's
 sign, waiting and distance swapped, a pool that does not count, a cost
 granted that does not fit, a cost above the pool queued, the dead served, the timer's `>=`, the multiplier
-dropped, the tie hash gone -- and each fails a vector.
+dropped, the tie hash gone, no patience, the interrupted kept waiting, another
+cost kept in place, a holder of another kind told it holds -- and each fails a
+vector or the suite; the timeout made optional fails the suite.
 
 `ActionChoice` and `ErrandChoice` were vectors here until T101 moved them,
 unchanged, to `ai_utility`: they are in
@@ -69,9 +71,9 @@ that must agree bit for bit would need rounded costs.
 | `passage` | a blocked bot's facts, and requests to a teammate with its prices | each way's cost in seconds (null: impossible) and the way taken; each request's cost to the teammate and whether it is granted |
 | `search` | spots (worth, searched), each searcher's walk to each, whether claims are on; the walks to the last known position and a cap (T70) | the spot each searcher is given (-1: none); who goes to the last known position |
 | `roles` | requests (role, score, can shoot), whether the arbiter is on, the most flankers (T70) | the role each request is granted |
-| `tokens` | a pool's config (pools, delays, timeouts, multipliers, patience, tie seed) and a script of requests, releases, revokes and steps (T154) | what each event answers -- a request's status, a release's true or false, the ids revoked, a step's grants, free tokens and holders -- and the log of grants and returns |
+| `tokens` | a pool's config (pools, delays, timeouts, multipliers, patience, tie seed) and a script of requests, withdrawals, releases, revokes and steps (T154) | what each event answers -- a request's status, a withdrawal's or a release's true or false, the ids revoked, a step's grants, free tokens and holders -- and the log of grants, returns and withdrawals |
 
-## The forty-two
+## The forty-five
 
 | file | what it pins |
 |---|---|
@@ -110,6 +112,9 @@ that must agree bit for bit would need rounded costs.
 | `two-melee-tokens-the-third-waits` | two melee tokens and one ranged: the nearest strike, spaced by the delay; the third waits for one to end |
 | `the-boss-goes-first-and-is-not-overtaken` | a heavy attack of priority 5 costs both tokens; a light one may not take a token past it |
 | `the-longest-waiting-before-the-nearest` | of equal priority, the one waiting longest beats the nearer |
+| `withdrawn-and-interrupted-leave-the-queue` | a waiter that withdraws, logged, and one interrupted both leave the queue; the farthest is granted |
+| `asking-again-for-another-cost-waits-from-now` | asking again for another cost withdraws the old request; the new one waits behind one who asked earlier |
+| `a-holder-asking-for-another-kind-is-refused` | a holder asking for another kind is refused by name; for its own kind, told it holds |
 | `a-cost-above-the-pool-is-refused` | a cost above the pool and an unknown kind are refused at once; a holder asking again is told it holds |
 | `revoked-is-free-on-the-same-step` | the ranged kind revoked: free at once, granted on the same step; busy, the next ranged grant waits twice as long |
 | `death-and-timeout-give-tokens-back` | a holder that dies gives its token back at once, a dead waiter is never served, a holder that never releases times out |

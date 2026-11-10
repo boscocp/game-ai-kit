@@ -112,6 +112,8 @@ def play_tokens(pool: tokens.AttackTokens, event: dict):
         return pool.request(event["id"], event["kind"], event["cost"], event["priority"], event["distance"], event["at"])
     if event["do"] == "release":
         return pool.release(event["id"], event["reason"], event["at"])
+    if event["do"] == "withdraw":
+        return pool.withdraw(event["id"], event["at"])
     if event["do"] == "revoke":
         return pool.revoke_kind(event["kind"], event["at"])
     granted = pool.step(event["at"], event["state"])

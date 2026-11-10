@@ -1,0 +1,192 @@
+{
+ "name": "asking-again-for-another-cost-waits-from-now",
+ "why": "Melee 2, one held by h. The troll asks for a swing (1) at 0.1, then for its charge (2) at 0.3: the swing is withdrawn and the charge waits from 0.3, behind mid, who asked at 0.2. mid gets the free token at 0.5; when h and mid end, the troll charges with both.",
+ "kind": "tokens",
+ "query": {
+  "config": {
+   "pools": {
+    "melee": 2,
+    "ranged": 1
+   },
+   "delays": {
+    "melee": 0.5,
+    "ranged": 2.0
+   },
+   "timeouts": {
+    "melee": 4.0,
+    "ranged": 6.0
+   },
+   "multipliers": {
+    "busy": {
+     "melee": 1.0,
+     "ranged": 2.0
+    },
+    "idle": {
+     "melee": 0.5,
+     "ranged": 0.5
+    }
+   },
+   "patience": 3,
+   "tie_seed": 7
+  },
+  "script": [
+   {
+    "do": "request",
+    "at": 0.0,
+    "id": "h",
+    "kind": "melee",
+    "cost": 1,
+    "priority": 0,
+    "distance": 5.0
+   },
+   {
+    "do": "step",
+    "at": 0.0,
+    "state": "normal"
+   },
+   {
+    "do": "request",
+    "at": 0.1,
+    "id": "troll",
+    "kind": "melee",
+    "cost": 1,
+    "priority": 0,
+    "distance": 1.0
+   },
+   {
+    "do": "request",
+    "at": 0.2,
+    "id": "mid",
+    "kind": "melee",
+    "cost": 1,
+    "priority": 0,
+    "distance": 5.0
+   },
+   {
+    "do": "request",
+    "at": 0.3,
+    "id": "troll",
+    "kind": "melee",
+    "cost": 2,
+    "priority": 0,
+    "distance": 1.0
+   },
+   {
+    "do": "step",
+    "at": 0.5,
+    "state": "normal"
+   },
+   {
+    "do": "release",
+    "at": 0.75,
+    "id": "h",
+    "reason": "ended"
+   },
+   {
+    "do": "release",
+    "at": 0.9,
+    "id": "mid",
+    "reason": "ended"
+   },
+   {
+    "do": "step",
+    "at": 1.0,
+    "state": "normal"
+   }
+  ]
+ },
+ "expect": {
+  "answers": [
+   "waiting",
+   {
+    "granted": [
+     "h"
+    ],
+    "free": {
+     "melee": 1,
+     "ranged": 1
+    },
+    "holders": {
+     "melee": [
+      "h"
+     ],
+     "ranged": []
+    }
+   },
+   "waiting",
+   "waiting",
+   "waiting",
+   {
+    "granted": [
+     "mid"
+    ],
+    "free": {
+     "melee": 0,
+     "ranged": 1
+    },
+    "holders": {
+     "melee": [
+      "h",
+      "mid"
+     ],
+     "ranged": []
+    }
+   },
+   true,
+   true,
+   {
+    "granted": [
+     "troll"
+    ],
+    "free": {
+     "melee": 0,
+     "ranged": 1
+    },
+    "holders": {
+     "melee": [
+      "troll"
+     ],
+     "ranged": []
+    }
+   }
+  ],
+  "events": [
+   [
+    0.0,
+    "h",
+    "melee",
+    "granted"
+   ],
+   [
+    0.3,
+    "troll",
+    "melee",
+    "withdrawn"
+   ],
+   [
+    0.5,
+    "mid",
+    "melee",
+    "granted"
+   ],
+   [
+    0.75,
+    "h",
+    "melee",
+    "ended"
+   ],
+   [
+    0.9,
+    "mid",
+    "melee",
+    "ended"
+   ],
+   [
+    1.0,
+    "troll",
+    "melee",
+    "granted"
+   ]
+  ]
+ }
+}

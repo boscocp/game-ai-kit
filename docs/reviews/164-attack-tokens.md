@@ -210,3 +210,48 @@ more or less than the code and the sources.
 - **`O(waiting log waiting)` per grant.** `waiting()` sorts the kind's
   queue once per grant; with a handful of enemies per target, it is the
   readable choice.
+
+## What was done about them
+
+All nine, on the same branch, on both sides, with `derive.py` updated and
+the vectors regenerated (three new; the other forty-two unchanged).
+
+1. **The bound is per kind.** Both suites measure the worst passes per kind
+   over the random fights and hold melee to `patience + 3` and ranged to
+   `patience + 1`. Each fighter now asks for its own kind and cost (one
+   melee fighter costs 2), so asking again keeps its place -- needed once 3
+   made a new cost a new request. A planted run with `patience = 1000` must
+   exceed the bound, and does on both sides (Python: worst melee 10 against
+   a bound of 6; 4 with patience). Planted in the implementation itself
+   (`patient` always false), the bound test now fails in GDScript and in
+   Python.
+2. **`INTERRUPTED` takes a waiter out of the queue too**, and
+   `withdraw(id, now)` takes out one that changed its mind, logged as
+   `withdrawn`. Vector `withdrawn-and-interrupted-leave-the-queue`.
+3. **Asking again with another kind or cost** withdraws the old request
+   (logged) and queues the new one, which waits from now; same kind and
+   cost keeps the place and updates priority and distance. A holder asking
+   for another kind is refused by name, `refused_holding`. Both in
+   `request`'s doc comment. Vectors
+   `asking-again-for-another-cost-waits-from-now` and
+   `a-holder-asking-for-another-kind-is-refused`.
+4. **The timeout is required.** `config_problem(config)` names a kind with
+   no finite, positive timeout; Python's constructor raises `ValueError`
+   with it, GDScript's pushes the error, keeps it in `refusal` and refuses
+   every request. Tested on both sides.
+5. **The state is read at a grant**, said in `step`'s comment on both
+   sides and on the technique page; the behaviour is unchanged.
+6. **"asked no later than it"** on the technique page in both languages
+   and in the task's Notes.
+7. **References:** Thompson dated 6 August 2018, the hedge removed;
+   Erunsal's two posts dated 21 December 2025 and 28 October 2026.
+8. **"only those attacking step into the inner"**.
+9. **`##` lines on `Waiter` and `Holder`**, and docstrings on the Python
+   twins.
+
+Rerun after the changes: `make test-godot-some SUITES="test/ai_teamwork"`,
+`make test-teamwork-vectors`, the Python teamwork tests,
+`check_readability.py`, `lint-tiers`, `lint-status`, `lint-glossary`,
+`lint-translations-docs`; exit codes in the PR. A mutation round of
+sixteen in the Python twin, run against both test modules, caught all
+sixteen; `__pycache__` was cleared after it.

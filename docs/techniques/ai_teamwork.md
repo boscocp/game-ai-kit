@@ -138,22 +138,30 @@ pool, one per target:
 
 - **A pool per kind**, `melee: 2` and `ranged: 1`, and a cost per request,
   so a heavy attack takes both melee tokens. A cost above its kind's whole
-  pool is refused when it is asked -- `REFUSED_COST` -- not queued for ever.
+  pool is refused when it is asked -- `REFUSED_COST` -- not queued for ever;
+  so is a holder asking for another kind, `REFUSED_HOLDING`. Asking again
+  for the same kind and cost keeps the place in the queue; another kind or
+  cost is a new request, which waits from now.
 - **Who is served next is a rule written down**, not the order the
   requests were stored in: first whoever was passed over `patience` times,
   oldest first; then the highest priority (the boss above its minions);
   then the one waiting longest; then the nearest; then a seeded hash. The
   first in that order is served or no one is: a heavy attack that does not
   fit yet is not overtaken by light ones. So every requester is served
-  within `patience` grants plus the number who asked before it -- the
-  suite holds that bound.
+  within `patience` grants plus the number still waiting who asked no
+  later than it -- the suite holds that bound for each kind, and a planted
+  pool with no patience breaks it.
 - **A token comes back in five ways**: the attack ends, the holder is
   interrupted or dies, the game revokes a whole kind at once
   (`revoke_kind`, when melee pressure starts and the ranged should stop),
-  or it times out -- the net for a holder that forgot.
+  or it times out -- the net for a holder that forgot. Every kind must have
+  a timeout: a pool configured without one is refused by name. A waiter
+  that is interrupted or dies leaves the queue, and one that changed its
+  mind calls `withdraw`.
 - **A timer spaces the grants** of each kind: a base delay, times a factor
-  for the player's state -- longer when busy, shorter when idle. Both are
-  data, and `delay_for(kind, state)` is there to be drawn.
+  for the player's state -- longer when busy, shorter when idle. The state
+  is read at a grant and sets the wait until the next one. Both are data,
+  and `delay_for(kind, state)` is there to be drawn.
 
 ```gdscript
 var pool := AttackTokens.new(config)  # config.pools = {"melee": 2, "ranged": 1}

@@ -1,0 +1,171 @@
+{
+ "name": "withdrawn-and-interrupted-leave-the-queue",
+ "why": "One melee token, held. w1 changes its mind and withdraws, logged; w2 is staggered while waiting and is interrupted, which takes it out too; withdrawing one not waiting answers false. When the holder ends, w3 -- the farthest -- is the one granted.",
+ "kind": "tokens",
+ "query": {
+  "config": {
+   "pools": {
+    "melee": 1,
+    "ranged": 1
+   },
+   "delays": {
+    "melee": 0.5,
+    "ranged": 2.0
+   },
+   "timeouts": {
+    "melee": 4.0,
+    "ranged": 6.0
+   },
+   "multipliers": {
+    "busy": {
+     "melee": 1.0,
+     "ranged": 2.0
+    },
+    "idle": {
+     "melee": 0.5,
+     "ranged": 0.5
+    }
+   },
+   "patience": 3,
+   "tie_seed": 7
+  },
+  "script": [
+   {
+    "do": "request",
+    "at": 0.0,
+    "id": "holder",
+    "kind": "melee",
+    "cost": 1,
+    "priority": 0,
+    "distance": 5.0
+   },
+   {
+    "do": "step",
+    "at": 0.0,
+    "state": "normal"
+   },
+   {
+    "do": "request",
+    "at": 0.0,
+    "id": "w1",
+    "kind": "melee",
+    "cost": 1,
+    "priority": 0,
+    "distance": 1.0
+   },
+   {
+    "do": "request",
+    "at": 0.0,
+    "id": "w2",
+    "kind": "melee",
+    "cost": 1,
+    "priority": 0,
+    "distance": 2.0
+   },
+   {
+    "do": "request",
+    "at": 0.0,
+    "id": "w3",
+    "kind": "melee",
+    "cost": 1,
+    "priority": 0,
+    "distance": 3.0
+   },
+   {
+    "do": "withdraw",
+    "at": 0.25,
+    "id": "w1"
+   },
+   {
+    "do": "release",
+    "at": 0.3,
+    "id": "w2",
+    "reason": "interrupted"
+   },
+   {
+    "do": "withdraw",
+    "at": 0.3,
+    "id": "nobody"
+   },
+   {
+    "do": "release",
+    "at": 0.75,
+    "id": "holder",
+    "reason": "ended"
+   },
+   {
+    "do": "step",
+    "at": 1.0,
+    "state": "normal"
+   }
+  ]
+ },
+ "expect": {
+  "answers": [
+   "waiting",
+   {
+    "granted": [
+     "holder"
+    ],
+    "free": {
+     "melee": 0,
+     "ranged": 1
+    },
+    "holders": {
+     "melee": [
+      "holder"
+     ],
+     "ranged": []
+    }
+   },
+   "waiting",
+   "waiting",
+   "waiting",
+   true,
+   false,
+   false,
+   true,
+   {
+    "granted": [
+     "w3"
+    ],
+    "free": {
+     "melee": 0,
+     "ranged": 1
+    },
+    "holders": {
+     "melee": [
+      "w3"
+     ],
+     "ranged": []
+    }
+   }
+  ],
+  "events": [
+   [
+    0.0,
+    "holder",
+    "melee",
+    "granted"
+   ],
+   [
+    0.25,
+    "w1",
+    "melee",
+    "withdrawn"
+   ],
+   [
+    0.75,
+    "holder",
+    "melee",
+    "ended"
+   ],
+   [
+    1.0,
+    "w3",
+    "melee",
+    "granted"
+   ]
+  ]
+ }
+}

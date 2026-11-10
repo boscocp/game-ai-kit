@@ -7,7 +7,7 @@ tier: 2
 source: https://www.gameaipro.com/
 invalidated_if: the kit's RoleArbiter, TeamCommander, TacticalPositions, SquadConfidence, SearchCoordinator or AttackTokens signatures change, or the demos that use them are renamed
 teaches: shooter-ai
-translation_of: 8e53ea715198bf3fbdb0666f838f580ae6e1740fce4a9a105fab113ecf67a329
+translation_of: 112913dd865f686734209b08f712798795f200a6d8b98d925f54a48501caea6e
 -->
 
 > English: [ai_teamwork.md](ai_teamwork.md). Os termos que ficam em inglês
@@ -149,7 +149,10 @@ peso ainda coubesse [Dawe 2013]; DOOM (2016) mantém uma contagem de
 - **Um estoque por tipo**, `melee: 2` e `ranged: 1`, e um custo por pedido,
   então um ataque pesado leva os dois *tokens* de *melee*. Um custo acima do
   estoque inteiro do seu tipo é recusado quando é pedido -- `REFUSED_COST`
-  --, não fica na fila para sempre.
+  --, não fica na fila para sempre; também é recusado quem segura um
+  *token* e pede de outro tipo, `REFUSED_HOLDING`. Pedir de novo o mesmo
+  tipo e custo mantém o lugar na fila; outro tipo ou custo é um pedido
+  novo, que espera a partir de agora.
 - **Quem é atendido em seguida é uma regra escrita**, não a ordem em que os
   pedidos foram guardados: primeiro quem foi preterido `patience` vezes, o
   mais antigo antes; depois a maior prioridade (o chefe acima dos
@@ -157,14 +160,20 @@ peso ainda coubesse [Dawe 2013]; DOOM (2016) mantém uma contagem de
   um *hash* com *seed*. O primeiro dessa ordem é atendido ou ninguém é: um
   ataque pesado que ainda não cabe não é ultrapassado pelos leves. Assim
   todo pedido é atendido em no máximo `patience` concessões mais o número
-  dos que pediram antes dele -- a suíte segura esse limite.
+  dos que ainda esperam e pediram no mesmo instante ou antes dele -- a
+  suíte segura esse limite para cada tipo, e um estoque plantado sem
+  paciência o quebra.
 - **Um *token* volta de cinco jeitos**: o ataque termina, quem o segura é
   interrompido ou morre, o jogo revoga um tipo inteiro de uma vez
   (`revoke_kind`, quando a pressão de *melee* começa e os de longe devem
   parar), ou o tempo dele acaba -- a rede para quem esqueceu de devolver.
+  Todo tipo precisa de um tempo máximo: um estoque configurado sem ele é
+  recusado pelo nome. Quem espera e é interrompido ou morre sai da fila, e
+  quem mudou de ideia chama `withdraw`.
 - **Um *timer* espaça as concessões** de cada tipo: uma espera base, vezes
   um fator pelo estado do jogador -- mais longa quando ele está ocupado,
-  mais curta quando está parado. Os dois são dados, e o
+  mais curta quando está parado. O estado é lido na concessão e define a
+  espera até a próxima. Os dois são dados, e o
   `delay_for(kind, state)` está lá para ser desenhado.
 
 ```gdscript

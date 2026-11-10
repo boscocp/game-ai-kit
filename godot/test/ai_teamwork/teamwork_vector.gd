@@ -262,6 +262,8 @@ static func _play_tokens(pool: AttackTokens, config: AttackTokens.Config, event:
 		return pool.request(str(event["id"]), str(event["kind"]), cost, priority, float(event["distance"]), now)
 	if action == "release":
 		return pool.release(str(event["id"]), str(event["reason"]), now)
+	if action == "withdraw":
+		return pool.withdraw(str(event["id"]), now)
 	if action == "revoke":
 		return Array(pool.revoke_kind(str(event["kind"]), now))
 	var granted: PackedStringArray = pool.step(now, str(event["state"]))

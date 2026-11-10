@@ -84,7 +84,8 @@ _Wave 164, before review._
   also says must not happen. The smallest change that makes the bound
   true: a requester passed over `patience` grants (3 by default, in data)
   is served before priority, the oldest of those first. The bound is then
-  `patience` plus the number who asked before it, and the suite holds it,
+  `patience` plus the number still waiting who asked no later than it,
+  and the suite holds it for each kind,
   with a planted pool of no patience that starves.
 - **A decision added: no overtaking.** If the first in the order does not
   fit the free tokens, no one is served: a light attack slipping past a
@@ -101,6 +102,24 @@ _Wave 164, before review._
   checked".
 - **No demo shows it yet**: T157's boss fight is the first. Invariant 13's
   half for this class is open until then, and the technique page says so.
+
+_Wave 164, after the fresh-context review of PR #125
+(`docs/reviews/164-attack-tokens.md`)._
+
+- **The bound is tested per kind**: `patience + 3` for the four melee
+  fighters, `patience + 1` for the two ranged, on both sides, and a pool
+  planted with no patience must break it. Each fighter now asks for its
+  own kind and cost, so asking again keeps its place.
+- **A waiter leaves the queue** when it dies or is interrupted, or by
+  `withdraw(id, now)`, which logs `withdrawn`.
+- **Asking again for another kind or cost** withdraws the old request and
+  queues the new one, waiting from now; a holder asking for another kind is
+  refused by name, `refused_holding`.
+- **The timeout is required**: a pool configured without a finite one for
+  some kind is refused by name (`config_problem`; Python raises, GDScript
+  pushes an error and refuses every request).
+- **The player's state is read at a grant** and sets the wait until the
+  next one; documented, the behaviour left as it was.
 
 ## Acceptance
 
