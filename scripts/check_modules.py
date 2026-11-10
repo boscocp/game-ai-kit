@@ -111,6 +111,9 @@ GLOBAL = (
     # project file and its attribution decide what any of them ships as.
     "python/gameaikit/techniques.py", "python/tests/test_techniques.py",
     "python/pyproject.toml", "python/LICENSE", "python/NOTICE", "python/README.md",
+    # What the store was handed (T159): the release's record, read by
+    # `scripts/check_published.py`, not by any module's code.
+    "tools/store/", "python/tests/test_check_published.py",
 )
 
 # What only a person reads. The lints that read it run on every wave anyway,

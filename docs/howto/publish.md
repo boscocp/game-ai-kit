@@ -188,6 +188,30 @@ should show every file under `res://addons/ai_<name>/` and nothing at
 `res://`. `release.py --self-test` holds the layout to the installer's rule
 as read in its source; only step 5 runs the installer itself.
 
+### After each upload: record it, and test what the store hands out
+
+`make library-check` tests what `HEAD` would publish. A stranger gets the
+file the store holds, and `make check-published` (T159) tests that one:
+
+1. Download the version once, into the toolchain, never the checkout or
+   the home, and measure it: `sha256sum` and its size in bytes.
+2. Add one entry to `tools/store/published.json`: the download URL, the
+   version, the sha256, the size, the size the page shows, and
+   `provenance`. That is the tag whose own `release.py` builds the file
+   byte for byte, or `unknown` with a `note` saying what was found.
+3. Run `make check-published`. It downloads every recorded upload again
+   into `$GAK_TOOLCHAIN/store/`, checks the sha256 and the size, the paths
+   (only `addons/ai_<name>/`, LICENSE and NOTICE in each, no test or demo
+   folder), unzips it into a blank project outside the repository, imports
+   it and loads every script there, and, for a tag, rebuilds that tag's kit
+   zip in a clone and compares. Exit 1 is a finding, 2 a download it could
+   not reach. It needs the network, so it is not in `make check`.
+
+Measured on 2026-11-10 (wave 168) for download 8161: the page shows
+322.41 KB for a file of 314,853 bytes. That is bytes x 1.024 / 1,000, the
+page's unit, so the shown size does not identify a build; the sha256 does.
+That file is byte for byte `v0.1.0`'s build.
+
 ## What did not fit, and what was decided
 
 The owner decided all four on 2026-11-06 ("pode seguir o recomendado nas 5
