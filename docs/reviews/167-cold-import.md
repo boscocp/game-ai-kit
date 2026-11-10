@@ -155,6 +155,29 @@ A fresh context reviewed PR #123 at head 0001f5e, based on 75caf84
   the samples here ran through `./scripts/godot`.
 - The commit and the PR title and body carry no tooling byline.
 
+## What was done about them
+
+All six, on the same branch:
+
+1. The page now says #125245 reports a crash with the same symptom and
+   workaround, in a C# project with no CSV tables and the fault on the
+   main thread, and that it is not shown to be the same race. The gate's
+   docstring and `project.godot`'s comment say "a similar crash". The page
+   leaves offering this repository as the reproduction to the owner.
+2. The page gives the rate per row (1 in 50 to 1 in 5), this review's 0 of
+   30, and Fisher's p. It says that before the line is removed, the loop
+   must first be shown to catch the crash at 4.7.2 with the setting on and
+   `--verbose`. "One run in ten" is gone from the gate's finding and the
+   Makefile comment.
+3. `invalidated_if` is now the pin and the upstream fix only.
+4. The gate takes the last assignment under `[editor]`, as Godot's loader
+   does. New planted cases: `=false` then `=true` (exit 1), `=true` then
+   `=false` (exit 0), and `false` under `[editor]` with `true` under
+   another section (exit 0).
+5. T148's Notes say why there is no retry, and its Files line lists the
+   four files the wave touched.
+6. The docstring paragraph is rewrapped.
+
 ## make check-affected
 
 `make check-affected BASE=origin/main` on 0001f5e, run here after the

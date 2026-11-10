@@ -24,7 +24,8 @@ window/size/viewport_height=720
 ; One import thread, not the default several (T148). On 4.7.2 a cold
 ; --import with several crashed 11 runs in 115 (signal 11 reimporting
 ; the translation tables, or SIGABRT at shutdown), and none in 160 with one.
-; godotengine/godot#125245; docs/godot/cold-import.md.
+; A similar crash is reported upstream, godotengine/godot#125245;
+; docs/godot/cold-import.md.
 import/use_multiple_threads=false
 
 [internationalization]

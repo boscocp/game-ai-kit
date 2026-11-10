@@ -777,7 +777,7 @@ import: ## Import the art, which a fresh checkout cannot load without
 	@# survives fixing the picture. So an ERROR is a failure here, and a
 	@# sidecar marked invalid is too.
 	@#
-	@# A cold import on several threads crashed one run in ten on 4.7.2
+	@# A cold import on several threads crashed 11 runs in 115 on 4.7.2
 	@# (exit 139 or 134); project.godot keeps it on one, and
 	@# lint-import-threads keeps that line. docs/godot/cold-import.md (T148).
 	@out=$$($(GODOT) --headless --path godot --import 2>&1) || \
