@@ -3,6 +3,81 @@
 The index. One row per task; the task file holds everything needed to do it.
 The topmost `## Resuming after` section is the next session's prompt.
 
+## Resuming after 2026-11-10, batch 164-168 merged (waves 164 to 169)
+
+**Where it stopped -- read first.** Five waves were each reviewed by a
+fresh context, their findings were applied, and they were merged with
+`--admin`:
+
+- **T140** (#122, `75caf84`): a server's refusal is cleaned by R9.
+- **T148** (#123, `9ded03f`): the import runs on one thread.
+  - Measured: 11 crashes in 115 cold imports with several threads, none
+    in 160 with one.
+  - Upstream reports a similar crash, godotengine/godot#125245.
+  - The page is `docs/godot/cold-import.md`.
+- **T146** (#124, `cd67a05`): two exit leaks are fixed.
+  - `make test-demos-exit` sweeps the 17 scenes and the squad mode.
+  - The owner approved that one gate, owned by `menu`.
+- **T154** (#125, `b474617`): `AttackTokens` in `ai_teamwork`.
+  - A fair queue with patience, `withdraw`, a required timeout and the
+    bound per kind.
+  - A Python twin and 13 shared vectors.
+- **T159** (#126, `dfb51d6`): `make check-published`.
+  - **The store's file is v0.1.0's kit zip, byte for byte.** It is
+    314,853 bytes, sha256 `8538106a…bbd1db`.
+  - The page's "322.41 KB" is 314,853 × 1.024 / 1000.
+  - The owner's first explanation was right: only the examples and the
+    addons added after the upload differ. Wave 163's "the store's file
+    comes from no commit" was wrong.
+
+This wave (169) adds T162, this section, the faster-batch routine in
+`docs/howto/parallel-batch.md`, and `docs/godot/project-manager-black.md`.
+
+**The owner's decisions, 2026-11-10.**
+
+1. T154 ran before T159 and T160.
+2. The batch merged with `--admin` without waiting for the PRs' CI. Each
+   rebased head passed its modules' gates locally, and the timing gates
+   passed alone at load 2 (`test-rts-budget` 0 failures, `test-rts-flock`
+   2.69 ms). CI runs on main after each merge. The coordinator proposes
+   it as the routine ("A faster batch" in `docs/howto/parallel-batch.md`);
+   ask the owner to confirm it for the next batch.
+3. One `make test-demos-exit` owned by `menu`, over every scene (T146).
+4. The 0.2.0 release (T161) also waits for T162.
+
+**Done by hand, 2026-11-10.**
+- **T149's store-tab install.** In an empty project (`~/teste`), the
+  AssetLib install put the 16 addons in `addons/ai_*/`, each with LICENSE
+  and NOTICE. T159's loader loaded 107 scripts and 107 `class_name`s,
+  and exited 0. The engine printed "7 resources still in use at exit",
+  which is T162.
+- **The Project Manager window stayed black** on the author's NVIDIA
+  machine until it was opened with `--rendering-method gl_compatibility
+  --rendering-driver opengl3` (`docs/godot/project-manager-black.md`).
+- The first try installed into the kit's own project by mistake. It was
+  undone: `project.godot` was restored and 32 added files were removed.
+- T148's 11 core dumps (956 MB) were deleted from systemd-coredump.
+
+**To check first in the next session.** Main's CI for #123-#126 was
+still running when this was written. #121 and #122 were green. If any is
+red, fix it forward before anything else.
+
+**Waiting for the owner:**
+- Whether to offer this repository as the reproduction project on
+  godotengine/godot#125245. Publishing outside is the owner's call.
+- A karma system example: the player's actions and choices change the
+  player's standing and the world's memory, and they persist like a save.
+  The owner is choosing between designs with a research brief (memory
+  note "karma-system-design"). No task until the owner has chosen. The
+  first task will be an ADR for the design, and the owner's approval
+  gates the rest.
+- Manual checks: close `make demo-tactical MODE=squad` and
+  `make demo-behaviour`, and look for `leaked` or `still in use` in the
+  last lines.
+
+**Next.** T160 first, beside T155 and T156, at most three at once. Then
+T141 alone, and T121. Then T157 and T158, then T162, and T161 last.
+
 ## Resuming after 2026-11-10, the boss fight and the store check (tasks T154-T160)
 
 **Where it stopped -- read first.** No code changed. This wave (163) only
@@ -1639,7 +1714,8 @@ review.
 | T158 | A director for the minions, and three difficulties | todo | build-up, peak, relief from fight events; easy/normal/hard in `difficulty.json` (pools, delays, minimum telegraph, waves), no adaptation to the player |
 | T159 | The published archive is tested | done | wave 168: `tools/store/published.json` records download 8161; `make check-published` downloads it into the toolchain, checks hash, paths and licences, loads every script in a blank project (`godot_checked.py --project`) and rebuilds the tag; the store file is byte for byte `v0.1.0`'s build (314,853 bytes, sha256 `8538106a…bbd1db`), and the page's 322.41 KB is bytes x 1.024 / 1000 |
 | T160 | A version is not reused | todo | `make release` refuses a published `VERSION` with changed addons; `library-check` installs the kit zip; READMEs no longer say "in review"; store Godot versions 4.7+ |
-| T161 | Release 0.2.0 | todo | after T154-T158 and the follow-ups (owner): `VERSION` bumped, built from tag `v0.2.0`, sha256 in `published.json`, release notes name the new addons; the owner uploads |
+| T161 | Release 0.2.0 | todo | after T154-T158, T162 and the follow-ups (owner): `VERSION` bumped, built from tag `v0.2.0`, sha256 in `published.json`, release notes name the new addons; the owner uploads |
+| T162 | Loading every addon closes clean | todo | the store install (2026-11-10) loaded 107 scripts with no `SCRIPT ERROR`, but the engine printed "7 resources still in use at exit"; name them, fix the addon, and make `check_published` and `library-check` fail on it; before T161 |
 
 ---
 

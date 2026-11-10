@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: tool
-verified_on: 2026-11-04
+verified_on: 2026-11-10
 tier: 1
 source: https://www.gnu.org/software/make/manual/html_node/Multiple-Rules.html
 invalidated_if: GNU make stops merging the prerequisites of several rules for one target, `gh pr merge` drops --match-head-commit, or the owner changes how a batch is gated
@@ -140,6 +140,46 @@ What still selects everything, on purpose: a change to a script under
 `scripts/`, CI, the engine pin, `godot/project.godot`, or a path no module
 owns. In batch 118-122 every wave had one of those besides its Makefile
 line, so this task would have saved wave 120 and not the other four.
+
+## A faster batch (2026-11-10)
+
+Batch 164-168 ran five waves at once. It took about seven hours, and
+most of that time was waiting, not work:
+
+- GitHub's full CI took one to two hours per run (the T140 push on main
+  took 1 h 51 min).
+- Every push to a branch cancelled its run and started another.
+- Every merge sent the open branches back to CI after a rebase.
+- Nine agents testing at once pushed the load to 15-20 on 12 threads.
+  Each local `make check` then took about 50 minutes, and the timing
+  gates failed until they were run alone.
+- The implementer and the reviewer each ran the same full check on the
+  same head.
+
+For that batch the owner decided two things (`tasks/STATUS.md`,
+2026-11-10). The merges went in with `--admin` without waiting for the
+pull request's CI. And no wave or review ran the full `make check`; each
+ran the gates of what it touched. The coordinator adds the other bullets
+below, from what the batch cost. The owner confirms the whole routine
+batch by batch, as this page's opening says:
+
+- **At most three waves at once.**
+- **The reviewer runs the gates of what the change touches**, and plants
+  each case it doubts. It does not rerun a `make check-affected` that
+  selects everything when the implementer already ran it on the same
+  head.
+- **A review's findings go back in one push**, not one per finding.
+- **The merge does not wait for the pull request's CI.** The coordinator
+  merges with `--admin` once three things are true:
+  - the review and its fixes are in;
+  - the rebased head passes its modules' gates locally;
+  - the timing gates passed alone.
+  CI then runs on main after each merge. A red run there is fixed
+  forward, in a pull request of its own.
+- **The full `make check` is skipped** for a wave whose change selects
+  everything only because it touches `scripts/` or the Makefile. Instead
+  the wave runs `make check-no-engine` and the gates of the scripts it
+  changed.
 
 ## Manual check
 
