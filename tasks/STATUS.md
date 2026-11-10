@@ -65,14 +65,12 @@ red, fix it forward before anything else.
 **Waiting for the owner:**
 - Whether to offer this repository as the reproduction project on
   godotengine/godot#125245. Publishing outside is the owner's call.
-- The nemesis-style example. The owner is refining it with a research
-  and design brief, kept in the memory note "nemesis-patent-pending".
-  - A US patent family (Warner Bros 10,926,179, 11,660,540, 12,201,908
-    and a pending application) covers "the player's interaction with
-    NPC A changes NPC B".
-  - No task until the owner has chosen a design. The first task will be
-    an ADR that maps the design against each claim, and the owner's or a
-    lawyer's approval gates the rest.
+- A karma system example: the player's actions and choices change the
+  player's standing and the world's memory, and they persist like a save.
+  The owner is choosing between designs with a research brief (memory
+  note "karma-system-design"). No task until the owner has chosen. The
+  first task will be an ADR for the design, and the owner's approval
+  gates the rest.
 - Manual checks: close `make demo-tactical MODE=squad` and
   `make demo-behaviour`, and look for `leaked` or `still in use` in the
   last lines.
