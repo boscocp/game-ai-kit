@@ -3,6 +3,48 @@
 The index. One row per task; the task file holds everything needed to do it.
 The topmost `## Resuming after` section is the next session's prompt.
 
+## Resuming after 2026-11-10, the boss fight and the store check (tasks T154-T160)
+
+**Where it stopped -- read first.** No code changed. This wave (163) only
+wrote tasks T154-T160 and this section.
+
+**Where they came from.** Someone on Reddit asked for enemies like Insomniac's
+Spider-Man: a group where one attacks at a time, plus a ranged attacker. They
+cited the GDC 2019 postmortem and the Unreal plugin "Soulslike Enemy Combat
+3.2". The owner agreed the kit lacks a single-player tactical fight, a boss
+with minions. Sources from industry and research are in each task's
+`## Sources`, marked [F] when opened and [S] when only seen in search
+results.
+
+**The store check, 2026-11-10, read-only.** The listing matches: 0.1.0,
+Apache-2.0, Godot 4.7+, the README's description, the video. The local
+`dist/` zip has only `addons/ai_*/` and LICENSE and NOTICE in every addon.
+Four things are wrong:
+
+- The store's file (download 8161, 322.41 KB) is not the local `dist/` zip,
+  which is 338,507 bytes, was built 13 commits after `v0.1.0` and is also
+  named 0.1.0. Waves 154 to 159 changed the addons after the upload
+  (`ai_bayes`, tree, forest, flock, `rts_crowd`), as the owner said. The
+  review then rebuilt every commit: the tag builds 314,853 bytes, and no
+  committed build is 322.41 KB. So the store's file comes from no commit,
+  and T159 downloads it to find out.
+- `make release` would rebuild 0.1.0 from HEAD without complaint.
+- The READMEs still say "in review".
+- The store's version selector offers 3.0 to 4.8.
+
+**The owner's decisions, 2026-11-10.**
+
+1. The boss fight is 3D, third person, in `godot/game3d/bossfight/`.
+2. Tokens and rings live in `ai_teamwork`.
+3. The store tests come first: T159, then T160, then T154-T158.
+4. The boss does not adapt to the player, so ADR 0016 is not extended. It has
+   three difficulty levels the person chooses (T158).
+5. The new version (0.2.0, T161) goes to the store only after T154-T158 and the remaining follow-ups.
+
+**Next.** T159 and T160, then T154. T155 and T156 can run in parallel
+after T154. Then T157 and T158, then the follow-ups (T140, T141, T146,
+T148, T121), and T161, the 0.2.0 release, last.
+
 ## Resuming after 2026-11-07, the new techniques and flocking (waves 154 to 161)
 
 **Where it stopped -- read first.** The repository is public. The owner opened it on 2026-11-06, with a ruleset like desk-panel's plus code-owner review, and approval for every outside contributor's CI. `gameaikit` 0.1.0 is on PyPI (tag `v0.1.0`). The Godot Asset Store entry "Game AI Kit" has been submitted and waits for review.
@@ -1589,6 +1631,14 @@ review.
 | T151 | An RTS group moves as a flock | done | wave 158 (#116): a `GakRtsCrowd` port in the core, `RtsFlock` in the game; G flocks a group's move order, off by default and byte-identical when off; `make test-rts-flock` holds T19's wall-gap jam; a G-on match is not kept as a recording |
 | T152 | A crowd to hide in | done | wave 159 (#117): a market level with sixteen civilians in three flocks; walking in step inside a group scales a guard's sight certainty and the reach of the player's steps, both in `crowd.json` and shown; the figure is evidence in T115's network |
 | T153 | A video of the demos, for YouTube | done | wave 162 (#119): 13 demos in 3:23, recorded by Movie Maker in English with each overlay, captions, title and end card, no music; mp4, clips, thumbnail and chapters in `$HOME/Videos/game-ai-kit/`; the owner posted it, https://youtu.be/1tvfXbz6LJQ; both READMEs link it |
+| T154 | Attack tokens: one attacks at a time | todo | `AttackTokens` in `ai_teamwork`: a pool per target and kind, a fair queue, release on end/death/timeout, a reissue timer with shown multipliers; Python twin and vectors; concept page `action-combat-ai.md` |
+| T155 | Engagement rings: where the others wait | todo | a ring generator for `TacticalPositions`: inner (token holder), waiting (strafe, in front of the camera), ranged band with line of sight |
+| T156 | A boss with phases and telegraphed attacks | todo | phases at the top of a behaviour tree, the next attack by utility with a repetition penalty; telegraph, active, recovery in data; heavy attacks take the melee pool |
+| T157 | The boss-fight example | todo | 3D third person, `godot/game3d/bossfight/`: a boss, melee and ranged minions; the overlay shows tokens, queue, rings, phase and telegraph; `make demo-bossfight` |
+| T158 | A director for the minions, and three difficulties | todo | build-up, peak, relief from fight events; easy/normal/hard in `difficulty.json` (pools, delays, minimum telegraph, waves), no adaptation to the player |
+| T159 | The published archive is tested | todo | `tools/store/published.json` (URL, sha256, tag); `make check-published` downloads into the toolchain, checks contents, installs headless and rebuilds the tag's zip to compare |
+| T160 | A version is not reused | todo | `make release` refuses a published `VERSION` with changed addons; `library-check` installs the kit zip; READMEs no longer say "in review"; store Godot versions 4.7+ |
+| T161 | Release 0.2.0 | todo | after T154-T158 and the follow-ups (owner): `VERSION` bumped, built from tag `v0.2.0`, sha256 in `published.json`, release notes name the new addons; the owner uploads |
 
 ---
 
