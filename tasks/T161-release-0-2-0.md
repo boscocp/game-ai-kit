@@ -1,6 +1,6 @@
 # T161 — Release 0.2.0
 
-Size: S · Prereqs: T160, T158, and the follow-ups (T140, T141, T146, T148, T121) · Files: `VERSION`, `python/pyproject.toml`, `tools/store/published.json`, `docs/howto/publish.md`, `README.md`, `README.pt-BR.md`
+Size: S · Prereqs: T160, T158, T140, T141, T146, T148, T121 · Files: `VERSION`, `python/pyproject.toml`, `tools/store/published.json`, `docs/howto/publish.md`, `README.md`, `README.pt-BR.md`
 
 ## Goal
 
