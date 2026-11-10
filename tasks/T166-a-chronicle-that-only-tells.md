@@ -1,0 +1,55 @@
+# T166 — A chronicle that only tells: story sifting
+
+Size: M · Prereqs: T165 · Files: `godot/addons/ai_sifting/`, `godot/test/ai_sifting/`, `python/gameaikit/sifting/`, `python/tests/`, `spec/vectors/sifting/`, `modules/ai_sifting.json`, `godot/game/valley/`, `docs/techniques/`, `Makefile`
+
+## Goal
+
+A simulation's output becomes a story only once something picks the
+moments worth telling. That is story sifting: patterns matched over an
+event log, as in Felt (Kreminski et al., 2019) and Winnow (Kreminski et
+al., 2021). It is the kit's one new technique for the karma system. The
+valley gets a chronicle, for example "the third time the bridge came
+down, the east village stopped waiting for bread". The chronicle only
+tells; it changes nothing in the world.
+
+## Decisions written down first
+
+_The owner asked for a karma system on 2026-11-10: the player's actions and choices have a visible impact on the world and its people, and they persist between sessions like a save. The owner chose this design from a research brief: the valley remembers what the player did to **places**. It has no combat and no opponent, and it is 2D and turn-based. The owner approves the ADR (T163), and that approval gates T164-T166. The other decisions below are this session's proposal, and the wave confirms them._
+
+- **A new addon, `ai_sifting`**, depending only on `ai_core`
+  (invariant 2), at tier 1. It has a Python twin and shared vectors. It
+  trains nothing (invariant 6).
+- **Felt-style first:** a pattern is a small query over events, with
+  shared variables and order constraints. The sifter returns every
+  match with the events that made it. Incremental matching, as in
+  Winnow, is a later task.
+- **Read-only, by test:** the sifter takes the record and returns
+  matches. A planted sifter that writes to the record, or to the world,
+  fails.
+- **The chronicle's voice is templates first.** `ai_llm` behind its
+  validator, at tier 3 with a recorded tier 2, is a possible later
+  task, not this one.
+- **The name** `ai_sifting` is this session's proposal; the owner may
+  rename it.
+- **Taught:** a technique page in English and pt-BR, and glossary entries.
+
+## Acceptance
+
+```bash
+make test-godot-some SUITES="test/ai_sifting"
+make test-sifting-vectors
+make test-python
+make lint-addon-deps
+make lint-tiers
+```
+
+## Manual check
+
+- The chronicle in the valley names moments a person would retell, and
+  the overlay shows which events each line matched.
+
+## Sources
+
+- Kreminski, Dickinson, Wardrip-Fruin, "Felt: A Simple Story Sifter", ICIDS 2019 [S].
+- Kreminski, Dickinson, Mateas, "Winnow: A Domain-Specific Language for Incremental Story Sifting", AIIDE 2021 [S]. Code: https://github.com/mkremins/winnow
+- Ryan, *Curating Simulated Storyworlds*, PhD thesis, UC Santa Cruz, 2018 [S].
