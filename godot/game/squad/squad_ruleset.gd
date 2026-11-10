@@ -176,14 +176,15 @@ func roster_names() -> Array[String]:
 	return SquadRoster.names()
 
 
-## `SquadRoster.build`, for the scene: an enemy that searches is built to
-## search a frame at a time (`SearchingSquad.spread_over_frames`), so the
-## board keeps drawing while it thinks.
+## `SquadRoster.for_the_scene`: an enemy that searches is built to search a
+## frame at a time, so the board keeps drawing while it thinks.
+##
+## Why the roster makes that choice and not this file: with `is
+## SearchingSquad` written here, this script leaked 18 objects at exit
+## whenever it was the first one compiled. That is the trigger observed,
+## not the engine's mechanism (T146, `docs/godot/exit-leaks.md`).
 func build_controller(row_name: String, seed_number: int) -> BlueController:
-	var built: BlueController = SquadRoster.build(row_name, seed_number)
-	if built is SearchingSquad:
-		(built as SearchingSquad).spread_over_frames()
-	return built
+	return SquadRoster.for_the_scene(row_name, seed_number)
 
 
 ## Every cell of the map, row by row.

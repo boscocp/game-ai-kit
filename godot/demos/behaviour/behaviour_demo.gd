@@ -101,7 +101,7 @@ func restart() -> void:
 ## Hand the guard to brain `index` -- 0 state machine, 1 tree, 2 GOAP,
 ## 3 HTN -- where it stands, mid-round.
 func swap_brain(index: int) -> void:
-	world.use([GuardFsm.new(), GuardTree.new(), GuardGoap.new(), GuardHtn.new()][index])
+	world.use(GuardBrain.every()[index])
 	_refresh()
 
 

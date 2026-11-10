@@ -744,6 +744,21 @@ test-rts-exit: import ## The RTS, run and closed, leaks nothing at exit, and a p
 	@# must see; each child has a deadline (review of PR #100).
 	@$(PYTHON) scripts/check_exit_leaks.py res://game/rts/rts.tscn --timeout 60
 
+.PHONY: test-demos-exit
+check: test-demos-exit
+test-demos-exit: import ## Every demo in check_demos.py's list and every extra mode, run and closed, leaks nothing at exit, after a planted leak it must see (T146)
+	@# The list is the one `lint-demos` and `test-demo-overlays` read, so a
+	@# new demo is checked once it is listed; the modes, through the menu,
+	@# are that file's MODE_REQUIRED. `menu` owns this gate, as it owns that
+	@# list, and depends on every example: a change to any of them selects
+	@# it. About 10 s for 17 scenes and 1 mode.
+	@$(PYTHON) scripts/check_exit_leaks.py --demos --timeout 60
+
+.PHONY: test-squad-exit
+check: test-squad-exit
+test-squad-exit: import ## A scene that compiles SquadRuleset first closes clean (T146)
+	@$(PYTHON) scripts/check_exit_leaks.py res://test/squad/exit_ruleset_first.tscn --timeout 60
+
 .PHONY: test-rts-flock
 check: test-rts-flock
 test-rts-flock: import ## T19's wall-gap jam, planted, is seen; a group walking as a flock does not jam there, inside its frame share (T151)

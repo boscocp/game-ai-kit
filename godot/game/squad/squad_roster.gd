@@ -52,3 +52,14 @@ static func build(row_name: String, seed_number: int) -> BlueController:
 		if row[NAME] == row_name:
 			return (row[BUILD] as Callable).call(seed_number)
 	return null
+
+
+## `build`, for the scene: an enemy that searches is built to search a frame
+## at a time (`SearchingSquad.spread_over_frames`), so the board keeps
+## drawing while it thinks. The duel and the match build with `build`, and
+## search a decision whole.
+static func for_the_scene(row_name: String, seed_number: int) -> BlueController:
+	var built: BlueController = build(row_name, seed_number)
+	if built is SearchingSquad:
+		(built as SearchingSquad).spread_over_frames()
+	return built
