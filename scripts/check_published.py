@@ -42,12 +42,17 @@ upload and before a release, the way `make library-check` is run.
 
 Why `--self-test` exists
 ------------------------
-To prove it refuses, offline (invariant 4). It zips `ai_core` as the
-release lays it out and checks that untouched zip first -- it must pass, or
-a Godot that does not start would fail every plant for the wrong reason --
-then four planted ones, each named in what it prints: a zip with no NOTICE
-in its addon, a record whose sha256 is wrong, a `test/` folder inside, and
-an addon script that does not parse.
+To prove it refuses (invariant 4). It needs no network, but it does need
+the pinned engine: with no toolchain it exits 2, as the gate does. It zips
+`ai_core` as the release lays it out and checks that untouched zip first --
+it must pass, or a Godot that does not start would fail every plant for the
+wrong reason -- then the planted ones, each named in what it prints: a zip
+with no NOTICE in its addon, a record whose sha256 is wrong, one whose size
+is wrong, a `test/` folder inside, an addon script that does not parse, and
+a `class_name` the import cannot register (it sits inside a string), so the
+loaded count is one fewer than the zip's. The rebuild compare and the
+stray-path rule are planted in `python/tests/test_check_published.py`,
+which needs neither the network nor the engine.
 
 Exit codes
 ----------
@@ -353,17 +358,32 @@ def planted_zip(path: pathlib.Path, entries: dict[str, bytes]) -> Upload:
                   size=path.stat().st_size, provenance="unknown", note="planted")
 
 
-def plants(clean: dict[str, bytes]) -> list[tuple[str, dict[str, bytes], bool, str]]:
-    """Each planted case: its label, its entries, whether its record lies, and what must be named."""
+def plants(clean: dict[str, bytes]) -> list[tuple[str, dict[str, bytes], str, str]]:
+    """Each planted case: its label, its entries, the record field that lies, and what must be named."""
     no_notice = {name: data for name, data in clean.items() if name != "addons/ai_core/NOTICE"}
     with_test = {**clean, "addons/ai_core/test/grid_graph_test.gd": b"extends RefCounted\n"}
     broken = {**clean, "addons/ai_core/planted.gd": b"class_name GakPlanted\nextends RefCounted\n\nfunc f( -> void:\n\tpass\n"}
+    # It parses, and its `class_name` line is text in a string: the zip's
+    # count sees one more class than the import can register.
+    unseen = {**clean, "addons/ai_core/planted.gd":
+              b'extends RefCounted\n\nconst NOTE: String = """\nclass_name GakNever\n"""\n'}
     return [
-        ("an addon with no NOTICE", no_notice, False, "carries no NOTICE"),
-        ("a record whose sha256 is wrong", clean, True, "integrity: the sha256 is"),
-        ("a test/ folder inside", with_test, False, "is in a test/ folder"),
-        ("an addon script that does not parse", broken, False, "Parse Error"),
+        ("an addon with no NOTICE", no_notice, "", "carries no NOTICE"),
+        ("a record whose sha256 is wrong", clean, "sha256", "integrity: the sha256 is"),
+        ("a record whose size is wrong", clean, "size", "integrity: the size is"),
+        ("a test/ folder inside", with_test, "", "is in a test/ folder"),
+        ("an addon script that does not parse", broken, "", "Parse Error"),
+        ("a class_name the import cannot register", unseen, "", "class_name(s) came up"),
     ]
+
+
+def lying(upload: Upload, field: str) -> Upload:
+    """`upload` with `field` made false; as it is when `field` is empty."""
+    if field == "sha256":
+        return dataclasses.replace(upload, sha256="0" * 64)
+    if field == "size":
+        return dataclasses.replace(upload, size=upload.size + 1)
+    return upload
 
 
 def self_test() -> int:
@@ -379,9 +399,7 @@ def self_test() -> int:
             failures.append(f"the untouched zip passes ({found})")
         for number, (label, entries, lies, named) in enumerate(plants(clean)):
             archive = pathlib.Path(root) / f"case-{number}.zip"
-            upload = planted_zip(archive, entries)
-            if lies:
-                upload = dataclasses.replace(upload, sha256="0" * 64)
+            upload = lying(planted_zip(archive, entries), lies)
             found = archive_findings(archive, upload)
             if not any(named in line for line in found):
                 failures.append(f"{label} is refused, naming {named!r} ({found})")

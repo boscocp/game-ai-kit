@@ -36,6 +36,9 @@ So the store's file is no committed build. It may have been built from a
 working tree with uncommitted changes, or the store may repackage. Only
 downloading it will say which.
 
+*Superseded by the Result below (wave 168): the store's file is the tag's
+build, byte for byte, and the page shows bytes x 1.024 / 1000 as KB.*
+
 ## Decisions written down first
 
 _The owner asked for this check on 2026-11-10 ("valide se tá tudo ok ou

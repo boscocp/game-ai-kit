@@ -166,7 +166,9 @@ def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("script", nargs="?")
     parser.add_argument("--timeout", type=float, default=TIMEOUT)
-    parser.add_argument("--project", type=pathlib.Path, default=None)
+    # Resolved here, so the folder stays the same one should the wrapper
+    # ever change directory before it starts Godot.
+    parser.add_argument("--project", type=lambda text: pathlib.Path(text).resolve(), default=None)
     parser.add_argument("--self-test", action="store_true")
     options = parser.parse_args(argv)
     if options.self_test:

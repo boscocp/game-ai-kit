@@ -180,3 +180,32 @@ on the owner's short list of commands only (no `make check`, no
 `make check-published` 0; `python3 scripts/godot_checked.py --self-test` 0;
 `python3 -m unittest discover -s python/tests -t python -p test_check_published.py`
 OK (8); `make check-no-engine` 0 (697 Python tests OK; no `SCRIPT ERROR` in its output).
+
+## What was done about them
+
+All five were applied on the branch, in one commit after this record:
+
+- **1. The three unplanted checks.**
+  - The size: a self-test plant, a record whose sha256 is right and whose
+    size is one byte over ("integrity: the size is"). There is also a unit
+    case for `integrity_findings` with exactly that one finding.
+  - The count: a self-test plant. Its `class_name` line sits inside a
+    string, so the file parses and the import registers nothing, and the
+    zip's count is one more than the loaded one. The finding is
+    "install: 4 script(s) and 3 class_name(s) came up, and the archive
+    holds (4, 4)".
+  - The rebuild: unit cases with `rebuilt_sha256` stubbed. Another file is
+    a "rebuild:" finding, the same file passes, and `unknown` never calls
+    the rebuild.
+  - Mutated by hand, `if rebuilt != upload.sha256` turned to `if False`:
+    the unit tests went red (exit 1), then green again once restored, with
+    `__pycache__` cleared.
+- **2. The stale text.** The STATUS bullet now gives wave 168's verdict and
+  says the owner's first explanation was right. T159's Goal marks its
+  paragraph as superseded by the Result.
+- **3.** The docstring says the self-test needs no network, but does need
+  the pinned engine, and exits 2 without it.
+- **4.** `docs/howto/publish.md`, step 2: copy the download link from the
+  asset's own page, because a download id is the store's.
+- **5.** `godot_checked.py --project` resolves its folder when it parses
+  it.

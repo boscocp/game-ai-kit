@@ -13,6 +13,7 @@ import pathlib
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 SPEC = importlib.util.spec_from_file_location("check_published", ROOT / "scripts" / "check_published.py")
@@ -68,6 +69,41 @@ class TheRecord(unittest.TestCase):
             path.write_text(json.dumps({"uploads": [entry]}))
             with self.assertRaises(GATE.Unreachable):
                 GATE.read_record(path)
+
+
+class TheRebuild(unittest.TestCase):
+    """The compare, planted without a clone: `rebuilt_sha256` is the stub."""
+
+    UPLOAD = GATE.Upload(download="planted", version="0.1.0", sha256="8" * 64, size=1,
+                         provenance="v0.1.0", note="")
+
+    def test_a_tag_that_builds_another_file_is_a_finding(self) -> None:
+        with mock.patch.object(GATE, "rebuilt_sha256", return_value="1" * 64):
+            found = GATE.rebuild_findings(self.UPLOAD)
+        self.assertTrue(any(line.startswith("rebuild:") for line in found), found)
+
+    def test_a_tag_that_builds_the_same_file_passes(self) -> None:
+        with mock.patch.object(GATE, "rebuilt_sha256", return_value="8" * 64), \
+                mock.patch("builtins.print"):
+            self.assertEqual(GATE.rebuild_findings(self.UPLOAD), [])
+
+    def test_an_unknown_provenance_is_not_rebuilt(self) -> None:
+        unknown = GATE.Upload(**{**vars(self.UPLOAD), "provenance": "unknown"})
+        with mock.patch.object(GATE, "rebuilt_sha256", side_effect=AssertionError("rebuilt")), \
+                mock.patch("builtins.print"):
+            self.assertEqual(GATE.rebuild_findings(unknown), [])
+
+
+class TheIntegrity(unittest.TestCase):
+    def test_a_right_hash_and_a_wrong_size_is_named(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            path = pathlib.Path(folder) / "download.zip"
+            path.write_bytes(b"what the store handed out")
+            upload = GATE.Upload(download="planted", version="0.1.0", sha256=GATE.sha256_of(path),
+                                 size=path.stat().st_size + 1, provenance="unknown", note="")
+            found = GATE.integrity_findings(path, upload)
+        self.assertEqual(len(found), 1, found)
+        self.assertIn("integrity: the size is", found[0])
 
 
 class TheContentsRules(unittest.TestCase):

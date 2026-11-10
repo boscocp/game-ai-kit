@@ -25,9 +25,10 @@ Four things are wrong:
   which is 338,507 bytes, was built 13 commits after `v0.1.0` and is also
   named 0.1.0. Waves 154 to 159 changed the addons after the upload
   (`ai_bayes`, tree, forest, flock, `rts_crowd`), as the owner said. The
-  review then rebuilt every commit: the tag builds 314,853 bytes, and no
-  committed build is 322.41 KB. So the store's file comes from no commit,
-  and T159 downloads it to find out.
+  tag builds 314,853 bytes. Wave 168 (T159) downloaded the store's file:
+  it is that build, byte for byte (sha256 `8538106a…bbd1db`), and
+  322.41 KB is the page's unit, 314,853 x 1.024 / 1000. The owner's first
+  explanation, an upload from the tag, was right.
 - `make release` would rebuild 0.1.0 from HEAD without complaint.
 - The READMEs still say "in review".
 - The store's version selector offers 3.0 to 4.8.

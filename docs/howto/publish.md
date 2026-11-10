@@ -195,8 +195,10 @@ file the store holds, and `make check-published` (T159) tests that one:
 
 1. Download the version once, into the toolchain, never the checkout or
    the home, and measure it: `sha256sum` and its size in bytes.
-2. Add one entry to `tools/store/published.json`: the download URL, the
-   version, the sha256, the size, the size the page shows, and
+2. Add one entry to `tools/store/published.json`: the download URL,
+   copied from the asset's own page, because a download id is the store's,
+   not the asset's (`…/game-ai-kit/download/1/` serves another asset's zip
+   with status 200, measured on 2026-11-10); the version, the sha256, the size, the size the page shows, and
    `provenance`. That is the tag whose own `release.py` builds the file
    byte for byte, or `unknown` with a `note` saying what was found.
 3. Run `make check-published`. It downloads every recorded upload again
