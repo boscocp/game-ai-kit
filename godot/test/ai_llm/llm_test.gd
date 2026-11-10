@@ -387,6 +387,25 @@ func test_the_servers_reason_is_cleaned_before_a_game_can_show_it() -> void:
 	assert_int(replies[1].refusal.get_slice("HTTP 500: ", 1).length()).is_equal(HttpRuntime.ERROR_LENGTH)
 
 
+func test_the_servers_reason_shows_nothing_r9_refuses_in_a_speech() -> void:
+	# T140: a refusal is cleaned by R9's own test, not a second spelling of
+	# it. Before, only C0 and DEL became spaces: NEXT LINE (C1), the line
+	# separator, a bidi override and a soft hyphen reached the screen.
+	var runtime: HttpRuntime = _in_scene(HttpRuntime.new())
+	var conversation := LlmConversation.new(runtime, _validator(), "You guard a gate.")
+	var replies: Array[LlmReply] = _replies_of(conversation)
+	var refused: String = "\u0085\u009b\u2028\u2029\u202e\u00ad\u200d\ufeff"
+	var message: String = ""
+	for character: String in refused:
+		message += character + "w"
+	var body: String = JSON.stringify({"error": {"code": 400, "message": message}})
+	runtime._on_request_completed(SUCCESS, 400, PackedStringArray(), body.to_utf8_buffer())
+	var shown: String = replies[0].refusal.get_slice("HTTP 400: ", 1)
+	assert_str(shown).is_equal(" w".repeat(refused.length()))
+	for character: String in shown:
+		assert_bool(LlmValidator.is_refused_by_r9(character)).is_false()
+
+
 func test_the_http_runtime_asks_on_the_one_port() -> void:
 	var runtime: HttpRuntime = auto_free(HttpRuntime.new())
 	assert_str(runtime.url).is_equal("http://127.0.0.1:%d/v1/chat/completions" % HttpRuntime.PORT)

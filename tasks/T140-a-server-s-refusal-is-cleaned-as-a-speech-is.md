@@ -40,3 +40,8 @@ None: a refusal is rare, and its words are the server's.
 
 - Opened from T129's review (wave 141), decision 3. After T139, so the
   test it reuses already refuses format controls.
+- Done in wave 165. R9's test is public as `LlmValidator.is_refused_by_r9`,
+  and the Python twin is renamed `is_refused_by_r9` with it, as wave 161's
+  review asked (finding 1). The new test failed before the change with
+  every one of its eight characters shown, C1, the separators and four
+  format controls. `llm_validator.gd` is 386 of its 400 lines.

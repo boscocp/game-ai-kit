@@ -217,7 +217,7 @@ func why_speech_is_wrong(speech: String) -> String:
 		return "R8 the speech is %d characters; 1 to %d are allowed" % [
 			speech.length(), SPEECH_LIMIT]
 	for character: String in speech:
-		if _is_refused_by_r9(character):
+		if is_refused_by_r9(character):
 			return "R9 the speech is more than one line, or has a control or format character"
 	for character: String in MARKUP:
 		if speech.contains(character):
@@ -227,11 +227,12 @@ func why_speech_is_wrong(speech: String) -> String:
 	return ""
 
 
-# R9's test: a control character -- Unicode's Cc, U+0000 to U+001F and
-# U+007F to U+009F, NEXT LINE among them -- a line or paragraph separator,
-# or a format control (FORMAT_CONTROLS). Each would break the line a game
-# shows, or put an invisible code in it.
-static func _is_refused_by_r9(character: String) -> bool:
+## R9's test: a control character -- Unicode's Cc, U+0000 to U+001F and
+## U+007F to U+009F, NEXT LINE among them -- a line or paragraph separator,
+## or a format control (FORMAT_CONTROLS). Each would break the line a game
+## shows, or put an invisible code in it. Public so that `HttpRuntime`
+## cleans a server's refusal by this one list, not a second spelling (T140).
+static func is_refused_by_r9(character: String) -> bool:
 	var code: int = character.unicode_at(0)
 	if code < 32 or (code >= 127 and code <= 159) or LINE_SEPARATORS.contains(character):
 		return true
