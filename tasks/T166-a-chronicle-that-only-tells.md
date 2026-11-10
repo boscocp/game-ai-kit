@@ -14,11 +14,16 @@ tells; it changes nothing in the world.
 
 ## Decisions written down first
 
-_The owner asked for a karma system on 2026-11-10: the player's actions and choices have a visible impact on the world and its people, and they persist between sessions like a save. The owner chose this design from a research brief: the valley remembers what the player did to **places**. It has no combat and no opponent, and it is 2D and turn-based. The owner approves the ADR (T163), and that approval gates T164-T166. The other decisions below are this session's proposal, and the wave confirms them._
+_The owner asked for a karma system on 2026-11-10: the player's actions and choices have a visible impact on the world and its people, and they persist between sessions like a save. The owner chose this design from a research brief: the valley remembers what the player did to **places**, and the player's standing, read from those deeds, sets prices and doors. It has no combat and no opponent, and it is 2D and turn-based. The owner approves the ADR (T163), and that approval gates T164-T166. The other decisions below are this session's proposal, and the wave confirms them._
 
 - **A new addon, `ai_sifting`**, depending only on `ai_core`
   (invariant 2), at tier 1. It has a Python twin and shared vectors. It
   trains nothing (invariant 6).
+- **Events are plain data.** The sifter takes an `Array` of
+  `Dictionary` events, never the valley's `DeedLog`, so the addon names
+  nothing outside itself and `ai_core` (invariant 2). This task creates
+  `make test-sifting-vectors`, with `test-vectors: test-sifting-vectors`
+  beside the rule.
 - **Felt-style first:** a pattern is a small query over events, with
   shared variables and order constraints. The sifter returns every
   match with the events that made it. Incremental matching, as in

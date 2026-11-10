@@ -10,7 +10,7 @@ from that record.
 
 ## Decisions written down first
 
-_The owner asked for a karma system on 2026-11-10: the player's actions and choices have a visible impact on the world and its people, and they persist between sessions like a save. The owner chose this design from a research brief: the valley remembers what the player did to **places**. It has no combat and no opponent, and it is 2D and turn-based. The owner approves the ADR (T163), and that approval gates T164-T166. The other decisions below are this session's proposal, and the wave confirms them._
+_The owner asked for a karma system on 2026-11-10: the player's actions and choices have a visible impact on the world and its people, and they persist between sessions like a save. The owner chose this design from a research brief: the valley remembers what the player did to **places**, and the player's standing, read from those deeds, sets prices and doors. It has no combat and no opponent, and it is 2D and turn-based. The owner approves the ADR (T163), and that approval gates T164-T166. The other decisions below are this session's proposal, and the wave confirms them._
 
 - **The deeds act on places.** The verbs are: burn, repair, pull down the
   bridge, build a footbridge, divert the water, plant, dig a well, open
@@ -35,6 +35,9 @@ _The owner asked for a karma system on 2026-11-10: the player's actions and choi
   - rebuilding twice gives the same world;
   - a record cut at day n gives the world and the standing of day n;
   - an unknown verb, or a target that is a person, is refused by name.
+- **This task creates `make test-valley-vectors`**, with
+  `test-vectors: test-valley-vectors` on its own line beside the rule
+  (`docs/howto/parallel-batch.md`).
 - **The names** (`valley`, `DeedLog`, `ValleySave`, `ValleyRules`,
   `ValleyWorld`, `Standing`) are this session's proposal. The wave may change them,
   and must say so.

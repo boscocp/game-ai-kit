@@ -180,3 +180,40 @@ blocker; six shoulds and five nits.** All are in the task text.
   2018 thesis are cited by author, venue and year.
 - **The writing.** Short sentences, one term per concept. No employer
   reference. The commits carry one author and no tooling byline.
+
+## What was done about them
+
+All eleven were applied in one commit.
+
+**Shoulds:**
+
+1. The rule now reads "no villager reads another villager's state; the
+   only thing about the player a villager may read is the standing,
+   rebuilt from the record".
+2. T163 says ADR 0025 is the amendment to 0016's "any count that
+   survives the fight", and why the standing is not 0016's player model:
+   its weights are fixed, it estimates no skill, and it sets no
+   difficulty. N14 is unchanged, and N20 neither widens nor weakens it.
+   "N14 still holds within a match" is gone.
+3. Difficulty (a parameter of how hard a challenge is) and consequence
+   (what an authored weight does in the world) are defined. The keys
+   the standing may set are listed in `standing.json`, and N20's plant
+   is the standing or the record read by code that sets a challenge
+   parameter.
+4. T163's Files lists `CLAUDE.md`, the "amended by" notes in 0016 and
+   0022, and the `Makefile`. The erase target is named `make
+   valley-erase`.
+5. The ADR states whether invariant 8 covers an exported build, and
+   notes D1. `make lint-disk-layout` is in T163's acceptance.
+6. T165 names the suite `godot/test/valley/three_sessions_test.gd`,
+   which `test-godot-some SUITES="test/valley"` runs.
+
+**Nits:**
+
+- The weights are fixed, and the value changes only when a deed is
+  added.
+- `VillagerManner` is in T165's note that the names are a proposal.
+- T164, T165 and T166 say which targets they create, each vector family
+  beside its rule.
+- The owner paragraph in T163-T166 mentions the standing.
+- T166 takes events as plain data, never a `DeedLog`.
