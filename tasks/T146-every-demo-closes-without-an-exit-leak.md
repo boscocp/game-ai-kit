@@ -70,15 +70,20 @@ Do the last lines hold no `leaked` and no `still in use`?
 - Wave 166, step 1. Every scene in `check_demos.py`'s list closed clean
   but one: `demos/behaviour/behaviour_demo.tscn` leaked 36 objects and 27
   resources. The review of PR #100 had measured `game/` and `menu/` only.
-  Its two triggers, `BrainPanel`'s `is GuardFsm` and `BehaviourDemo` naming
-  the four brains, are fixed in the demo; `docs/godot/exit-leaks.md` has
-  the measurements.
+  It is fixed by `GuardBrain.every()`, which names the four brains; in the
+  scene that function alone is enough, even uncalled. A second change,
+  `BrainPanel` reading `thinking()`'s keys, fixed only the script loaded
+  alone, was held by no gate, and was reverted after the review of PR #124
+  (finding 1). `docs/godot/exit-leaks.md` has the table.
 - Step 2. The squad trigger was in the game, `is SearchingSquad` in
   `SquadRuleset.build_controller`, and is fixed where it was made
   (`SquadRoster.for_the_scene`). So the acceptance expects exit 0 from the
   case scene, and `make test-squad-exit` holds it. Against the old ruleset
   it exits 1 (measured). The engine mechanism is still not identified.
-- Step 3, the module decision. `make test-demos-exit` is one target, owned
+- Step 3, the module decision, a third option beside the two written down
+  first (review of PR #124, finding 4). **The owner approved it on
+  2026-11-10:** one `make test-demos-exit`, owned by `menu`, sweeping all
+  17 scenes (and, since the review, the extra modes). `make test-demos-exit` is one target, owned
   by `menu`, the module that owns the list (`test/menu/demo_overlays.gd`)
   and already owns `test-demo-overlays` over the same scenes. `menu`
   depends on every example module, so a change to any example selects it.
@@ -88,3 +93,9 @@ Do the last lines hold no `leaked` and no `still in use`?
   kept by hand, which the first decision rules out.
 - `make test-rts-exit` stays, though the RTS is in the sweep: it is in the
   acceptance, and `rts` owns it.
+- After the review of PR #124: the sweep also runs every extra mode that
+  `test/menu/demo_overlays.gd`'s `MODE_REQUIRED` names, through the menu
+  (today the squad mode, `--open=demo-tactical --mode=squad`), so the
+  manual check's mode is swept too. A leak in one run wins over a kill in
+  another (`sweep_code`, finding 2 and nit 7). Measured 15.3 s at load 18
+  in the review, about 10 s quiet.

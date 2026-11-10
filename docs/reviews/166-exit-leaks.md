@@ -208,3 +208,39 @@ page tells it: one of its two changes is held by nothing.
 - `test-rts-budget` and `test-rts-flock` pass alone at low load.
 - The `SCRIPT ERROR` lines in `test-demo-overlays` are its planted
   anonymous scripts.
+
+## What was done about them
+
+1. **Done, option (a).** `brain_panel.gd` is back as it is on `main`,
+   with `is GuardFsm` and `is GuardTree`. `GuardBrain.every()` carries the
+   fix, and `swap_brain` still calls it. Remeasured after the revert:
+   `behaviour_demo.tscn` closed clean in three runs, and `brain_panel.gd`
+   loaded first closes clean. `every()`'s comment now gives 36/27 for the
+   scene and 22/20 for `behaviour_demo.gd` loaded alone. The page's
+   behaviour paragraph is this review's table, a row added for what
+   ships. It says that `every()` works even uncalled, and that the panel
+   change was reverted because it fixed only the script loaded alone.
+2. **Done.** `sweep_code(codes)` is the fold, and `run` calls it. The
+   self-test plants five cases on it: `[1, 0]` and `[0, 1]` give 1,
+   `[0, 2, 1]` gives 1, `[0, 2]` gives 2 and `[0, 0]` gives 0. A mutant
+   that keeps the last code fails the first case.
+3. **Done.** `--demos` also runs every key of `demo_overlays.gd`'s
+   `MODE_REQUIRED`. Each one is opened through the menu, with the card's
+   target from `menu/catalogue.json`: `-- --open=demo-tactical
+   --mode=squad`, the form `make demo-tactical MODE=squad` uses. A mode
+   whose scene has no card fails 1. A verbose run of that form loads
+   `squad_ruleset.gd` and `squad_view.gd`. The self-test plants a
+   catalogue and an overlays file, and reads two modes from them: one
+   with a card, one without. A key in another block is ignored. The sweep
+   now prints "18 scene(s) and mode(s)" and took 9 s. The page and the
+   target's comment say so.
+4. **The owner's decision.** On 2026-11-10 the owner approved one
+   `make test-demos-exit` target, owned by `menu` and sweeping all 17
+   scenes. The task's Notes and the STATUS row record it. The code is
+   unchanged.
+5. **Done.** The empty case is asked of `sweep_code([])` now, not of
+   `run([])`. A green self-test prints only "self-test: ok".
+6. **Not done.** It is optional, and it needs a read-only accessor on
+   `SearchingSquad`, which is a change of its own.
+7. **Done.** A leak wins over a kill. That is in `sweep_code`'s doc
+   comment, in the exit codes in the script's docstring, and on the page.

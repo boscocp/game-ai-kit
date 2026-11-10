@@ -68,12 +68,9 @@ func _draw() -> void:
 		return
 	var rows: Array[Array] = [[words(_brain.brain_name()), TEXT, false]]
 	var thinking: Dictionary = _brain.thinking()
-	# Told apart by what the brain says, not by `is GuardFsm`: with the
-	# classes named here, this script leaked at exit when compiled first
-	# (T146, `docs/godot/exit-leaks.md`).
-	if thinking.has("states"):
+	if _brain is GuardFsm:
 		rows.append_array(_machine_rows(thinking))
-	elif thinking.has("trail"):
+	elif _brain is GuardTree:
 		rows.append_array(_tree_rows(thinking))
 	else:
 		rows.append_array(_plan_rows(thinking))

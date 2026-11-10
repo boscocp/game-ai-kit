@@ -746,11 +746,12 @@ test-rts-exit: import ## The RTS, run and closed, leaks nothing at exit, and a p
 
 .PHONY: test-demos-exit
 check: test-demos-exit
-test-demos-exit: import ## Every demo in check_demos.py's list, run and closed, leaks nothing at exit, after a planted leak it must see (T146)
+test-demos-exit: import ## Every demo in check_demos.py's list and every extra mode, run and closed, leaks nothing at exit, after a planted leak it must see (T146)
 	@# The list is the one `lint-demos` and `test-demo-overlays` read, so a
-	@# new demo is checked once it is listed. `menu` owns this gate, as it
-	@# owns that list, and depends on every example: a change to any of them
-	@# selects it. About 10 s for 17 scenes.
+	@# new demo is checked once it is listed; the modes, through the menu,
+	@# are that file's MODE_REQUIRED. `menu` owns this gate, as it owns that
+	@# list, and depends on every example: a change to any of them selects
+	@# it. About 10 s for 17 scenes and 1 mode.
 	@$(PYTHON) scripts/check_exit_leaks.py --demos --timeout 60
 
 .PHONY: test-squad-exit

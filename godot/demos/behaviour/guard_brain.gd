@@ -94,9 +94,11 @@ func _walk(state: BoardState, guard: Unit, goal: Vector2i) -> Array[Vector2i]:
 ## A new brain of each kind, in the order the keys pick them: 0 the state
 ## machine, 1 the tree, 2 GOAP, 3 the HTN.
 ##
-## Why here and not in `BehaviourDemo`: with the four named there, the demo
-## leaked 22 objects at exit (T146, `docs/godot/exit-leaks.md`). Moved into
-## `BehaviourWorld` it leaked the same; here it closes clean. Measured, not
-## understood.
+## Why here: it is also what keeps the behaviour demo from leaking at exit.
+## Without this function, the scene left 36 objects and 27 resources alive
+## (22 and 20 with `behaviour_demo.gd` loaded alone). With it in this file
+## the scene closes clean, even with nothing calling it; the same list in
+## `BehaviourWorld` did not help. Measured, not understood (T146,
+## `docs/godot/exit-leaks.md`).
 static func every() -> Array[GuardBrain]:
 	return [GuardFsm.new(), GuardTree.new(), GuardGoap.new(), GuardHtn.new()]

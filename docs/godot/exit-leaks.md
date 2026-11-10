@@ -101,30 +101,41 @@ calls it. Every script under `game/squad/` and `game/tactical/`, loaded
 first, now closes clean.
 
 **The behaviour demo.** It was not in the review's measurement, which read
-`game/` and `menu/`. Run first, `demos/behaviour/behaviour_demo.tscn`
-leaked 36 objects and 27 resources: the board's scripts, the stealth room's,
-`ai_fuzzy` and `ai_perception`, and the seven terrain textures that
-`Art`'s static cache held. Two triggers:
+`game/` and `menu/`. Run as a scene, `demos/behaviour/behaviour_demo.tscn`
+leaked 36 objects, 27 resources and 7 dummy-texture RIDs: the board's
+scripts, the stealth room's, `ai_fuzzy` and `ai_perception`, and the seven
+terrain textures that `Art`'s static cache held. `behaviour_demo.gd`
+loaded alone with `load()` leaked 22 and 20, and `brain_panel.gd` 16 and 15.
 
-- `BrainPanel._draw` wrote `_brain is GuardFsm` and `_brain is GuardTree`.
-  Now it tells the brains apart by what `thinking()` says (a state machine
-  says `states`, a tree `trail`). With it, `brain_panel.gd` and
-  `guard_htn.gd` loaded first stopped leaking.
-- `BehaviourDemo.swap_brain` named the four brains. Moved into
-  `BehaviourWorld` the list leaked the same; as `GuardBrain.every()` it
-  closes clean. Of the four, `GuardTree` alone was enough.
+What fixed it is one static function, `GuardBrain.every()`, which builds
+the four brains. The scene and a script loaded alone do not agree on what
+matters. Measured in the review of PR #124, then again after the revert
+below:
 
-**What they share, and what they do not.** Each trigger names a class from
-inside the script compiled first: in a signature (`rts.gd`), an `is` or an
-`as` (the squad, the panel), or a `.new()` (the demo). Each was fixed by
-naming that class somewhere else, and by nothing in the class itself. Not
-every such name triggers it: `GuardBrain.every()` names the same four
-brains and closes clean, and so did the same list tried in
-`GuardActions`. Loading one more script first also hid each leak:
-`tactical_ruleset.gd`, `blue_controller.gd` or `squad_view.gd` before the
-ruleset, `guard_tree.gd` or `addons/ai_behaviour/behaviour_tree.gd` before
-the demo. So the engine mechanism is still not identified, and the order the
-engine compiles scripts in is part of it.
+| Present | `behaviour_demo.tscn` | `brain_panel.gd` loaded first |
+|---|---|---|
+| `every()` in `guard_brain.gd`, called by `swap_brain` (what ships) | clean | clean |
+| `every()` only, old inline list in `swap_brain` | clean | clean |
+| `BrainPanel` dispatching on `thinking()`'s keys, no `every()` | leaks 36/27 | clean |
+| neither | leaks 36/27 | leaks 16/15 |
+
+So `every()` fixes the scene even when nothing calls it: what matters is that
+`guard_brain.gd` names its four subclasses. The same list in
+`BehaviourWorld` still leaked. Changing `BrainPanel` to read `thinking()`'s
+keys instead of `is GuardFsm` fixed only the script loaded alone, and no
+gate holds that case, so it was reverted: `BrainPanel` still writes `is
+GuardFsm`. `swap_brain` calls `every()` because it reads better there, not
+because the fix needs it.
+
+**What they share, and what they do not.** In each case the script the
+engine compiles first names another class: in a signature (`rts.gd`), or in
+an `is` or an `as` (the squad). The behaviour demo does not fit the pattern:
+it was fixed by a base class naming its subclasses, and nothing in the
+script compiled first changed. Loading one more script first also hid each
+leak: `tactical_ruleset.gd`, `blue_controller.gd` or `squad_view.gd` before
+the ruleset, `guard_tree.gd` or `addons/ai_behaviour/behaviour_tree.gd`
+before the demo. So the engine mechanism is still not identified, and the
+order the engine compiles scripts in is part of it.
 
 `test/squad/exit_ruleset_first.tscn` is kept bare on purpose. Against the
 old ruleset, a body that called the ruleset, a `BlueController` in its
@@ -151,8 +162,12 @@ under a deadline, through `godot_shards`' `wait_or_kill`. The order:
    engine lines that explain it are printed. These were added after the
    second review of PR #100. With `--demos` (`make test-demos-exit`) it
    runs every scene in `check_demos.py`'s list, one after another, after
-   the one planted leak; the worst scene's code is the gate's. A list that
-   came back empty fails.
+   the one planted leak. It then runs every extra mode that
+   `test/menu/demo_overlays.gd`'s `MODE_REQUIRED` names, through the menu,
+   as `make demo-tactical MODE=squad` opens it (`-- --open=demo-tactical
+   --mode=squad`). Today that is one mode. A leak in any run fails 1, even
+   when another run was killed (2): `sweep_code`. A list that came back
+   empty fails.
 3. **The deadline.** A child that stops on an error before `quit()` never
    ends. It is killed at `--timeout` (60 s in the Makefile), and the gate
    exits 2.
