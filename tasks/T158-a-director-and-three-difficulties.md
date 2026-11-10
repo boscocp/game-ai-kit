@@ -1,6 +1,6 @@
 # T158 — A director for the minions, and three difficulties
 
-Size: M · Prereqs: T157 · Files: `godot/game3d/bossfight/`, `godot/test/bossfight/`, `docs/godot/bossfight.md`, `godot/menu/catalogue.json`
+Size: M · Prereqs: T157 · Files: `godot/game3d/bossfight/`, `godot/test/bossfight/`, `docs/godot/bossfight.md`, `godot/menu/catalogue.json`, `godot/locale/`
 
 ## Goal
 
@@ -13,7 +13,7 @@ person can choose.
 
 ## Decisions written down first
 
-_The owner asked for this task on 2026-11-10, from a request on Reddit: enemies "like Insomniac's Spider-Man: a group, but one attacks at a time, and a ranged attacker from far away". It cited the GDC 2019 "Marvel's Spider-Man AI Postmortem" and the Unreal plugin "Soulslike Enemy Combat 3.2". Decisions marked **(owner)** were answered on that date. The rest is this session's proposal; the wave that takes the task confirms it, or brings it back to the owner._
+_The owner asked for this task on 2026-11-10, from a request on Reddit: enemies "like Insomniac's Spider-Man: a group, but one attacks at a time, and a ranged attacker from far away". It cited the GDC 2019 "Marvel's Spider-Man AI Postmortem" and the Unreal plugin "Soulslike Enemy AI Combat System" (its video: "Soulslike Enemy Combat 3.2"). Decisions marked **(owner)** were answered on that date. The rest is this session's proposal; the wave that takes the task confirms it, or brings it back to the owner._
 
 - **(owner) Three difficulty levels, chosen by the person, with no adaptation
   to the player**:
@@ -23,8 +23,15 @@ _The owner asked for this task on 2026-11-10, from a request on Reddit: enemies 
   - chosen in the example's menu and by a command-line flag;
   - a level that does not exist is refused by name;
   - nothing about the player is counted, so ADR 0016 is not extended;
-  - `ai_planning/difficulty.gd` is reused if it fits, and the wave says
-    why if not.
+  - `ai_planning/difficulty.gd` is **not** reused, and the reason is written
+    on the page. It teaches that a level changes only how much a searching
+    AI thinks. It calls giving the AI more "a lie told to the player", and
+    `test-difficulty-knobs` holds that. These levels do give the boss's side
+    more: more tokens, shorter delays, bigger waves. So they are a
+    different, honest thing. The table is on screen with its numbers, so
+    nothing is hidden from the player. `difficulty.gd` and its test stay as
+    they are. If the wave thinks this contradicts the kit's teaching, it
+    brings it to the owner before writing code.
 - **The director reads events, not the player's skill.** The events are the
   boss's phase change, minions alive and the time since the last wave. It
   uses them to move through build-up, peak and relief, and it never spawns

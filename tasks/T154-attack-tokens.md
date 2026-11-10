@@ -9,31 +9,38 @@ strike at a time. The rest circle and wait, and a ranged enemy fires from a
 distance at its own pace. The player feels outnumbered without being
 swarmed. Spider-Man (Insomniac), DOOM (2016) and the Souls-likes do this
 with **attack tokens**. An enemy must hold a token to attack, and it gives
-the token back when the attack ends. Dawe's chapter calls the naive version
-the "kung-fu circle" and generalises it.
+the token back when the attack ends. Dawe's chapter, by its title, goes
+"beyond the kung-fu circle". Its body was not read when this task was
+written, and the wave reads it before confirming the design below.
 
-The kit has no such thing. `GakRoleArbiter` (`ai_teamwork/role_arbiter.gd`)
+The kit has no such thing. `RoleArbiter` (`ai_teamwork/role_arbiter.gd`)
 caps how many may *take a role*. `docs/concepts/shooter-ai.md` describes
 tokens for whose shots hit, but nothing implements them. T52 planned them
 and was split without them.
 
 ## Decisions written down first
 
-_The owner asked for this task on 2026-11-10, from a request on Reddit: enemies "like Insomniac's Spider-Man: a group, but one attacks at a time, and a ranged attacker from far away". It cited the GDC 2019 "Marvel's Spider-Man AI Postmortem" and the Unreal plugin "Soulslike Enemy Combat 3.2". Decisions marked **(owner)** were answered on that date. The rest is this session's proposal; the wave that takes the task confirms it, or brings it back to the owner._
+_The owner asked for this task on 2026-11-10, from a request on Reddit: enemies "like Insomniac's Spider-Man: a group, but one attacks at a time, and a ranged attacker from far away". It cited the GDC 2019 "Marvel's Spider-Man AI Postmortem" and the Unreal plugin "Soulslike Enemy AI Combat System" (its video: "Soulslike Enemy Combat 3.2"). Decisions marked **(owner)** were answered on that date. The rest is this session's proposal; the wave that takes the task confirms it, or brings it back to the owner._
 
-- **(owner) It lives in `ai_teamwork`**, as `GakAttackTokens`, next to the
-  role arbiter. It depends only on `ai_core` (invariant 2), and has a
+- **(owner) It lives in `ai_teamwork`**, as `AttackTokens`, next to the
+  role arbiter (no `Gak` prefix: that is for ports, ADR 0024). It depends only on `ai_core` (invariant 2), and has a
   Python twin with shared vectors like the rest of the addon.
 - **The pool belongs to a target and has one count per attack kind**, for
-  example `melee: 1` and `ranged: 1`. A kind may have a cost, so a heavy
-  attack takes two. Requests are answered by a rule written down in data:
-  - the one already waiting longest;
+  example `melee: 2` and `ranged: 1`. A request has a cost, so a heavy
+  attack takes more than one. A cost larger than its kind's pool is
+  refused when the request is made, by name, because it could never be
+  granted. A request also has a priority (the boss above its minions).
+  Requests are answered by a rule written down in data:
+  - the highest priority;
+  - then the one already waiting longest;
   - then the nearest;
   - then a seeded tie-break.
   There is no starvation: a requester that waits is served within K
   reissues, and that bound is a test.
-- **A token is given back in three ways:** the attack ends, the holder is
-  interrupted or dies, or it times out. The timeout is the safety net for a
+- **A token comes back in four ways:** the attack ends, the holder is
+  interrupted or dies, it times out, or the game **revokes** it. Revoking
+  is how T157's ranged minions lose their token when melee pressure
+  starts (the Spider-Man rule); it is one call, and it is shown. The timeout is the safety net for a
   holder that forgot. The test that holds it is a planted holder that never
   releases.
 - **Reissue is a timer with multipliers**, as in Ocio Barriales and the
@@ -63,7 +70,9 @@ make lint-tiers
 The properties tested:
 
 - never more holders than the pool allows, for each kind;
-- every requester is served within K reissues;
+- every requester is served within K reissues, at its priority;
+- a cost above the pool is refused, not queued forever;
+- a revoked token is free on the same step;
 - a holder that dies frees its token on the same step;
 - the same seed gives the same grants.
 
@@ -75,7 +84,7 @@ Planted cases the tests must reject:
 
 ## Manual check
 
-- The concept page reads top to bottom as the tokens chapter reads, and its
+- The concept page reads top to bottom as Dawe's chapter reads, once the wave has read it, and its
   "when not to use it" names a case.
 
 ## Sources

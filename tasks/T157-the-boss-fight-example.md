@@ -11,7 +11,7 @@ example is one against one, and the bot match is team against team.
 
 ## Decisions written down first
 
-_The owner asked for this task on 2026-11-10, from a request on Reddit: enemies "like Insomniac's Spider-Man: a group, but one attacks at a time, and a ranged attacker from far away". It cited the GDC 2019 "Marvel's Spider-Man AI Postmortem" and the Unreal plugin "Soulslike Enemy Combat 3.2". Decisions marked **(owner)** were answered on that date. The rest is this session's proposal; the wave that takes the task confirms it, or brings it back to the owner._
+_The owner asked for this task on 2026-11-10, from a request on Reddit: enemies "like Insomniac's Spider-Man: a group, but one attacks at a time, and a ranged attacker from far away". It cited the GDC 2019 "Marvel's Spider-Man AI Postmortem" and the Unreal plugin "Soulslike Enemy AI Combat System" (its video: "Soulslike Enemy Combat 3.2"). Decisions marked **(owner)** were answered on that date. The rest is this session's proposal; the wave that takes the task confirms it, or brings it back to the owner._
 
 - **(owner) 3D, third person**, in `godot/game3d/bossfight/`, on the 3D tier
   (ADR 0018):
@@ -23,8 +23,9 @@ _The owner asked for this task on 2026-11-10, from a request on Reddit: enemies 
   - the controls are: move, light attack, dodge, lock-on.
 - **The minions are game code** that use T154's tokens, T155's rings,
   `ai_steering` to circle and `ai_perception` for line of sight. Melee
-  minions request `melee`. Ranged minions request `ranged`, and lose
-  their token when a melee minion is on the player (Spider-Man's rule).
+  minions request `melee`. Ranged minions request `ranged`. When a melee
+  minion starts on the player, the game revokes the ranged token (T154's
+  fourth way back) and the reissue multiplier holds it back (Spider-Man's rule).
 - **Shown, as invariant 13 requires:**
   - who holds each token and who is queued;
   - the reissue timer with its multipliers;
@@ -32,6 +33,8 @@ _The owner asked for this task on 2026-11-10, from a request on Reddit: enemies 
   - the boss's phase, its next attack and the telegraph bar;
   - the director's state (T158).
   A key toggles the overlay.
+- **`modules/bossfight.json` exists from T156**; this task adds what it
+  owns and depends on.
 - **Registered in full**, following "Adding an example" in
   `docs/godot/examples.md`:
   - `make demo-bossfight`;

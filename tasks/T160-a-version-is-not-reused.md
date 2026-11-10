@@ -1,6 +1,6 @@
 # T160 — A version is not reused
 
-Size: S · Prereqs: T159 · Files: `scripts/release.py`, `scripts/library_check.py`, `python/tests/`, `README.md`, `README.pt-BR.md`, `docs/howto/publish.md`
+Size: S · Prereqs: T159 · Files: `scripts/release.py`, `scripts/library_check.py`, `python/tests/`, `README.md`, `README.pt-BR.md`, `docs/howto/publish.md`, `docs/techniques/using-the-library.md`, `docs/techniques/using-the-library.pt-BR.md`
 
 ## Goal
 
@@ -17,9 +17,16 @@ split these follow-ups out of it. The wave confirms them._
 
 - **`make release` refuses a published version:** when `VERSION` is
   already a tag and HEAD differs from that tag under `godot/addons/` or
-  `python/`, it fails by name and says to bump `VERSION`. Planted case: a
+  `python/gameaikit/` (not the tests: a test-only change ships nothing), it fails by name and says to bump `VERSION`. Planted case: a
   repo fixture with a tag and one changed addon file.
+- **(owner) The next upload, 0.2.0, waits.** It goes out only after the
+  boss-fight batch (T154-T158) and the follow-ups, as T161. This task
+  builds the guard and uploads nothing.
 - **`make library-check` installs the kit zip too**, all addons at once,
+  and `using-the-library.md` and its pt-BR twin say so. The same pages fix a
+  live bug: the `infer` step unzips `ai_learning` with `-d my_game/addons/`,
+  so it lands in `addons/addons/`; it passes only because Godot finds a
+  `class_name` anywhere. The check asserts the path, not just the class,
   not only three addon zips. Installing all of them together is how the
   store delivers them.
 - **Small fixes found by the check:**

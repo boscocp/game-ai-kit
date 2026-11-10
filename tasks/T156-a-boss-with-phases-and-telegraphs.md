@@ -1,6 +1,6 @@
 # T156 — A boss with phases and telegraphed attacks
 
-Size: M · Prereqs: T154 · Files: `godot/game3d/bossfight/`, `godot/test/bossfight/`, `docs/concepts/action-combat-ai.md`
+Size: M · Prereqs: T154 · Files: `godot/game3d/bossfight/`, `godot/test/bossfight/`, `modules/bossfight.json`, `docs/concepts/action-combat-ai.md`
 
 ## Goal
 
@@ -18,7 +18,7 @@ Souls-like plugin adds a second moveset below a threshold.
 
 ## Decisions written down first
 
-_The owner asked for this task on 2026-11-10, from a request on Reddit: enemies "like Insomniac's Spider-Man: a group, but one attacks at a time, and a ranged attacker from far away". It cited the GDC 2019 "Marvel's Spider-Man AI Postmortem" and the Unreal plugin "Soulslike Enemy Combat 3.2". Decisions marked **(owner)** were answered on that date. The rest is this session's proposal; the wave that takes the task confirms it, or brings it back to the owner._
+_The owner asked for this task on 2026-11-10, from a request on Reddit: enemies "like Insomniac's Spider-Man: a group, but one attacks at a time, and a ranged attacker from far away". It cited the GDC 2019 "Marvel's Spider-Man AI Postmortem" and the Unreal plugin "Soulslike Enemy AI Combat System" (its video: "Soulslike Enemy Combat 3.2"). Decisions marked **(owner)** were answered on that date. The rest is this session's proposal; the wave that takes the task confirms it, or brings it back to the owner._
 
 - **The phases are the top of a behaviour tree** built with `ai_behaviour`'s
   `behaviour_tree.gd`. A selector checks each phase's health condition,
@@ -27,11 +27,16 @@ _The owner asked for this task on 2026-11-10, from a request on Reddit: enemies 
   than nested `state_machine.gd`s, it writes that down and asks.
 - **The next attack is a utility choice** (`ai_utility/action_choice.gd`).
   Its considerations are distance, the player's facing, and how long since
-  this attack was last used (a repetition penalty). The attacks and the
+  this attack was last used. That last one is a penalty, and it only
+  spaces attacks out. The rule "never three in a row" is a hard filter: a
+  consideration that scores zero on the third repeat. The attacks and the
   three windows' lengths are data, in `bossfight/boss_attacks.json`.
-- **The boss uses the target's token pool, with a cost.** A heavy attack
-  takes the melee kind's whole pool, so minions do not strike during it.
-  This is why T154 has costs.
+- **The boss uses the target's token pool, with a cost and a priority.** A
+  heavy attack costs exactly the melee kind's pool, so minions do not
+  strike during it, and the boss's priority puts it before minions already
+  waiting. This is why T154 has costs and priorities.
+- **This task creates `modules/bossfight.json`**, since it is the first to
+  write under `godot/game3d/bossfight/`. T157 extends it.
 - **A phase change is an event the minions' director (T158) reads.** The
   boss does not spawn anything itself.
 - **No adaptation to the player (owner)**: nothing is counted about the
@@ -43,6 +48,7 @@ _The owner asked for this task on 2026-11-10, from a request on Reddit: enemies 
 
 ```bash
 make test-godot-some SUITES="test/bossfight"
+make lint-modules
 ```
 
 Properties, headless and seeded:

@@ -194,3 +194,44 @@ Not findings:
 - invariant 13, because every task says what is shown;
 - the [S]/[F] marks on the GDC talks, which are honest: the Vault page is
   [F] and the summary of the talk is [S].
+
+## What was done about them
+
+All fourteen were applied in a second commit on the branch:
+
+- **1. Names.** `AttackTokens`, with no `Gak` prefix (ADR 0024).
+  `RoleArbiter` is named correctly.
+- **2. T155.** The ring generator only places points. The example fills
+  in their facts, line of sight included, so the Python twin stays free of
+  physics.
+- **3 and 4. One rule for costs, priority and revoking.**
+  - A cost above its kind's pool is refused by name, and there is a test
+    for it.
+  - Requests carry a priority, so the boss goes before minions already
+    waiting.
+  - A heavy attack costs exactly the melee pool.
+  - Revoking is the fourth way a token comes back. T157 uses it for the
+    Spider-Man ranged rule.
+- **5. T158.** It says up front that `difficulty.gd` is not reused, and
+  why.
+- **6. T156.** It creates `modules/bossfight.json` and runs `lint-modules`.
+- **7. T159.** `published.json` has a `provenance` field: a tag, or
+  `unknown` with a sentence. The rebuild runs only for a tag, with that
+  tag's own `release.py`. The goal now gives this review's measurements:
+  no committed build is 322.41 KB. That replaces the earlier claim that
+  git confirmed the store's file was the tag's build.
+- **8. T160.** It lists the two `using-the-library` pages, fixes the
+  `addons/addons/` bug, and asserts the install path.
+- **Nits.**
+  - T159 adds a `--project` option to `godot_checked.py`, with its own
+    planted case. It no longer uses `lint-links-remote` as its example.
+  - T160 compares only `python/gameaikit/`.
+  - T156's rule "never three in a row" is a hard filter.
+  - Dawe's chapter is marked as read only by its title and index, and the
+    wave reads it first.
+  - The plugin has one name.
+  - The two missing paths are added.
+
+After the review, the owner decided that 0.2.0 goes to the store only
+after T154-T158 and the remaining follow-ups. That release is the new
+T161, and T160 now builds the guard and uploads nothing.
