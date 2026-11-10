@@ -1,6 +1,6 @@
 # T148 — A cold import that crashes is explained, or survived
 
-Size: S · Prereqs: T112 · Files: `scripts/godot`, `Makefile`, `scripts/worktree_setup.py`, `docs/godot/`
+Size: S · Prereqs: T112 · Files: `godot/project.godot`, `scripts/check_import_threads.py`, `Makefile`, `docs/godot/cold-import.md`
 
 ## Goal
 
@@ -44,3 +44,10 @@ None.
 ## Notes
 
 - After T113-T115, with the other follow-ups (the owner, 2026-11-06).
+- Done in wave 167, with no retry. The crash is the engine's, but it
+  happens only with `editor/import/use_multiple_threads` on. That is an
+  import setting, which the first decision counts as a fix on our side.
+  So `project.godot` turns it off and `lint-import-threads` keeps the line.
+  A retry on exit 139 would also have let the exit 134s through, the
+  shutdown crash the setting removes too. Counts, the upstream issue and
+  when to take the line out: `docs/godot/cold-import.md`.

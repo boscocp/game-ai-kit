@@ -200,6 +200,12 @@ lint-disk-layout: ## Invariant 8: nothing this repository writes lands in the ho
 lint-renderer: ## Renderer stays Compatibility; no 3D nodes in game/ or demos/
 	@$(PYTHON) scripts/check_renderer.py
 
+.PHONY: lint-import-threads
+check-no-engine: lint-import-threads
+lint-import-threads: ## T148: the project imports on one thread, where a cold --import does not crash
+	@# Its self-test runs in lint-selftests, found there by its name.
+	@$(PYTHON) scripts/check_import_threads.py
+
 .PHONY: lint-no-assets
 lint-no-assets: ## ADR 0018: nothing from a 3D pack is tracked, and every manifest row has a sha256
 	@$(PYTHON) scripts/check_no_assets.py
@@ -770,6 +776,10 @@ import: ## Import the art, which a fresh checkout cannot load without
 	@# rewrites that picture's committed .import to `valid=false` -- which then
 	@# survives fixing the picture. So an ERROR is a failure here, and a
 	@# sidecar marked invalid is too.
+	@#
+	@# A cold import on several threads crashed 11 runs in 115 on 4.7.2
+	@# (exit 139 or 134); project.godot keeps it on one, and
+	@# lint-import-threads keeps that line. docs/godot/cold-import.md (T148).
 	@out=$$($(GODOT) --headless --path godot --import 2>&1) || \
 		{ echo "$$out" >&2; echo "import: the engine refused to import the project" >&2; exit 2; }; \
 	if echo "$$out" | grep -q "ERROR"; then \
