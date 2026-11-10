@@ -139,7 +139,8 @@ também em itálico, ficam como foram publicados.
 | *jab*, *uppercut*, *side_kick*, *low_jab* | os nomes dos golpes da demo de luta, como a *frame data* os escreve; ficam com o nome do código, como os personagens *lancer* e *dancer* |
 | *build_lab*, *train_runners*, *mortars_ready* | passos e fatos do plano do comandante da demo de RTS, com o nome que o código e o domínio PDDL dão |
 | *grid* | o grid de largada de uma corrida, onde os carros esperam lado a lado |
-| *attack token* | a permissão de atacar um alvo agora: o alvo tem um estoque por tipo de ataque, quem quer golpear pede um, e o devolve quando o ataque acaba; é o que faz um grupo atacar um ou dois de cada vez |
+| *attack token*, *token* | a permissão de atacar um alvo agora: o alvo tem um estoque por tipo de ataque, quem quer golpear pede um, e o devolve quando o ataque acaba; é o que faz um grupo atacar um ou dois de cada vez |
+| *attack capacity* | em Kingdoms of Amalur, quanto peso de ataques o jogador aguenta de uma vez; cada ataque tem um peso, e só começa se o peso couber |
 | *melee*, *ranged* | o ataque corpo a corpo e o de longe; ficam em inglês porque são os nomes dos tipos de ataque no código e nos jogos |
 | *telegraph* | o aviso que um inimigo dá antes de golpear -- um gesto, um brilho, um som -- para o jogador ter tempo de reagir |
 | *hash* | um número calculado de um texto, sempre o mesmo para o mesmo texto; aqui, o desempate entre dois pedidos iguais |
