@@ -408,9 +408,146 @@ def coordination_vectors():
                 "The arbiter off: everyone who can shoot does, flank requests or not.",
                 [ask("flanker", 0.9), ask("shooter", 0.5), ask("flanker", 0.4, False)], False)
 
+# --- attack tokens (T154) ----------------------------------------------------
+
+def fnv(text):
+    h = 2166136261
+    for b in text.encode("utf-8"):
+        h = ((h ^ b) * 16777619) & 0xFFFFFFFF
+    return h
+
+def run_tokens(config, script):
+    pools, free = config["pools"], dict(config["pools"])
+    waiting, holding, events, answers = [], {}, [], []
+    next_grant, now = {k: -math.inf for k in pools}, 0.0
+    def key(w):
+        patient = w["passed"] >= config["patience"]
+        return (0.0 if patient else 1.0, 0.0 if patient else -float(w["priority"]), w["asked_at"], w["distance"],
+                float(fnv(f"{config['tie_seed']}:{w['id']}")), w["id"])
+    def give_back(id, what):
+        h = holding.pop(id)
+        free[h["kind"]] += h["cost"]
+        events.append([now, id, h["kind"], what])
+    for e in script:
+        now = e.get("at", now)
+        if e["do"] == "request":
+            if e["kind"] not in pools: answers.append("refused_kind")
+            elif not 1 <= e["cost"] <= pools[e["kind"]]: answers.append("refused_cost")
+            elif e["id"] in holding: answers.append("holding")
+            else:
+                mine = [w for w in waiting if w["id"] == e["id"]]
+                if mine: mine[0].update(priority=e["priority"], distance=e["distance"])
+                else: waiting.append(dict(e, asked_at=now, passed=0))
+                answers.append("waiting")
+        elif e["do"] == "release":
+            if e["reason"] == "died": waiting = [w for w in waiting if w["id"] != e["id"]]
+            ok = e["id"] in holding and e["reason"] in ("ended", "interrupted", "died", "revoked")
+            if ok: give_back(e["id"], e["reason"])
+            answers.append(ok)
+        elif e["do"] == "revoke":
+            gone = sorted(i for i, h in holding.items() if h["kind"] == e["kind"])
+            for i in gone: give_back(i, "revoked")
+            answers.append(gone)
+        else:
+            for i in sorted(i for i, h in holding.items() if now - h["since"] >= config["timeouts"][h["kind"]]):
+                give_back(i, "timed_out")
+            granted = []
+            for kind in sorted(pools):
+                factor = config["multipliers"].get(e["state"], {}).get(kind, 1.0)
+                while now >= next_grant[kind]:
+                    queue = sorted((w for w in waiting if w["kind"] == kind), key=key)
+                    if not queue or queue[0]["cost"] > free[kind]: break
+                    head = queue[0]
+                    waiting.remove(head)
+                    for w in queue[1:]: w["passed"] += 1
+                    holding[head["id"]] = {"kind": kind, "cost": head["cost"], "since": now}
+                    free[kind] -= head["cost"]
+                    events.append([now, head["id"], kind, "granted"])
+                    granted.append(head["id"])
+                    next_grant[kind] = now + config["delays"][kind] * factor
+            answers.append({"granted": granted, "free": dict(free),
+                            "holders": {k: sorted(i for i, h in holding.items() if h["kind"] == k) for k in pools}})
+    return answers, events
+
+TOKENS = {"pools": {"melee": 2, "ranged": 1}, "delays": {"melee": 0.5, "ranged": 2.0},
+          "timeouts": {"melee": 4.0, "ranged": 6.0},
+          "multipliers": {"busy": {"melee": 1.0, "ranged": 2.0}, "idle": {"melee": 0.5, "ranged": 0.5}},
+          "patience": 3, "tie_seed": 7}
+
+def tokens(name, why, script, config=TOKENS):
+    answers, events = run_tokens(config, script)
+    return {"name": name, "why": why, "kind": "tokens", "query": {"config": config, "script": script},
+            "expect": {"answers": answers, "events": events}}
+
+def want(id, at, kind="melee", cost=1, priority=0, distance=5.0):
+    return {"do": "request", "at": at, "id": id, "kind": kind, "cost": cost, "priority": priority, "distance": distance}
+
+def tick(at, state="normal"):
+    return {"do": "step", "at": at, "state": state}
+
+def done(id, at, reason="ended"):
+    return {"do": "release", "at": at, "id": id, "reason": reason}
+
+def token_vectors():
+    yield tokens("two-melee-tokens-the-third-waits",
+                 "Three ask to strike and one to shoot. Melee 2, ranged 1, melee spaced 0.5 s: at 0 the nearest "
+                 "melee and the archer, at 0.5 the next nearest, at 1.0 the pool is full and the third circles. "
+                 "One attack ends, and at 1.5 the third strikes.",
+                 [want("far", 0.0, distance=9.0), want("near", 0.0, distance=2.0), want("mid", 0.0, distance=4.0),
+                  want("archer", 0.0, "ranged", distance=20.0), tick(0.0), tick(0.5), tick(1.0), done("near", 1.25),
+                  tick(1.5)])
+    yield tokens("the-boss-goes-first-and-is-not-overtaken",
+                 "A boss's heavy attack costs both melee tokens and has priority 5. Two minions hold them; when "
+                 "one ends, the boss is first and does not fit, and the waiting minion m3 may not take the token "
+                 "past it. When the second ends, the boss strikes.",
+                 [want("m1", 0.0, distance=1.0), want("m2", 0.0, distance=2.0), tick(0.0), tick(0.5),
+                  want("boss", 1.0, cost=2, priority=5, distance=6.0), want("m3", 1.0, distance=1.5),
+                  done("m1", 1.0), tick(1.0), done("m2", 1.25), tick(1.5)])
+    yield tokens("the-longest-waiting-before-the-nearest",
+                 "One melee token, held. 'early' has waited since 0 at 8 m; 'late' asks at 0.5 from 1 m. Equal "
+                 "priority: the one waiting longest is next, though the other is nearer.",
+                 [want("holder", 0.0, distance=2.0), tick(0.0), want("early", 0.0, distance=8.0),
+                  want("late", 0.5, distance=1.0), done("holder", 1.0), tick(1.0)],
+                 dict(TOKENS, pools={"melee": 1, "ranged": 1}))
+    yield tokens("a-cost-above-the-pool-is-refused",
+                 "A cost of 3 against a melee pool of 2 is refused at once, by name, and never queued; a kind the "
+                 "pool does not have is refused too; a holder asking again is told it holds.",
+                 [want("giant", 0.0, cost=3), want("ghost", 0.0, "magic"), want("m1", 0.0), tick(0.0),
+                  want("m1", 0.2), tick(0.5)])
+    yield tokens("revoked-is-free-on-the-same-step",
+                 "a1 holds the ranged token. At 2.0 melee pressure starts: the game revokes the ranged kind, the "
+                 "token is free at once, and a2, waiting since 0, takes it on the step at that same moment. The "
+                 "player busy, the next ranged grant waits 2 x 2 = 4 s: nothing at 4.0, a1 again at 6.0.",
+                 [want("a1", 0.0, "ranged", distance=20.0), want("a2", 0.0, "ranged", distance=25.0), tick(0.0),
+                  {"do": "revoke", "at": 2.0, "kind": "ranged"}, tick(2.0, "busy"), done("a2", 2.5),
+                  want("a1", 2.5, "ranged", distance=20.0), tick(4.0, "busy"), tick(6.0, "busy")])
+    yield tokens("death-and-timeout-give-tokens-back",
+                 "m1 dies holding at 0.75: its token is back at once, and m3 takes it at 1.0. m4 dies waiting, and "
+                 "is never served. m2 never releases: at 4.5, 4 s after its grant, the timeout takes it back.",
+                 [want("m1", 0.0, distance=1.0), want("m2", 0.0, distance=2.0), want("m3", 0.0, distance=3.0),
+                  want("m4", 0.0, distance=4.0), tick(0.0), tick(0.5), done("m1", 0.75, "died"),
+                  done("m4", 0.75, "died"), tick(1.0), tick(4.5)])
+    yield tokens("patience-serves-the-passed-over",
+                 "One melee token. A low minion waits while h1, h2 and h3, priority 3, strike in turn, the player "
+                 "idle so the delay is halved to 0.25 s. Passed over three times, the patience, the minion is "
+                 "served before h4, priority 3, who came later -- no starvation. Then h4.",
+                 [want("low", 0.0, priority=0, distance=1.0), want("h1", 0.0, priority=3, distance=2.0),
+                  want("h2", 0.0, priority=3, distance=3.0), want("h3", 0.0, priority=3, distance=4.0),
+                  tick(0.0, "idle"), done("h1", 0.2), tick(0.25, "idle"), done("h2", 0.45), tick(0.5, "idle"),
+                  want("h4", 0.6, priority=3, distance=1.0), done("h3", 0.7), tick(0.75, "idle"),
+                  done("low", 0.9), tick(1.0, "idle")],
+                 dict(TOKENS, pools={"melee": 1, "ranged": 1}))
+    for seed, order in ((7, ("left", "right")), (7, ("right", "left")), (8, ("left", "right"))):
+        yield tokens(f"equal-facts-go-by-the-seed-{seed}-{order[0]}-first",
+                     f"Two requests equal in every fact, asked {order[0]} first, seed {seed}: the seeded hash "
+                     "decides, not the order they were stored in. The same seed either way round gives the same "
+                     "token; another seed may give the other.",
+                     [want(order[0], 0.0), want(order[1], 0.0), tick(0.0)],
+                     dict(TOKENS, pools={"melee": 1, "ranged": 1}, tie_seed=seed))
+
 def main(directory):
     folder = pathlib.Path(directory)
-    for vector in list(vectors()) + list(passage_vectors()) + list(coordination_vectors()):
+    for vector in list(vectors()) + list(passage_vectors()) + list(coordination_vectors()) + list(token_vectors()):
         (folder / f"{vector['name']}.json").write_text(json.dumps(vector, indent=1) + "\n", encoding="utf-8")
 
 if __name__ == "__main__":

@@ -1,13 +1,14 @@
 {
   "module": "ai_teamwork",
   "kind": "technique",
-  "about": "Bots that cooperate: tactical positions with claims, a team's influence, a commander over objectives, squad confidence and the retreat in waves; in GDScript and Python.",
-  "summary": "Bots that cooperate: tactical positions with claims, a team's influence, a commander over objectives, roles, a shared search, a way past a body in the way, and squad confidence with the retreat in waves.",
+  "about": "Bots that cooperate: tactical positions with claims, a team's influence, a commander over objectives, squad confidence and the retreat in waves, and attack tokens; in GDScript and Python.",
+  "summary": "Bots that cooperate: tactical positions with claims, a team's influence, a commander over objectives, roles, a shared search, a way past a body in the way, squad confidence with the retreat in waves, and attack tokens: one attacks at a time.",
   "owns": [
     "godot/addons/ai_teamwork/",
     "godot/test/ai_teamwork/",
     "spec/vectors/teamwork/",
     "python/gameaikit/teamwork/",
+    "python/tests/test_teamwork_tokens.py",
     "python/tests/test_teamwork_vectors.py"
   ],
   "depends_on": [],

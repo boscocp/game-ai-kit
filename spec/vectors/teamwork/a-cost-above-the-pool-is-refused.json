@@ -1,0 +1,125 @@
+{
+ "name": "a-cost-above-the-pool-is-refused",
+ "why": "A cost of 3 against a melee pool of 2 is refused at once, by name, and never queued; a kind the pool does not have is refused too; a holder asking again is told it holds.",
+ "kind": "tokens",
+ "query": {
+  "config": {
+   "pools": {
+    "melee": 2,
+    "ranged": 1
+   },
+   "delays": {
+    "melee": 0.5,
+    "ranged": 2.0
+   },
+   "timeouts": {
+    "melee": 4.0,
+    "ranged": 6.0
+   },
+   "multipliers": {
+    "busy": {
+     "melee": 1.0,
+     "ranged": 2.0
+    },
+    "idle": {
+     "melee": 0.5,
+     "ranged": 0.5
+    }
+   },
+   "patience": 3,
+   "tie_seed": 7
+  },
+  "script": [
+   {
+    "do": "request",
+    "at": 0.0,
+    "id": "giant",
+    "kind": "melee",
+    "cost": 3,
+    "priority": 0,
+    "distance": 5.0
+   },
+   {
+    "do": "request",
+    "at": 0.0,
+    "id": "ghost",
+    "kind": "magic",
+    "cost": 1,
+    "priority": 0,
+    "distance": 5.0
+   },
+   {
+    "do": "request",
+    "at": 0.0,
+    "id": "m1",
+    "kind": "melee",
+    "cost": 1,
+    "priority": 0,
+    "distance": 5.0
+   },
+   {
+    "do": "step",
+    "at": 0.0,
+    "state": "normal"
+   },
+   {
+    "do": "request",
+    "at": 0.2,
+    "id": "m1",
+    "kind": "melee",
+    "cost": 1,
+    "priority": 0,
+    "distance": 5.0
+   },
+   {
+    "do": "step",
+    "at": 0.5,
+    "state": "normal"
+   }
+  ]
+ },
+ "expect": {
+  "answers": [
+   "refused_cost",
+   "refused_kind",
+   "waiting",
+   {
+    "granted": [
+     "m1"
+    ],
+    "free": {
+     "melee": 1,
+     "ranged": 1
+    },
+    "holders": {
+     "melee": [
+      "m1"
+     ],
+     "ranged": []
+    }
+   },
+   "holding",
+   {
+    "granted": [],
+    "free": {
+     "melee": 1,
+     "ranged": 1
+    },
+    "holders": {
+     "melee": [
+      "m1"
+     ],
+     "ranged": []
+    }
+   }
+  ],
+  "events": [
+   [
+    0.0,
+    "m1",
+    "melee",
+    "granted"
+   ]
+  ]
+ }
+}

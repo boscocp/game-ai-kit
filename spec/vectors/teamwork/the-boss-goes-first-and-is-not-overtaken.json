@@ -1,0 +1,204 @@
+{
+ "name": "the-boss-goes-first-and-is-not-overtaken",
+ "why": "A boss's heavy attack costs both melee tokens and has priority 5. Two minions hold them; when one ends, the boss is first and does not fit, and the waiting minion m3 may not take the token past it. When the second ends, the boss strikes.",
+ "kind": "tokens",
+ "query": {
+  "config": {
+   "pools": {
+    "melee": 2,
+    "ranged": 1
+   },
+   "delays": {
+    "melee": 0.5,
+    "ranged": 2.0
+   },
+   "timeouts": {
+    "melee": 4.0,
+    "ranged": 6.0
+   },
+   "multipliers": {
+    "busy": {
+     "melee": 1.0,
+     "ranged": 2.0
+    },
+    "idle": {
+     "melee": 0.5,
+     "ranged": 0.5
+    }
+   },
+   "patience": 3,
+   "tie_seed": 7
+  },
+  "script": [
+   {
+    "do": "request",
+    "at": 0.0,
+    "id": "m1",
+    "kind": "melee",
+    "cost": 1,
+    "priority": 0,
+    "distance": 1.0
+   },
+   {
+    "do": "request",
+    "at": 0.0,
+    "id": "m2",
+    "kind": "melee",
+    "cost": 1,
+    "priority": 0,
+    "distance": 2.0
+   },
+   {
+    "do": "step",
+    "at": 0.0,
+    "state": "normal"
+   },
+   {
+    "do": "step",
+    "at": 0.5,
+    "state": "normal"
+   },
+   {
+    "do": "request",
+    "at": 1.0,
+    "id": "boss",
+    "kind": "melee",
+    "cost": 2,
+    "priority": 5,
+    "distance": 6.0
+   },
+   {
+    "do": "request",
+    "at": 1.0,
+    "id": "m3",
+    "kind": "melee",
+    "cost": 1,
+    "priority": 0,
+    "distance": 1.5
+   },
+   {
+    "do": "release",
+    "at": 1.0,
+    "id": "m1",
+    "reason": "ended"
+   },
+   {
+    "do": "step",
+    "at": 1.0,
+    "state": "normal"
+   },
+   {
+    "do": "release",
+    "at": 1.25,
+    "id": "m2",
+    "reason": "ended"
+   },
+   {
+    "do": "step",
+    "at": 1.5,
+    "state": "normal"
+   }
+  ]
+ },
+ "expect": {
+  "answers": [
+   "waiting",
+   "waiting",
+   {
+    "granted": [
+     "m1"
+    ],
+    "free": {
+     "melee": 1,
+     "ranged": 1
+    },
+    "holders": {
+     "melee": [
+      "m1"
+     ],
+     "ranged": []
+    }
+   },
+   {
+    "granted": [
+     "m2"
+    ],
+    "free": {
+     "melee": 0,
+     "ranged": 1
+    },
+    "holders": {
+     "melee": [
+      "m1",
+      "m2"
+     ],
+     "ranged": []
+    }
+   },
+   "waiting",
+   "waiting",
+   true,
+   {
+    "granted": [],
+    "free": {
+     "melee": 1,
+     "ranged": 1
+    },
+    "holders": {
+     "melee": [
+      "m2"
+     ],
+     "ranged": []
+    }
+   },
+   true,
+   {
+    "granted": [
+     "boss"
+    ],
+    "free": {
+     "melee": 0,
+     "ranged": 1
+    },
+    "holders": {
+     "melee": [
+      "boss"
+     ],
+     "ranged": []
+    }
+   }
+  ],
+  "events": [
+   [
+    0.0,
+    "m1",
+    "melee",
+    "granted"
+   ],
+   [
+    0.5,
+    "m2",
+    "melee",
+    "granted"
+   ],
+   [
+    1.0,
+    "m1",
+    "melee",
+    "ended"
+   ],
+   [
+    1.25,
+    "m2",
+    "melee",
+    "ended"
+   ],
+   [
+    1.5,
+    "boss",
+    "melee",
+    "granted"
+   ]
+  ]
+ }
+}

@@ -10,7 +10,7 @@ extends RefCounted
 ## Shared with `python/tests/test_teamwork_vectors.py`; sized for `Vector2`'s
 ## 32-bit floats.
 const TOLERANCE: float = 1e-4
-const KINDS: Array[String] = ["positions", "influence", "commander", "confidence", "passage", "search", "roles"]
+const KINDS: Array[String] = ["positions", "influence", "commander", "confidence", "passage", "search", "roles", "tokens"]
 
 
 ## Why `vector` is not a teamwork vector, or "" when it is one.
@@ -48,6 +48,8 @@ static func answer_to(vector: Dictionary) -> Dictionary:
 			return _search(vector)
 		"roles":
 			return _roles(vector)
+		"tokens":
+			return _tokens(vector)
 	return _confidence(vector)
 
 
@@ -220,6 +222,55 @@ static func _roles(vector: Dictionary) -> Dictionary:
 	for request: Dictionary in query["requests"]:
 		requests.append(request)
 	return {"granted": Array(RoleArbiter.grant(requests, bool(query["use_arbiter"]), int(query["max_flankers"])))}
+
+
+## An `AttackTokens.Config` from a vector's `config`: JSON's numbers are
+## floats, the pools are whole tokens.
+static func tokens_config(fields: Dictionary) -> AttackTokens.Config:
+	var config := AttackTokens.Config.new()
+	for kind: String in fields["pools"]:
+		config.pools[kind] = int(fields["pools"][kind])
+	for kind: String in fields["delays"]:
+		config.delays[kind] = float(fields["delays"][kind])
+	for kind: String in fields["timeouts"]:
+		config.timeouts[kind] = float(fields["timeouts"][kind])
+	for state: String in fields["multipliers"]:
+		config.multipliers[state] = fields["multipliers"][state]
+	config.patience = int(fields["patience"])
+	config.tie_seed = int(fields["tie_seed"])
+	return config
+
+
+static func _tokens(vector: Dictionary) -> Dictionary:
+	var config: AttackTokens.Config = tokens_config(vector["query"]["config"])
+	var pool := AttackTokens.new(config)
+	var answers: Array = []
+	for event: Dictionary in vector["query"]["script"]:
+		answers.append(_play_tokens(pool, config, event))
+	var events: Array = []
+	for each: Dictionary in pool.events:
+		events.append([each["at"], each["id"], each["kind"], each["what"]])
+	return {"answers": answers, "events": events}
+
+
+static func _play_tokens(pool: AttackTokens, config: AttackTokens.Config, event: Dictionary) -> Variant:
+	var now: float = float(event["at"])
+	var action: String = str(event["do"])
+	if action == "request":
+		var cost: int = int(event["cost"])
+		var priority: int = int(event["priority"])
+		return pool.request(str(event["id"]), str(event["kind"]), cost, priority, float(event["distance"]), now)
+	if action == "release":
+		return pool.release(str(event["id"]), str(event["reason"]), now)
+	if action == "revoke":
+		return Array(pool.revoke_kind(str(event["kind"]), now))
+	var granted: PackedStringArray = pool.step(now, str(event["state"]))
+	var free: Dictionary = {}
+	var holders: Dictionary = {}
+	for kind: String in config.pools:
+		free[kind] = pool.free_tokens(kind)
+		holders[kind] = Array(pool.holders(kind))
+	return {"granted": Array(granted), "free": free, "holders": holders}
 
 
 static func _states(values: Array, thresholds: SquadConfidence.Thresholds, may_retreat: bool) -> Array:

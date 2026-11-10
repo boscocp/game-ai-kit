@@ -1,0 +1,273 @@
+{
+ "name": "patience-serves-the-passed-over",
+ "why": "One melee token. A low minion waits while h1, h2 and h3, priority 3, strike in turn, the player idle so the delay is halved to 0.25 s. Passed over three times, the patience, the minion is served before h4, priority 3, who came later -- no starvation. Then h4.",
+ "kind": "tokens",
+ "query": {
+  "config": {
+   "pools": {
+    "melee": 1,
+    "ranged": 1
+   },
+   "delays": {
+    "melee": 0.5,
+    "ranged": 2.0
+   },
+   "timeouts": {
+    "melee": 4.0,
+    "ranged": 6.0
+   },
+   "multipliers": {
+    "busy": {
+     "melee": 1.0,
+     "ranged": 2.0
+    },
+    "idle": {
+     "melee": 0.5,
+     "ranged": 0.5
+    }
+   },
+   "patience": 3,
+   "tie_seed": 7
+  },
+  "script": [
+   {
+    "do": "request",
+    "at": 0.0,
+    "id": "low",
+    "kind": "melee",
+    "cost": 1,
+    "priority": 0,
+    "distance": 1.0
+   },
+   {
+    "do": "request",
+    "at": 0.0,
+    "id": "h1",
+    "kind": "melee",
+    "cost": 1,
+    "priority": 3,
+    "distance": 2.0
+   },
+   {
+    "do": "request",
+    "at": 0.0,
+    "id": "h2",
+    "kind": "melee",
+    "cost": 1,
+    "priority": 3,
+    "distance": 3.0
+   },
+   {
+    "do": "request",
+    "at": 0.0,
+    "id": "h3",
+    "kind": "melee",
+    "cost": 1,
+    "priority": 3,
+    "distance": 4.0
+   },
+   {
+    "do": "step",
+    "at": 0.0,
+    "state": "idle"
+   },
+   {
+    "do": "release",
+    "at": 0.2,
+    "id": "h1",
+    "reason": "ended"
+   },
+   {
+    "do": "step",
+    "at": 0.25,
+    "state": "idle"
+   },
+   {
+    "do": "release",
+    "at": 0.45,
+    "id": "h2",
+    "reason": "ended"
+   },
+   {
+    "do": "step",
+    "at": 0.5,
+    "state": "idle"
+   },
+   {
+    "do": "request",
+    "at": 0.6,
+    "id": "h4",
+    "kind": "melee",
+    "cost": 1,
+    "priority": 3,
+    "distance": 1.0
+   },
+   {
+    "do": "release",
+    "at": 0.7,
+    "id": "h3",
+    "reason": "ended"
+   },
+   {
+    "do": "step",
+    "at": 0.75,
+    "state": "idle"
+   },
+   {
+    "do": "release",
+    "at": 0.9,
+    "id": "low",
+    "reason": "ended"
+   },
+   {
+    "do": "step",
+    "at": 1.0,
+    "state": "idle"
+   }
+  ]
+ },
+ "expect": {
+  "answers": [
+   "waiting",
+   "waiting",
+   "waiting",
+   "waiting",
+   {
+    "granted": [
+     "h1"
+    ],
+    "free": {
+     "melee": 0,
+     "ranged": 1
+    },
+    "holders": {
+     "melee": [
+      "h1"
+     ],
+     "ranged": []
+    }
+   },
+   true,
+   {
+    "granted": [
+     "h2"
+    ],
+    "free": {
+     "melee": 0,
+     "ranged": 1
+    },
+    "holders": {
+     "melee": [
+      "h2"
+     ],
+     "ranged": []
+    }
+   },
+   true,
+   {
+    "granted": [
+     "h3"
+    ],
+    "free": {
+     "melee": 0,
+     "ranged": 1
+    },
+    "holders": {
+     "melee": [
+      "h3"
+     ],
+     "ranged": []
+    }
+   },
+   "waiting",
+   true,
+   {
+    "granted": [
+     "low"
+    ],
+    "free": {
+     "melee": 0,
+     "ranged": 1
+    },
+    "holders": {
+     "melee": [
+      "low"
+     ],
+     "ranged": []
+    }
+   },
+   true,
+   {
+    "granted": [
+     "h4"
+    ],
+    "free": {
+     "melee": 0,
+     "ranged": 1
+    },
+    "holders": {
+     "melee": [
+      "h4"
+     ],
+     "ranged": []
+    }
+   }
+  ],
+  "events": [
+   [
+    0.0,
+    "h1",
+    "melee",
+    "granted"
+   ],
+   [
+    0.2,
+    "h1",
+    "melee",
+    "ended"
+   ],
+   [
+    0.25,
+    "h2",
+    "melee",
+    "granted"
+   ],
+   [
+    0.45,
+    "h2",
+    "melee",
+    "ended"
+   ],
+   [
+    0.5,
+    "h3",
+    "melee",
+    "granted"
+   ],
+   [
+    0.7,
+    "h3",
+    "melee",
+    "ended"
+   ],
+   [
+    0.75,
+    "low",
+    "melee",
+    "granted"
+   ],
+   [
+    0.9,
+    "low",
+    "melee",
+    "ended"
+   ],
+   [
+    1.0,
+    "h4",
+    "melee",
+    "granted"
+   ]
+  ]
+ }
+}

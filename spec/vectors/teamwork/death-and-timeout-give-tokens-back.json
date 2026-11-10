@@ -1,0 +1,205 @@
+{
+ "name": "death-and-timeout-give-tokens-back",
+ "why": "m1 dies holding at 0.75: its token is back at once, and m3 takes it at 1.0. m4 dies waiting, and is never served. m2 never releases: at 4.5, 4 s after its grant, the timeout takes it back.",
+ "kind": "tokens",
+ "query": {
+  "config": {
+   "pools": {
+    "melee": 2,
+    "ranged": 1
+   },
+   "delays": {
+    "melee": 0.5,
+    "ranged": 2.0
+   },
+   "timeouts": {
+    "melee": 4.0,
+    "ranged": 6.0
+   },
+   "multipliers": {
+    "busy": {
+     "melee": 1.0,
+     "ranged": 2.0
+    },
+    "idle": {
+     "melee": 0.5,
+     "ranged": 0.5
+    }
+   },
+   "patience": 3,
+   "tie_seed": 7
+  },
+  "script": [
+   {
+    "do": "request",
+    "at": 0.0,
+    "id": "m1",
+    "kind": "melee",
+    "cost": 1,
+    "priority": 0,
+    "distance": 1.0
+   },
+   {
+    "do": "request",
+    "at": 0.0,
+    "id": "m2",
+    "kind": "melee",
+    "cost": 1,
+    "priority": 0,
+    "distance": 2.0
+   },
+   {
+    "do": "request",
+    "at": 0.0,
+    "id": "m3",
+    "kind": "melee",
+    "cost": 1,
+    "priority": 0,
+    "distance": 3.0
+   },
+   {
+    "do": "request",
+    "at": 0.0,
+    "id": "m4",
+    "kind": "melee",
+    "cost": 1,
+    "priority": 0,
+    "distance": 4.0
+   },
+   {
+    "do": "step",
+    "at": 0.0,
+    "state": "normal"
+   },
+   {
+    "do": "step",
+    "at": 0.5,
+    "state": "normal"
+   },
+   {
+    "do": "release",
+    "at": 0.75,
+    "id": "m1",
+    "reason": "died"
+   },
+   {
+    "do": "release",
+    "at": 0.75,
+    "id": "m4",
+    "reason": "died"
+   },
+   {
+    "do": "step",
+    "at": 1.0,
+    "state": "normal"
+   },
+   {
+    "do": "step",
+    "at": 4.5,
+    "state": "normal"
+   }
+  ]
+ },
+ "expect": {
+  "answers": [
+   "waiting",
+   "waiting",
+   "waiting",
+   "waiting",
+   {
+    "granted": [
+     "m1"
+    ],
+    "free": {
+     "melee": 1,
+     "ranged": 1
+    },
+    "holders": {
+     "melee": [
+      "m1"
+     ],
+     "ranged": []
+    }
+   },
+   {
+    "granted": [
+     "m2"
+    ],
+    "free": {
+     "melee": 0,
+     "ranged": 1
+    },
+    "holders": {
+     "melee": [
+      "m1",
+      "m2"
+     ],
+     "ranged": []
+    }
+   },
+   true,
+   false,
+   {
+    "granted": [
+     "m3"
+    ],
+    "free": {
+     "melee": 0,
+     "ranged": 1
+    },
+    "holders": {
+     "melee": [
+      "m2",
+      "m3"
+     ],
+     "ranged": []
+    }
+   },
+   {
+    "granted": [],
+    "free": {
+     "melee": 1,
+     "ranged": 1
+    },
+    "holders": {
+     "melee": [
+      "m3"
+     ],
+     "ranged": []
+    }
+   }
+  ],
+  "events": [
+   [
+    0.0,
+    "m1",
+    "melee",
+    "granted"
+   ],
+   [
+    0.5,
+    "m2",
+    "melee",
+    "granted"
+   ],
+   [
+    0.75,
+    "m1",
+    "melee",
+    "died"
+   ],
+   [
+    1.0,
+    "m3",
+    "melee",
+    "granted"
+   ],
+   [
+    4.5,
+    "m2",
+    "melee",
+    "timed_out"
+   ]
+  ]
+ }
+}

@@ -1,0 +1,136 @@
+{
+ "name": "the-longest-waiting-before-the-nearest",
+ "why": "One melee token, held. 'early' has waited since 0 at 8 m; 'late' asks at 0.5 from 1 m. Equal priority: the one waiting longest is next, though the other is nearer.",
+ "kind": "tokens",
+ "query": {
+  "config": {
+   "pools": {
+    "melee": 1,
+    "ranged": 1
+   },
+   "delays": {
+    "melee": 0.5,
+    "ranged": 2.0
+   },
+   "timeouts": {
+    "melee": 4.0,
+    "ranged": 6.0
+   },
+   "multipliers": {
+    "busy": {
+     "melee": 1.0,
+     "ranged": 2.0
+    },
+    "idle": {
+     "melee": 0.5,
+     "ranged": 0.5
+    }
+   },
+   "patience": 3,
+   "tie_seed": 7
+  },
+  "script": [
+   {
+    "do": "request",
+    "at": 0.0,
+    "id": "holder",
+    "kind": "melee",
+    "cost": 1,
+    "priority": 0,
+    "distance": 2.0
+   },
+   {
+    "do": "step",
+    "at": 0.0,
+    "state": "normal"
+   },
+   {
+    "do": "request",
+    "at": 0.0,
+    "id": "early",
+    "kind": "melee",
+    "cost": 1,
+    "priority": 0,
+    "distance": 8.0
+   },
+   {
+    "do": "request",
+    "at": 0.5,
+    "id": "late",
+    "kind": "melee",
+    "cost": 1,
+    "priority": 0,
+    "distance": 1.0
+   },
+   {
+    "do": "release",
+    "at": 1.0,
+    "id": "holder",
+    "reason": "ended"
+   },
+   {
+    "do": "step",
+    "at": 1.0,
+    "state": "normal"
+   }
+  ]
+ },
+ "expect": {
+  "answers": [
+   "waiting",
+   {
+    "granted": [
+     "holder"
+    ],
+    "free": {
+     "melee": 0,
+     "ranged": 1
+    },
+    "holders": {
+     "melee": [
+      "holder"
+     ],
+     "ranged": []
+    }
+   },
+   "waiting",
+   "waiting",
+   true,
+   {
+    "granted": [
+     "early"
+    ],
+    "free": {
+     "melee": 0,
+     "ranged": 1
+    },
+    "holders": {
+     "melee": [
+      "early"
+     ],
+     "ranged": []
+    }
+   }
+  ],
+  "events": [
+   [
+    0.0,
+    "holder",
+    "melee",
+    "granted"
+   ],
+   [
+    1.0,
+    "holder",
+    "melee",
+    "ended"
+   ],
+   [
+    1.0,
+    "early",
+    "melee",
+    "granted"
+   ]
+  ]
+ }
+}

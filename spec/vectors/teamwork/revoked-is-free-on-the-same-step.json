@@ -1,0 +1,192 @@
+{
+ "name": "revoked-is-free-on-the-same-step",
+ "why": "a1 holds the ranged token. At 2.0 melee pressure starts: the game revokes the ranged kind, the token is free at once, and a2, waiting since 0, takes it on the step at that same moment. The player busy, the next ranged grant waits 2 x 2 = 4 s: nothing at 4.0, a1 again at 6.0.",
+ "kind": "tokens",
+ "query": {
+  "config": {
+   "pools": {
+    "melee": 2,
+    "ranged": 1
+   },
+   "delays": {
+    "melee": 0.5,
+    "ranged": 2.0
+   },
+   "timeouts": {
+    "melee": 4.0,
+    "ranged": 6.0
+   },
+   "multipliers": {
+    "busy": {
+     "melee": 1.0,
+     "ranged": 2.0
+    },
+    "idle": {
+     "melee": 0.5,
+     "ranged": 0.5
+    }
+   },
+   "patience": 3,
+   "tie_seed": 7
+  },
+  "script": [
+   {
+    "do": "request",
+    "at": 0.0,
+    "id": "a1",
+    "kind": "ranged",
+    "cost": 1,
+    "priority": 0,
+    "distance": 20.0
+   },
+   {
+    "do": "request",
+    "at": 0.0,
+    "id": "a2",
+    "kind": "ranged",
+    "cost": 1,
+    "priority": 0,
+    "distance": 25.0
+   },
+   {
+    "do": "step",
+    "at": 0.0,
+    "state": "normal"
+   },
+   {
+    "do": "revoke",
+    "at": 2.0,
+    "kind": "ranged"
+   },
+   {
+    "do": "step",
+    "at": 2.0,
+    "state": "busy"
+   },
+   {
+    "do": "release",
+    "at": 2.5,
+    "id": "a2",
+    "reason": "ended"
+   },
+   {
+    "do": "request",
+    "at": 2.5,
+    "id": "a1",
+    "kind": "ranged",
+    "cost": 1,
+    "priority": 0,
+    "distance": 20.0
+   },
+   {
+    "do": "step",
+    "at": 4.0,
+    "state": "busy"
+   },
+   {
+    "do": "step",
+    "at": 6.0,
+    "state": "busy"
+   }
+  ]
+ },
+ "expect": {
+  "answers": [
+   "waiting",
+   "waiting",
+   {
+    "granted": [
+     "a1"
+    ],
+    "free": {
+     "melee": 2,
+     "ranged": 0
+    },
+    "holders": {
+     "melee": [],
+     "ranged": [
+      "a1"
+     ]
+    }
+   },
+   [
+    "a1"
+   ],
+   {
+    "granted": [
+     "a2"
+    ],
+    "free": {
+     "melee": 2,
+     "ranged": 0
+    },
+    "holders": {
+     "melee": [],
+     "ranged": [
+      "a2"
+     ]
+    }
+   },
+   true,
+   "waiting",
+   {
+    "granted": [],
+    "free": {
+     "melee": 2,
+     "ranged": 1
+    },
+    "holders": {
+     "melee": [],
+     "ranged": []
+    }
+   },
+   {
+    "granted": [
+     "a1"
+    ],
+    "free": {
+     "melee": 2,
+     "ranged": 0
+    },
+    "holders": {
+     "melee": [],
+     "ranged": [
+      "a1"
+     ]
+    }
+   }
+  ],
+  "events": [
+   [
+    0.0,
+    "a1",
+    "ranged",
+    "granted"
+   ],
+   [
+    2.0,
+    "a1",
+    "ranged",
+    "revoked"
+   ],
+   [
+    2.0,
+    "a2",
+    "ranged",
+    "granted"
+   ],
+   [
+    2.5,
+    "a2",
+    "ranged",
+    "ended"
+   ],
+   [
+    6.0,
+    "a1",
+    "ranged",
+    "granted"
+   ]
+  ]
+ }
+}

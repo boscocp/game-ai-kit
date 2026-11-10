@@ -1,6 +1,6 @@
 # T154 — Attack tokens: one attacks at a time
 
-Size: M · Prereqs: T160 · Files: `godot/addons/ai_teamwork/`, `godot/test/ai_teamwork/`, `python/gameaikit/teamwork/`, `python/tests/`, `spec/vectors/teamwork/`, `modules/ai_teamwork.json`, `docs/techniques/ai_teamwork*.md`, `docs/concepts/`
+Size: M · Prereqs: none · Files: `godot/addons/ai_teamwork/`, `godot/test/ai_teamwork/`, `python/gameaikit/teamwork/`, `python/tests/`, `spec/vectors/teamwork/`, `modules/ai_teamwork.json`, `docs/techniques/ai_teamwork*.md`, `docs/techniques/glossary.pt-BR.md`, `docs/concepts/`
 
 ## Goal
 
@@ -57,6 +57,50 @@ _The owner asked for this task on 2026-11-10, from a request on Reddit: enemies 
   `docs/concepts/action-combat-ai.md` opens the batch: tokens, rings
   (T155) and telegraphs (T156), each with its source, plus "when not to use
   it": a fight with one enemy, or a stealth game.
+
+## Notes
+
+_Wave 164, before review._
+
+- **Run before T159 and T160, by the owner's decision of 2026-11-10.** The
+  owner ran T154 in this batch, ahead of the store tests. Its header said
+  `Prereqs: T160`; that was an order of the work, not something the code
+  needs -- `AttackTokens` uses nothing T159 or T160 make -- so the header
+  now says `Prereqs: none`. `lint-status` did not require the change: it
+  checks only that a prerequisite exists and that there is no cycle. It was
+  made so a task marked done does not name an unmet prerequisite.
+- **Dawe's chapter was read in full** (the PDF, through `pdftotext`). It
+  confirms the design: a capacity per target, a weight per attack that must
+  fit, the slot given back right after the attack, and difficulty as the
+  capacities' size. Two things it has that this task leaves: *stealing* a
+  slot for a better-placed creature, and cooldowns per attack. A holder
+  here keeps its token until it gives it back, which is Dawe's "lock" held
+  for the whole attack. Its text says the weights must total "less than"
+  the capacity, but its worked example fills the grid exactly (12 - 4 - 8 =
+  0); the kit follows the example: no more than the pool.
+- **A decision added: patience.** The order written down first --
+  priority, then waiting, then distance, then the seed -- lets a stream of
+  higher-priority requests starve a lower one for ever, which the task
+  also says must not happen. The smallest change that makes the bound
+  true: a requester passed over `patience` grants (3 by default, in data)
+  is served before priority, the oldest of those first. The bound is then
+  `patience` plus the number who asked before it, and the suite holds it,
+  with a planted pool of no patience that starves.
+- **A decision added: no overtaking.** If the first in the order does not
+  fit the free tokens, no one is served: a light attack slipping past a
+  heavy one would starve the heavy one just the same.
+- **The seeded tie-break is a 32-bit FNV-1a hash** of `"<seed>:<id>"`, the
+  same in GDScript and Python, so the two languages and two runs order
+  equal requests alike; neither engine's random generator is shared.
+- **`release` and `revoke_kind` take `now`**, so the log of grants and
+  returns says when each happened.
+- **Spider-Man's revoke rule is not claimed of that game.** Only the GDC
+  Vault page of the talk was read, and it says nothing of tokens.
+  `revoke_kind` and the "busy" multiplier are this task's design;
+  `docs/concepts/action-combat-ai.md` lists the talk under "Could not be
+  checked".
+- **No demo shows it yet**: T157's boss fight is the first. Invariant 13's
+  half for this class is open until then, and the technique page says so.
 
 ## Acceptance
 
