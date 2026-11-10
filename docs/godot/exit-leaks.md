@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-11-06
+verified_on: 2026-11-10
 tier: 1
 source: https://docs.godotengine.org/en/4.7/tutorials/editor/command_line_tutorial.html ; https://raw.githubusercontent.com/godotengine/godot/4.7.2-stable/core/object/object.cpp ; https://raw.githubusercontent.com/godotengine/godot/4.7.2-stable/core/io/resource.cpp ; https://raw.githubusercontent.com/godotengine/godot/4.7.2-stable/modules/gdscript/gdscript.cpp ; https://raw.githubusercontent.com/godotengine/godot/4.7.2-stable/modules/gdscript/gdscript_cache.cpp ; https://forum.godotengine.org/t/95708
 invalidated_if: Godot stops printing the two exit lines without --verbose, renames them, or a 4.7.x release changes how GDScriptLanguage::finish breaks cycles between scripts
@@ -64,9 +64,9 @@ its own:
 - `game/league/rts_roster.gd` declares seven `-> GakRtsController`
   signatures and loads clean as the first script.
 - `game/squad/squad_ruleset.gd` and `game/squad/squad_map_words.gd` never
-  name the port, and each leaks 18 objects and 17 resources when loaded
-  alone. This was found in the review of PR #100. Today's scenes do not load
-  them first, and every demo scene closes clean.
+  name the port, and each leaked 18 objects and 17 resources when loaded
+  alone. This was found in the review of PR #100. T146 found the trigger,
+  below.
 
 `GDScriptLanguage::finish` (gdscript.cpp, 4.7.2-stable) breaks cycles between
 scripts through member types and function signatures only, before
@@ -79,14 +79,64 @@ with no root cause (forum.godotengine.org/t/95708).
 
 The change to `rts.gd` is a workaround at the observed trigger. `_seat`
 returns the clock or null, typed `RtsHumanClock`, and never names the port.
-T146 runs the same exit check over every demo scene and looks at the squad
-leak.
+
+## T146: two more triggers, and what they share
+
+Measured on 4.7.2 in wave 166, with a scratch `-s` script that `load()`s
+one script and quits, the way T138 measured `rts.gd`. Function bodies were
+stubbed one at a time, then lines changed one at a time.
+
+**The squad.** The trigger was one line of `SquadRuleset.build_controller`:
+
+```gdscript
+if built is SearchingSquad:
+	(built as SearchingSquad).spread_over_frames()
+```
+
+With either the `is` or the `as` there, and `squad_ruleset.gd` compiled
+first, 18 objects leaked. `squad_map_words.gd` leaked only because it names
+`SquadRuleset` in a signature, so the ruleset compiled first. The fix is in
+the game: `SquadRoster.for_the_scene` makes that choice now, and the ruleset
+calls it. Every script under `game/squad/` and `game/tactical/`, loaded
+first, now closes clean.
+
+**The behaviour demo.** It was not in the review's measurement, which read
+`game/` and `menu/`. Run first, `demos/behaviour/behaviour_demo.tscn`
+leaked 36 objects and 27 resources: the board's scripts, the stealth room's,
+`ai_fuzzy` and `ai_perception`, and the seven terrain textures that
+`Art`'s static cache held. Two triggers:
+
+- `BrainPanel._draw` wrote `_brain is GuardFsm` and `_brain is GuardTree`.
+  Now it tells the brains apart by what `thinking()` says (a state machine
+  says `states`, a tree `trail`). With it, `brain_panel.gd` and
+  `guard_htn.gd` loaded first stopped leaking.
+- `BehaviourDemo.swap_brain` named the four brains. Moved into
+  `BehaviourWorld` the list leaked the same; as `GuardBrain.every()` it
+  closes clean. Of the four, `GuardTree` alone was enough.
+
+**What they share, and what they do not.** Each trigger names a class from
+inside the script compiled first: in a signature (`rts.gd`), an `is` or an
+`as` (the squad, the panel), or a `.new()` (the demo). Each was fixed by
+naming that class somewhere else, and by nothing in the class itself. Not
+every such name triggers it: `GuardBrain.every()` names the same four
+brains and closes clean, and so did the same list tried in
+`GuardActions`. Loading one more script first also hid each leak:
+`tactical_ruleset.gd`, `blue_controller.gd` or `squad_view.gd` before the
+ruleset, `guard_tree.gd` or `addons/ai_behaviour/behaviour_tree.gd` before
+the demo. So the engine mechanism is still not identified, and the order the
+engine compiles scripts in is part of it.
+
+`test/squad/exit_ruleset_first.tscn` is kept bare on purpose. Against the
+old ruleset, a body that called the ruleset, a `BlueController` in its
+signature or a `var rules: SquadRuleset` in `_ready` each made the case
+close clean, so it would no longer have shown the leak.
 
 ## The gate
 
 A process cannot read what it prints after it ends. So `make test-rts-exit`
-runs `scripts/check_exit_leaks.py`, which starts Godot on the scene as a
-child and reads that child's output for the two lines. Each child runs
+(T138), `make test-demos-exit` and `make test-squad-exit` (T146) run
+`scripts/check_exit_leaks.py`, which starts Godot on the scene as a child
+and reads that child's output for the two lines. Each child runs
 under a deadline, through `godot_shards`' `wait_or_kill`. The order:
 
 1. **The planted leak.** It first runs `godot/test/rts/planted_exit_leak.gd`,
@@ -99,7 +149,10 @@ under a deadline, through `godot_shards`' `wait_or_kill`. The order:
    clean run of the RTS prints none). It fails if it loaded no `.gd` at
    all, which is what an empty scene prints. And on a nonzero exit, the
    engine lines that explain it are printed. These were added after the
-   second review of PR #100.
+   second review of PR #100. With `--demos` (`make test-demos-exit`) it
+   runs every scene in `check_demos.py`'s list, one after another, after
+   the one planted leak; the worst scene's code is the gate's. A list that
+   came back empty fails.
 3. **The deadline.** A child that stops on an error before `quit()` never
    ends. It is killed at `--timeout` (60 s in the Makefile), and the gate
    exits 2.

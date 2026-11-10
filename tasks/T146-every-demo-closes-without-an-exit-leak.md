@@ -1,6 +1,6 @@
 # T146 — Every demo closes without an exit leak
 
-Size: S · Prereqs: T138 · Files: `scripts/check_exit_leaks.py`, `Makefile`, `godot/game/squad/`
+Size: S · Prereqs: T138 · Files: `scripts/check_exit_leaks.py`, `Makefile`, `godot/game/squad/`, `godot/test/squad/`, `godot/demos/behaviour/`, `modules/menu.json`, `modules/squad.json`, `docs/godot/exit-leaks.md`
 
 ## Goal
 
@@ -67,3 +67,24 @@ Do the last lines hold no `leaked` and no `still in use`?
 
 - Opened by the review of PR #100 (wave 146, finding 3), at the
   coordinator's word.
+- Wave 166, step 1. Every scene in `check_demos.py`'s list closed clean
+  but one: `demos/behaviour/behaviour_demo.tscn` leaked 36 objects and 27
+  resources. The review of PR #100 had measured `game/` and `menu/` only.
+  Its two triggers, `BrainPanel`'s `is GuardFsm` and `BehaviourDemo` naming
+  the four brains, are fixed in the demo; `docs/godot/exit-leaks.md` has
+  the measurements.
+- Step 2. The squad trigger was in the game, `is SearchingSquad` in
+  `SquadRuleset.build_controller`, and is fixed where it was made
+  (`SquadRoster.for_the_scene`). So the acceptance expects exit 0 from the
+  case scene, and `make test-squad-exit` holds it. Against the old ruleset
+  it exits 1 (measured). The engine mechanism is still not identified.
+- Step 3, the module decision. `make test-demos-exit` is one target, owned
+  by `menu`, the module that owns the list (`test/menu/demo_overlays.gd`)
+  and already owns `test-demo-overlays` over the same scenes. `menu`
+  depends on every example module, so a change to any example selects it.
+  It runs all 17 scenes, not only the changed one: about 10 s (9.3 s on
+  the machine of the decision above, one run). One target per scene would
+  have meant 16 new targets and 16 manifests to edit, and a second list
+  kept by hand, which the first decision rules out.
+- `make test-rts-exit` stays, though the RTS is in the sweep: it is in the
+  acceptance, and `rts` owns it.

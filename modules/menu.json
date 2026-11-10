@@ -37,6 +37,7 @@
   ],
   "gates": [
     "test-demo-overlays",
+    "test-demos-exit",
     "test-locale-screen",
     "test-menu-walk"
   ]

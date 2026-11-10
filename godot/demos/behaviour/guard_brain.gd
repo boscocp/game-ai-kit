@@ -89,3 +89,14 @@ func _walk(state: BoardState, guard: Unit, goal: Vector2i) -> Array[Vector2i]:
 			break
 		steps = longer
 	return steps
+
+
+## A new brain of each kind, in the order the keys pick them: 0 the state
+## machine, 1 the tree, 2 GOAP, 3 the HTN.
+##
+## Why here and not in `BehaviourDemo`: with the four named there, the demo
+## leaked 22 objects at exit (T146, `docs/godot/exit-leaks.md`). Moved into
+## `BehaviourWorld` it leaked the same; here it closes clean. Measured, not
+## understood.
+static func every() -> Array[GuardBrain]:
+	return [GuardFsm.new(), GuardTree.new(), GuardGoap.new(), GuardHtn.new()]

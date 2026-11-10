@@ -13,6 +13,12 @@ verbose or not (`ObjectDB::cleanup` in core/object/object.cpp,
 `--verbose` adds each leaked object's class and each resource's path, which
 a failure prints.
 
+`--demos` runs every scene in `check_demos.py`'s list, the one
+`test/menu/demo_overlays.gd` reads, so a new demo is checked the day it is
+listed and no second list is kept (T146). The planted leak runs once per
+run, not once per scene. A list that came back empty fails 1: a sweep of no
+scene would read as clean.
+
 Each run starts with a planted leak, `godot/test/rts/planted_exit_leak.gd`,
 which must show both lines. A reader that sees nothing there is broken, and
 its silence on the scene would mean nothing (invariant 4). Each child has a
@@ -23,14 +29,15 @@ one that reads it.
 
 Exit codes
 ----------
-0   the planted leak was seen, and the scene closed clean
-1   the scene left something alive, or did not end well, or the planted
-    leak was not seen
+0   the planted leak was seen, and every scene closed clean
+1   a scene left something alive, or did not end well, or the planted
+    leak was not seen, or `--demos` found no scene
 2   wrong usage, or a child outlived `--timeout` and was killed
 
 Usage
 -----
     check_exit_leaks.py res://game/rts/rts.tscn [--frames N] [--timeout SECONDS]
+    check_exit_leaks.py --demos [--frames N] [--timeout SECONDS]
     check_exit_leaks.py --self-test
 """
 from __future__ import annotations
@@ -42,6 +49,7 @@ import re
 import sys
 import tempfile
 
+from check_demos import listed_scenes
 from godot_checked import run_to_file
 from godot_shards import ENGINE_ERROR, GODOT, ROOT, godot_command, windows_bash
 
@@ -103,19 +111,38 @@ def scene_reading(scene: str, returncode: int | None, output: str) -> tuple[int,
     return 0, []
 
 
-def run(scene: str, frames: int, timeout: float) -> int:
-    """The planted leak, then the scene, each under `timeout`; print why and exit."""
+def demo_scenes(root: pathlib.Path) -> list[str]:
+    """Every scene in `check_demos.py`'s list, as `res://` paths, sorted.
+
+    Why that list: `lint-demos` refuses an example missing from it, so it is
+    every demo there is, and a second list here would one day differ.
+    """
+    return [f"res://{scene}" for scene in sorted(listed_scenes(root))]
+
+
+def run(scenes: list[str], frames: int, timeout: float) -> int:
+    """The planted leak once, then each scene, each under `timeout`; print why
+    and exit with the worst scene's code."""
+    if not scenes:
+        print("check_exit_leaks: no scene to check: a sweep of none would read as clean")
+        return 1
+    worst = 0
     with tempfile.TemporaryDirectory() as folder:
         place = pathlib.Path(folder)
         planted = godot_command(PLANTED, place / "planted.log", [])
-        code, reasons = planted_reading(*run_to_file(planted, place, timeout))
-        if code == 0:
-            command = scene_command(scene, frames, place / "scene.log")
+        worst, reasons = planted_reading(*run_to_file(planted, place, timeout))
+        for reason in reasons:
+            print(f"check_exit_leaks: {reason}")
+        for index, scene in enumerate(scenes if worst == 0 else []):
+            command = scene_command(scene, frames, place / f"scene{index}.log")
             code, reasons = scene_reading(scene, *run_to_file(command, place, timeout))
-    for reason in reasons:
-        print(f"check_exit_leaks: {reason}")
-    print(f"check_exit_leaks: {scene}: " + ("closed clean" if code == 0 else f"exit {code}"))
-    return code
+            for reason in reasons:
+                print(f"check_exit_leaks: {reason}")
+            print(f"check_exit_leaks: {scene}: " + ("closed clean" if code == 0 else f"exit {code}"))
+            worst = max(worst, code)
+    if len(scenes) > 1 or worst != 0:
+        print(f"check_exit_leaks: {len(scenes)} scene(s): " + ("all closed clean" if worst == 0 else f"exit {worst}"))
+    return worst
 
 
 def _a_hung_child_is_killed() -> int:
@@ -127,6 +154,16 @@ def _a_hung_child_is_killed() -> int:
     stub = [sys.executable, "-c", "import time; time.sleep(30)"]
     with tempfile.TemporaryDirectory() as folder:
         return planted_reading(*run_to_file(stub, pathlib.Path(folder), 1.0))[0]
+
+
+def _planted_demo_list() -> list[str]:
+    """`demo_scenes` on a planted overlays file: two scenes, one commented out."""
+    with tempfile.TemporaryDirectory() as folder:
+        overlays = pathlib.Path(folder) / "godot" / "test" / "menu" / "demo_overlays.gd"
+        overlays.parent.mkdir(parents=True)
+        overlays.write_text('const SCENES: Array[String] = [\n\t"res://game/b.tscn",\n'
+                            '\t# "res://game/c.tscn",\n\t"res://demos/a.tscn",\n]\n', encoding="utf-8")
+        return demo_scenes(pathlib.Path(folder))
 
 
 def self_test() -> int:
@@ -157,6 +194,8 @@ def self_test() -> int:
         ("scene: a crash's exit code", scene_reading(scene, 139, started)[0], 1),
         ("scene: killed at the deadline", scene_reading(scene, None, started)[0], 2),
         ("a child that never ends is killed", _a_hung_child_is_killed(), 2),
+        ("a sweep of no scene", run([], FRAMES, TIMEOUT), 1),
+        ("the demo list, read from the overlays", _planted_demo_list(), ["res://demos/a.tscn", "res://game/b.tscn"]),
     ]
     wrong = [f"{label}: {got}, expected {want}" for label, got, want in cases if got != want]
     for line in wrong:
@@ -169,16 +208,18 @@ def main(argv: list[str]) -> int:
     """Parse the command line and run; usage errors exit 2."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("scene", nargs="?")
+    parser.add_argument("--demos", action="store_true", help="every scene in check_demos.py's list")
     parser.add_argument("--frames", type=int, default=FRAMES)
     parser.add_argument("--timeout", type=float, default=TIMEOUT)
     parser.add_argument("--self-test", action="store_true")
     options = parser.parse_args(argv)
     if options.self_test:
         return self_test()
-    if options.scene is None or options.frames <= 0 or options.timeout <= 0:
+    if (options.scene is None) == (not options.demos) or options.frames <= 0 or options.timeout <= 0:
         parser.print_usage(sys.stderr)
         return 2
-    return run(options.scene, options.frames, options.timeout)
+    scenes = demo_scenes(ROOT) if options.demos else [options.scene]
+    return run(scenes, options.frames, options.timeout)
 
 
 if __name__ == "__main__":
