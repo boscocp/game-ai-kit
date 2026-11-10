@@ -4,7 +4,7 @@
 half_life: concept
 verified_on: 2026-11-10
 tier: 1
-source: http://www.gameaipro.com/GameAIPro/GameAIPro_Chapter28_Beyond_the_Kung-Fu_Circle_A_Flexible_System_for_Managing_NPC_Attacks.pdf
+source: https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter28_Beyond_the_Kung-Fu_Circle_A_Flexible_System_for_Managing_NPC_Attacks.pdf
 invalidated_if: T154's AttackTokens stops doing what "What the kit takes" says, or T155-T158 take something else from here
 teaches: action-combat-ai
 -->
@@ -187,7 +187,7 @@ and is cited for no more than that.
 
 - Dawe, M. "Beyond the Kung-Fu Circle: A Flexible System for Managing NPC
   Attacks." In S. Rabin (ed.), *Game AI Pro*, ch. 28, CRC Press, 2013.
-  http://www.gameaipro.com/GameAIPro/GameAIPro_Chapter28_Beyond_the_Kung-Fu_Circle_A_Flexible_System_for_Managing_NPC_Attacks.pdf
+  https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter28_Beyond_the_Kung-Fu_Circle_A_Flexible_System_for_Managing_NPC_Attacks.pdf
   -- read in full, 2026-11-10.
 - Thompson, T. "Cyber Demons: The AI of DOOM (2016)." Game Developer, 2018
   (the year as T154's sources give it; not re-read).
