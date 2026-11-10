@@ -156,9 +156,12 @@ most of that time was waiting, not work:
 - The implementer and the reviewer each ran the same full check on the
   same head.
 
-The owner decided the following for that batch (`tasks/STATUS.md`,
-2026-11-10). The coordinator proposes it as the routine; the owner
-confirms that, batch by batch, as this page's opening says:
+For that batch the owner decided two things (`tasks/STATUS.md`,
+2026-11-10). The merges went in with `--admin` without waiting for the
+pull request's CI. And no wave or review ran the full `make check`; each
+ran the gates of what it touched. The coordinator adds the other bullets
+below, from what the batch cost. The owner confirms the whole routine
+batch by batch, as this page's opening says:
 
 - **At most three waves at once.**
 - **The reviewer runs the gates of what the change touches**, and plants

@@ -1,6 +1,6 @@
 # T162 — Loading every addon closes clean
 
-Size: S · Prereqs: T159, T146 · Files: `godot/addons/`, `scripts/check_published.py`, `scripts/store/load_every_class.gd`, `docs/godot/exit-leaks.md`
+Size: S · Prereqs: T159, T146, T160 · Files: `godot/addons/`, `scripts/check_published.py`, `scripts/library_check.py`, `scripts/store/load_every_class.gd`, `docs/godot/exit-leaks.md`
 
 ## Goal
 

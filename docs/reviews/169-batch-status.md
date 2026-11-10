@@ -108,3 +108,20 @@ nit.**
   manual install; nothing this repository writes went there.
 - `verified_on: 2026-11-10` on parallel-batch.md is right: the page gained
   a section measured that day.
+
+## What was done about them
+
+All four were applied in one commit:
+
+1. `parallel-batch.md` now says which two things the owner decided for the
+   batch: the `--admin` merges without the PR's CI, and no full `make
+   check`. It says the other bullets are the coordinator's proposal, and
+   that the owner confirms the routine batch by batch.
+2. The Project Manager page says the only saved log is the `-e` run's,
+   and that the `-p` run's output was not kept. The cause is now "not
+   known", with the unpinned renderer given only as a guess.
+3. T162 depends on T160 too, and lists `scripts/library_check.py`.
+4. The key is written as `renderer/rendering_method`.
+
+Also in this wave, after the review: the owner named the next example a
+karma system. STATUS says so, and names no other game's system.

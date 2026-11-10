@@ -16,7 +16,9 @@ teaches: none
 
 ## What the log said
 
-The editor's output began with these lines:
+The only log kept is the `-e` run's, on the kit's own project, which drew
+normally. The `-p` run that stayed black was started from the prompt and
+its output was not saved. The `-e` run's output began with these lines:
 
 ```
 ERROR: Condition "ctxErrorOccurred || !gl_display.context->glx_context" is true. Returning: ERR_UNCONFIGURED
@@ -24,11 +26,12 @@ WARNING: Your video card drivers seem not to support the required OpenGL version
 MESA-EGL: warning: egl: failed to create dri2 screen
 ```
 
-The GLX context failed, and the engine fell back to OpenGL ES. The kit's
-project draws anyway, because `project.godot` pins
-`rendering_method="gl_compatibility"`. With no project open, nothing pins
-the renderer. That is why the Project Manager differs, though it is
-inferred from the log and not traced in the source.
+So on this machine the GLX context fails and the engine falls back to
+OpenGL ES. The kit's project draws anyway; it pins
+`renderer/rendering_method="gl_compatibility"`. Why the Project Manager
+stayed black is **not known**. One guess is that with no project open,
+nothing pins the renderer. It is not checked against the `-p` run's log,
+which was not saved, or against the source.
 
 ## What worked
 
