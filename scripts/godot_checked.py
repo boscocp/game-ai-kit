@@ -16,6 +16,12 @@ runs one process and reuses its `engine_errors`, `wait_or_kill` and
 T88's duel (`make test-squad-duel`, `make measure-squad-duel`) runs through
 it. Any other `-s` gate can: the trap applies to all of them.
 
+`--project FOLDER` runs the script in another Godot project, one outside
+this repository (T159): `check_published.py` loads every class of the
+store's download in a blank project that holds only that download. A
+folder with no `project.godot` is refused as wrong usage, before Godot
+starts: given one, Godot would open no project and report nothing useful.
+
 Exit codes
 ----------
 0   the gate exited 0 and printed no engine error
@@ -24,7 +30,7 @@ Exit codes
 
 Usage
 -----
-    godot_checked.py res://test/x/gate.gd [--timeout SECONDS] [-- gate arguments]
+    godot_checked.py res://test/x/gate.gd [--timeout SECONDS] [--project FOLDER] [-- gate arguments]
     godot_checked.py --self-test
 """
 
@@ -67,11 +73,26 @@ def run_to_file(command: list[str], folder: pathlib.Path, timeout: float) -> tup
     return returncode, path.read_text(encoding="utf-8", errors="replace")
 
 
-def run(script: str, gate_arguments: list[str], timeout: float) -> int:
+def command_for(script: str, log: pathlib.Path, gate_arguments: list[str],
+                project: pathlib.Path | None) -> list[str]:
+    """The Godot command for one run, in `project` when one is named.
+
+    Why it rewrites `godot_command`'s `--path` and does not take a second
+    copy of it: the wrapper, the log and Windows' `bash` stay in one place.
+    """
+    command = godot_command(script, log, gate_arguments)
+    if project is not None:
+        command[command.index("--path") + 1] = str(project)
+    return command
+
+
+def run(script: str, gate_arguments: list[str], timeout: float,
+        project: pathlib.Path | None = None) -> int:
     """Run `script` once, print what it printed and the engine errors found."""
     with tempfile.TemporaryDirectory() as folder:
         log = pathlib.Path(folder) / "gate.log"
-        returncode, output = run_to_file(godot_command(script, log, gate_arguments), pathlib.Path(folder), timeout)
+        command = command_for(script, log, gate_arguments, project)
+        returncode, output = run_to_file(command, pathlib.Path(folder), timeout)
     print(output, end="")
     for line in engine_errors(output):
         print(f"godot_checked: an engine error, so the run fails: {line}")
@@ -92,6 +113,27 @@ def _a_long_output_is_read_whole() -> bool:
     return returncode == 0 and len(output) > 204800
 
 
+def _another_project_is_where_godot_runs() -> bool:
+    """True when `--project` names the folder Godot runs in, and only then.
+
+    Planted for T159: without it, `--project` could be parsed and dropped,
+    and the store's download would be checked inside this repository's own
+    project, where every class is already registered.
+    """
+    log = pathlib.Path("gate.log")
+    elsewhere = pathlib.Path("/elsewhere/project")
+    named = command_for("res://x.gd", log, [], elsewhere)
+    default = command_for("res://x.gd", log, [], None)
+    return (named[named.index("--path") + 1] == str(elsewhere)
+            and default[default.index("--path") + 1] != str(elsewhere))
+
+
+def _a_folder_with_no_project_is_refused() -> int:
+    """The exit code of a run whose `--project` holds no `project.godot`."""
+    with tempfile.TemporaryDirectory() as folder:
+        return main(["res://x.gd", "--project", folder])
+
+
 def self_test() -> int:
     """Every verdict, asked of a planted case; 0 when each came out as it must."""
     clean = "squad duel, fixed: 30 position row(s), 6 match(es), 0 failure(s)\n"
@@ -105,6 +147,8 @@ def self_test() -> int:
         ("a run killed at the deadline", verdict(None, clean), 2),
         ("a crash's exit code", verdict(139, clean), 1),
         ("a process printing past a pipe's 64 KiB", _a_long_output_is_read_whole(), True),
+        ("--project names the folder Godot runs in", _another_project_is_where_godot_runs(), True),
+        ("--project on a folder with no project.godot", _a_folder_with_no_project_is_refused(), 2),
     ]
     wrong = [f"{label}: {got}, expected {want}" for label, got, want in cases if got != want]
     for line in wrong:
@@ -122,6 +166,9 @@ def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("script", nargs="?")
     parser.add_argument("--timeout", type=float, default=TIMEOUT)
+    # Resolved here, so the folder stays the same one should the wrapper
+    # ever change directory before it starts Godot.
+    parser.add_argument("--project", type=lambda text: pathlib.Path(text).resolve(), default=None)
     parser.add_argument("--self-test", action="store_true")
     options = parser.parse_args(argv)
     if options.self_test:
@@ -129,7 +176,10 @@ def main(argv: list[str]) -> int:
     if options.script is None or options.timeout <= 0:
         parser.print_usage(sys.stderr)
         return 2
-    return run(options.script, gate_arguments, options.timeout)
+    if options.project is not None and not (options.project / "project.godot").is_file():
+        print(f"godot_checked: {options.project} holds no project.godot", file=sys.stderr)
+        return 2
+    return run(options.script, gate_arguments, options.timeout, options.project)
 
 
 if __name__ == "__main__":

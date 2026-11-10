@@ -1,0 +1,16 @@
+{
+  "about": "What the Godot Asset Store hands a stranger: one entry per upload, measured from the downloaded file. scripts/check_published.py (make check-published) holds each entry true. provenance is the tag whose own release.py builds this file byte for byte, or 'unknown' with a note saying what was found.",
+  "uploads": [
+    {
+      "store_page": "https://store.godotengine.org/asset/boscocp/game-ai-kit/",
+      "download": "https://store.godotengine.org/asset/boscocp/game-ai-kit/download/8161/",
+      "version": "0.1.0",
+      "uploaded_on": "2026-11-07",
+      "size": 314853,
+      "shown_size": "322.41 KB",
+      "sha256": "8538106aa2fa8adf21b7b2472349c26b9a83058bc5a7e2697f571424ecbbd1db",
+      "provenance": "v0.1.0",
+      "note": "Measured on 2026-11-10 (wave 168): byte for byte the kit zip that v0.1.0's own release.py builds, 278 entries, 16 addons, no ai_bayes. The store page shows 322.41 KB, which is 314,853 x 1.024 / 1,000: the page's unit, not another file."
+    }
+  ]
+}

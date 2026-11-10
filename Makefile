@@ -1298,6 +1298,14 @@ library-check: ## Follow docs/techniques/using-the-library.md outside the reposi
 	@# not take -- run in lint-selftests.
 	@$(PYTHON) scripts/library_check.py
 
+.PHONY: check-published
+check-published: ## Download what the Godot Asset Store hands out and test it against tools/store/published.json (T159)
+	@# Needs the network, so it is not in `make check`: run it by hand after
+	@# each upload and before a release. The download goes into the
+	@# toolchain, never the checkout or the home. Its planted cases run in
+	@# lint-selftests, offline.
+	@$(PYTHON) scripts/check_published.py
+
 # --- housekeeping ----------------------------------------------------------
 
 .PHONY: godot-version

@@ -36,6 +36,9 @@ So the store's file is no committed build. It may have been built from a
 working tree with uncommitted changes, or the store may repackage. Only
 downloading it will say which.
 
+*Superseded by the Result below (wave 168): the store's file is the tag's
+build, byte for byte, and the page shows bytes x 1.024 / 1000 as KB.*
+
 ## Decisions written down first
 
 _The owner asked for this check on 2026-11-10 ("valide se tá tudo ok ou
@@ -87,3 +90,13 @@ make test-python
 - The owner installs Game AI Kit from the editor's AssetLib tab into an
   empty project and opens one addon's example. This closes T149's pending
   store-tab check.
+
+## Result (wave 168)
+
+The store's download 8161, fetched on 2026-11-10, is 314,853 bytes, sha256
+`8538106aa2fa8adf21b7b2472349c26b9a83058bc5a7e2697f571424ecbbd1db`: byte
+for byte the kit zip that `v0.1.0`'s own `release.py` builds, 278 entries
+under 16 `addons/ai_*/` folders, each with LICENSE and NOTICE, no
+`ai_bayes`. So `provenance` is `v0.1.0`, and there is nothing to re-upload.
+The Goal's puzzle was the page's unit: 322.41 KB is 314,853 x 1.024 /
+1,000, so no other build was ever needed to explain it.

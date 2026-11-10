@@ -25,9 +25,10 @@ Four things are wrong:
   which is 338,507 bytes, was built 13 commits after `v0.1.0` and is also
   named 0.1.0. Waves 154 to 159 changed the addons after the upload
   (`ai_bayes`, tree, forest, flock, `rts_crowd`), as the owner said. The
-  review then rebuilt every commit: the tag builds 314,853 bytes, and no
-  committed build is 322.41 KB. So the store's file comes from no commit,
-  and T159 downloads it to find out.
+  tag builds 314,853 bytes. Wave 168 (T159) downloaded the store's file:
+  it is that build, byte for byte (sha256 `8538106a…bbd1db`), and
+  322.41 KB is the page's unit, 314,853 x 1.024 / 1000. The owner's first
+  explanation, an upload from the tag, was right.
 - `make release` would rebuild 0.1.0 from HEAD without complaint.
 - The READMEs still say "in review".
 - The store's version selector offers 3.0 to 4.8.
@@ -1636,7 +1637,7 @@ review.
 | T156 | A boss with phases and telegraphed attacks | todo | phases at the top of a behaviour tree, the next attack by utility with a repetition penalty; telegraph, active, recovery in data; heavy attacks take the melee pool |
 | T157 | The boss-fight example | todo | 3D third person, `godot/game3d/bossfight/`: a boss, melee and ranged minions; the overlay shows tokens, queue, rings, phase and telegraph; `make demo-bossfight` |
 | T158 | A director for the minions, and three difficulties | todo | build-up, peak, relief from fight events; easy/normal/hard in `difficulty.json` (pools, delays, minimum telegraph, waves), no adaptation to the player |
-| T159 | The published archive is tested | todo | `tools/store/published.json` (URL, sha256, tag); `make check-published` downloads into the toolchain, checks contents, installs headless and rebuilds the tag's zip to compare |
+| T159 | The published archive is tested | done | wave 168: `tools/store/published.json` records download 8161; `make check-published` downloads it into the toolchain, checks hash, paths and licences, loads every script in a blank project (`godot_checked.py --project`) and rebuilds the tag; the store file is byte for byte `v0.1.0`'s build (314,853 bytes, sha256 `8538106a…bbd1db`), and the page's 322.41 KB is bytes x 1.024 / 1000 |
 | T160 | A version is not reused | todo | `make release` refuses a published `VERSION` with changed addons; `library-check` installs the kit zip; READMEs no longer say "in review"; store Godot versions 4.7+ |
 | T161 | Release 0.2.0 | todo | after T154-T158 and the follow-ups (owner): `VERSION` bumped, built from tag `v0.2.0`, sha256 in `published.json`, release notes name the new addons; the owner uploads |
 
