@@ -35,15 +35,15 @@ func _init(recorded: PackedStringArray = PackedStringArray()) -> void:
 static func from_file(path: String) -> RecordedRuntime:
 	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
 	if file == null:
-		return RecordedRuntime.new()
+		return new()
 	var reader := JSON.new()
 	if reader.parse(file.get_as_text()) != OK or not (reader.data is Dictionary):
-		return RecordedRuntime.new()
+		return new()
 	var texts := PackedStringArray()
 	for turn: Variant in (reader.data as Dictionary).get("turns", []):
 		if turn is Dictionary and (turn as Dictionary).get("raw") is String:
 			texts.append(turn["raw"])
-	return RecordedRuntime.new(texts)
+	return new(texts)
 
 
 ## How many recorded texts have not been answered yet.

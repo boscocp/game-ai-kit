@@ -121,6 +121,6 @@ func neighbours(cell: Vector2i) -> Array[Vector2i]:
 
 ## An independent copy. Used wherever a caller must not see the board change.
 func duplicate_graph() -> GakGridGraph:
-	var copy := GakGridGraph.new(width, height)
+	var copy: GakGridGraph = new(width, height)
 	copy._costs = _costs.duplicate()
 	return copy

@@ -44,7 +44,7 @@ static func from_entry(entry: Dictionary) -> LearnedForest:
 	for nodes: Array in entry["trees"]:
 		built.append(LearnedTree.from_entry({"features": entry["features"], "classes": entry["classes"],
 			"nodes": nodes}))
-	return LearnedForest.new(PackedStringArray(entry["features"]), PackedStringArray(entry["classes"]), built)
+	return new(PackedStringArray(entry["features"]), PackedStringArray(entry["classes"]), built)
 
 
 ## Each tree's vote for `values`, in tree order: its leaf's likeliest answer,

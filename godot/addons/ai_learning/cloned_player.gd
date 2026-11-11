@@ -43,7 +43,7 @@ static func from_dictionary(data: Variant) -> ClonedPlayer:
 	var wrong: String = _why_wrong(data)
 	if wrong != "":
 		return _refused(wrong)
-	var loaded := ClonedPlayer.new()
+	var loaded: ClonedPlayer = new()
 	loaded.generated_by = data["generated_by"]
 	loaded.trained_on = data["trained_on"]
 	var weights: Array[PackedFloat64Array] = []
@@ -116,6 +116,6 @@ static func _all_numbers(list: Variant) -> bool:
 
 
 static func _refused(reason: String) -> ClonedPlayer:
-	var refused := ClonedPlayer.new()
+	var refused: ClonedPlayer = new()
 	refused.error = reason
 	return refused

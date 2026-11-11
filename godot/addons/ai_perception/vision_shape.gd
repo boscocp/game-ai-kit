@@ -48,7 +48,7 @@ static func from_row(row: Dictionary) -> VisionShape:
 	var typed: Array[Dictionary] = []
 	for zone: Dictionary in row["zones"]:
 		typed.append(zone)
-	return VisionShape.new(typed, float(row["dark_share"]), float(row["motion_bonus"]))
+	return new(typed, float(row["dark_share"]), float(row["motion_bonus"]))
 
 
 ## The index of the most certain zone that holds a body `distance` metres

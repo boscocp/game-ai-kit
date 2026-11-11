@@ -90,7 +90,7 @@ static func from_dictionary(data: Dictionary, source: String) -> ModelFile:
 	if wrong != "":
 		return _refused("%s (%s)" % [wrong, source])
 
-	var loaded := ModelFile.new()
+	var loaded: ModelFile = new()
 	loaded.generated_by = str(data.get("generated_by", "unknown"))
 	loaded.extra = data.duplicate(true)
 	loaded.extra.erase("models")
@@ -332,7 +332,7 @@ static func _size_of(value: Variant) -> String:
 
 # The result of a refusal: an error, and nothing to predict with.
 static func _refused(reason: String) -> ModelFile:
-	var refused := ModelFile.new()
+	var refused: ModelFile = new()
 	refused.error = reason
 	return refused
 

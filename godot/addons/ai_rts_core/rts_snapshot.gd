@@ -38,7 +38,7 @@ var graph: GakGridGraph
 
 ## What `world` shows `viewer` now.
 static func of(world: RtsWorld, viewer: int) -> RtsSnapshot:
-	var view := RtsSnapshot.new()
+	var view: RtsSnapshot = new()
 	view.side = viewer
 	view.tick = world.tick
 	view.resources = world.funds(viewer).duplicate()

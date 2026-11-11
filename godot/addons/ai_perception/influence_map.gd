@@ -34,7 +34,7 @@ func _init(map_width: int, map_height: int) -> void:
 ## whichever watchers happened to have a partner.
 static func of_watchers(graph: GakGridGraph, cone: VisionCone, eyes: Array[Vector2i],
 		facings: Array[Vector2i]) -> InfluenceMap:
-	var map := InfluenceMap.new(graph.width, graph.height)
+	var map: InfluenceMap = new(graph.width, graph.height)
 	if eyes.size() != facings.size():
 		return map
 	for index: int in range(eyes.size()):

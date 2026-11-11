@@ -72,7 +72,7 @@ func _init(data: Dictionary = {}) -> void:
 ## The network in the JSON file at `path`.
 static func read(path: String) -> BayesNetwork:
 	var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
-	return BayesNetwork.new(data if data is Dictionary else {})
+	return new(data if data is Dictionary else {})
 
 
 ## What is wrong with the network as given, or "" when it can be asked.
