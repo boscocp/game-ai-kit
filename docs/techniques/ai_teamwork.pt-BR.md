@@ -2,12 +2,12 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-11-10
+verified_on: 2026-11-11
 tier: 2
 source: https://www.gameaipro.com/
-invalidated_if: the kit's RoleArbiter, TeamCommander, TacticalPositions, SquadConfidence, SearchCoordinator or AttackTokens signatures change, or the demos that use them are renamed
+invalidated_if: the kit's RoleArbiter, TeamCommander, TacticalPositions, SquadConfidence, SearchCoordinator, AttackTokens or EngagementRings signatures change, or the demos that use them are renamed
 teaches: shooter-ai
-translation_of: 112913dd865f686734209b08f712798795f200a6d8b98d925f54a48501caea6e
+translation_of: 9a4e71937b41f603adc5106df514e5a029241a9a9a1bb85e63cef36a756a0531
 -->
 
 > English: [ai_teamwork.md](ai_teamwork.md). Os termos que ficam em inglês
@@ -24,7 +24,8 @@ quando atacar, segurar ou recuar, e `PassageChoice` pesa como passar por
 um corpo no caminho -- esperar, dar a volta,
 pedir a um companheiro que saia da frente, ou ir para outro lugar. E o
 `AttackTokens` deixa um ou dois de um grupo golpearem um alvo de cada vez,
-enquanto os outros esperam a vez (T154). Cada um guarda os seus
+enquanto os outros esperam a vez (T154), e o
+`EngagementRings` diz onde os outros ficam enquanto isso (T155). Cada um guarda os seus
 números, para uma tela mostrar o porquê. O que um *bot* faz agora, as
 saídas do posto e onde ele mira não estão aqui: desde a T101 e a T64 são do
 [`ai_utility`](ai_utility.pt-BR.md), porque nada neles é sobre um time. As
@@ -52,8 +53,9 @@ deveriam estar atacando.
 - `make demo-infiltration` -- os guardas procuram com o `SearchCoordinator`
   e lutam sob o `RoleArbiter`; **2** e **3** ligam e desligam o coordenador
   e o árbitro, **Tab** observa o próximo guarda.
-- O `AttackTokens` ainda não tem demo: a luta contra o chefe da T157 é a
-  que vai mostrar quem segura um *token*. Até lá, os vetores e a suíte dele
+- O `AttackTokens` e o `EngagementRings` ainda não têm demo: a luta
+  contra o chefe da T157 é a que vai mostrar quem segura um *token* e os
+  anéis. Até lá, os vetores e a suíte dele
   o rodam.
 - Qual demo usa qual técnica, nos dois sentidos: o
   [catálogo](catalogue.pt-BR.md).
@@ -72,6 +74,7 @@ fica. Os guardas da infiltração dividem a busca por
 | o comandante | `TeamCommander.assign(squads, objectives, weights)` | para qual objetivo cada esquadrão vai, e quantos enchem um |
 | o recuo | `SquadConfidence.Thresholds` | quando um esquadrão ataca, segura ou recua, e a folga que o impede de oscilar |
 | *attack tokens* | `AttackTokens.Config` | quantos podem golpear de uma vez por tipo, quanto tempo entre concessões, quanto mais quando o jogador está ocupado |
+| anéis | `EngagementRings.Config` | o raio e o número de pontos de cada anel, e o espaçamento mínimo entre duas reivindicações |
 
 ## No seu projeto {#your-project}
 
@@ -188,6 +191,66 @@ O `events` registra cada concessão e cada devolução com o motivo, para uma
 tela desenhar. Onde isso fica ao lado dos anéis e dos *telegraphs*, e
 quando não usar nenhum deles (em inglês):
 [concepts/action-combat-ai.md](../concepts/action-combat-ai.md).
+
+## Anéis de combate: onde os outros esperam {#engagement-rings}
+
+Um *token* diz **quem** ataca; não diz onde os outros ficam. Sem isso, os
+que esperam se amontoam, ficam atrás do jogador, onde ele não os vê, ou
+tapam a linha de quem ataca de longe. Reckoning dividiu o círculo em volta
+do jogador num círculo de ataque e num de aproximação, para o jogador
+saber quem é uma ameaça imediata [Dawe 2013, 28.3.1]. O `EngagementRings`
+mantém três:
+
+- **`INNER`** para quem segura um *token* de *melee*, **`WAITING`** para os
+  outros de *melee*, e **`RANGED`**, uma faixa mais longe, para os de longe,
+  segurando *token* ou não. O `ring_for(holds_token, ranged)` diz qual;
+  então segurar um *token* leva o inimigo para dentro, e devolvê-lo o manda
+  para fora de novo. Os anéis nunca concedem um ataque: quem concede é o
+  `AttackTokens`.
+- **Os anéis só põem pontos**, um número por anel, no raio dele. Qual ponto
+  um inimigo toma é a consulta do `TacticalPositions`, não uma segunda: um
+  ponto de outro anel fica `OUTSIDE_AREA`; um ponto a menos de `spacing` da
+  reivindicação de outro inimigo -- em qualquer anel -- aparece como
+  `CLAIMED` por ele; um ponto sem linha de visão fica `EXPOSED`; a
+  proximidade ordena o resto. Andar longe nunca descarta um ponto do anel:
+  cada consulta sobe o `max_travel` até o ponto mais distante, então um
+  inimigo longe ainda chega à frente.
+- **Quem segura um *token* tem a preferência.** Uma reivindicação de outro
+  anel nunca impede quem segura um *token* de entrar no anel de dentro: ele
+  toma o ponto, e cada reivindicação que agora fica perto demais é largada
+  e listada em `last_bumped`, para aquele inimigo escolher de novo.
+- **Primeiro na frente da câmera.** Um ponto atrás da vista do jogador fica
+  fora da área enquanto houver um livre na frente, e só é tomado quando não
+  houver nenhum. Um ponto exatamente na altura da câmera conta como atrás.
+- **Não lança raios.** A `line_of_sight` de cada ponto é sua para
+  preencher, lançada com a sua física, como os fatos do
+  `TacticalPositions`; assim o *addon* e o gêmeo em Python não precisam de
+  física.
+- **Os anéis andam com o alvo**: `place(at)` move todos os pontos e mantém
+  cada reivindicação, e o `choose` larga a reivindicação antiga do inimigo
+  antes de perguntar; perguntar de novo a cada decisão acompanha o alvo, o
+  *token* e a vista. Rodear é *steering*, e é seu: chegar ao ponto
+  reivindicado, com separação.
+
+```gdscript
+var field := EngagementRings.new(config, player_xz)
+for point: EngagementRings.Point in field.points:
+	point.line_of_sight = _can_see(point.position, player_xz)  # your raycast
+var enemy_id: int = minion.get_instance_id()  # the rings' id: an int
+var holds: bool = str(enemy_id) in tokens.holders("melee")  # the tokens' id: a String
+var ring: String = EngagementRings.ring_for(holds, is_ranged)
+var index: int = field.choose(enemy_id, ring, enemy_xz, camera_xz, camera_forward_xz)
+```
+
+Dois ids para um inimigo: o `AttackTokens` chama quem pede por uma
+`String`, e o `EngagementRings`, como o `TacticalPositions`, por um `int`.
+Um `int` por inimigo, com o `str()` dele dado aos *tokens*, mantém os dois
+o mesmo inimigo.
+
+Para uma tela: o `last_choice` guarda o estado e a nota de cada ponto da
+última consulta, e o `last_behind` diz, por ponto, se ele estava atrás da
+câmera -- a parte da regra da câmera no `OUTSIDE_AREA`, que um ponto de
+outro anel também é.
 
 ## Para ir mais fundo {#deeper}
 

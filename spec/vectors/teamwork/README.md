@@ -2,18 +2,19 @@
 
 <!-- doc-meta
 half_life: structure
-verified_on: 2026-11-10
+verified_on: 2026-11-11
 tier: 1
 source: https://github.com/boscocp/game-ai-kit
-invalidated_if: a technique's rule changes -- a condition's order, a weight's meaning, the commander's tie, a threshold's gap, the tokens' serving order -- or Vector2 becomes double precision
+invalidated_if: a technique's rule changes -- a condition's order, a weight's meaning, the commander's tie, a threshold's gap, the tokens' serving order, the rings' order of choice -- or Vector2 becomes double precision
 teaches: none
 -->
 
-> Eight techniques, two languages, and the files that say they gave the
+> Nine techniques, two languages, and the files that say they gave the
 > same answers.
 
 `ai_teamwork` (GDScript) and `gameaikit.teamwork` (Python) implement the
-same eight things T51's and T66's bot match and T70's guards decide with, and T154's attack tokens. Each vector is one `.json`
+same nine things T51's and T66's bot match and T70's guards decide with,
+T154's attack tokens and T155's engagement rings. Each vector is one `.json`
 file: a query and the answer it must get. Both sides answer it and check
 every value against the file, never against each other: `make test-vectors`
 on the GDScript side, `make test-python` on the Python side.
@@ -38,6 +39,20 @@ granted that does not fit, a cost above the pool queued, the dead served, the ti
 dropped, the tie hash gone, no patience, the interrupted kept waiting, another
 cost kept in place, a holder of another kind told it holds -- and each fails a
 vector or the suite; the timeout made optional fails the suite.
+T155's engagement rings were asked nine in the Python twin and three in
+GDScript -- the view always or never in front, the view's `>` for `>=`,
+the line of sight ignored, the claims ignored, only the claimed point
+itself crowded, no first pass in front, the old claim kept while
+choosing, the ring's phase ignored -- and each fails a vector. After
+wave 173's review, eight more in the Python twin and two in GDScript: the
+spacing's `<` for `<=`, the claimed point itself no longer crowded, a
+claim crowding only its own ring, nothing giving way to a token holder,
+the config's `max_travel` kept, `ring_for` sending a holder to wait or a
+ranged holder in -- and each fails a vector. The suites plant generators
+that ignore the claims, the view or the sight, where nothing gives way to
+a holder, and that drop a far point, over random scenes with cover and
+enemies up to 30 m off, and reject each; every -1 they see must have had
+no free point.
 
 `ActionChoice` and `ErrandChoice` were vectors here until T101 moved them,
 unchanged, to `ai_utility`: they are in
@@ -71,9 +86,10 @@ that must agree bit for bit would need rounded costs.
 | `passage` | a blocked bot's facts, and requests to a teammate with its prices | each way's cost in seconds (null: impossible) and the way taken; each request's cost to the teammate and whether it is granted |
 | `search` | spots (worth, searched), each searcher's walk to each, whether claims are on; the walks to the last known position and a cap (T70) | the spot each searcher is given (-1: none); who goes to the last known position |
 | `roles` | requests (role, score, can shoot), whether the arbiter is on, the most flankers (T70) | the role each request is granted |
+| `rings` | rings (name, radius, count, phase), the spacing and `TacticalPositions`' weights; the target, the camera's place and facing, the points with no line of sight, and a script of choices, releases, moves of the target and `ring_for` questions (T155) | every point's place; what each event answers -- a choice's point, every point's status, which points were behind the camera and whose claims gave way; a release's true or false; a move's null; a ring's name -- and the claims at the end |
 | `tokens` | a pool's config (pools, delays, timeouts, multipliers, patience, tie seed) and a script of requests, withdrawals, releases, revokes and steps (T154) | what each event answers -- a request's status, a withdrawal's or a release's true or false, the ids revoked, a step's grants, free tokens and holders -- and the log of grants, returns and withdrawals |
 
-## The forty-five
+## The fifty-nine
 
 | file | what it pins |
 |---|---|
@@ -119,6 +135,20 @@ that must agree bit for bit would need rounded costs.
 | `revoked-is-free-on-the-same-step` | the ranged kind revoked: free at once, granted on the same step; busy, the next ranged grant waits twice as long |
 | `death-and-timeout-give-tokens-back` | a holder that dies gives its token back at once, a dead waiter is never served, a holder that never releases times out |
 | `patience-serves-the-passed-over` | a low requester passed over three times is served before a later high one; the idle player halves the delay |
+| `the-nearest-free-point-in-front` | the nearest waiting point is behind the camera: outside the area, the nearest in front is taken; a second enemy does not take the first's point |
+| `behind-only-when-the-front-is-full` | six enemies fill the waiting points in front; the seventh is sent behind |
+| `level-with-the-camera-is-behind` | a point exactly level with the camera counts as behind |
+| `a-claim-crowds-its-neighbours` | a spacing wider than two neighbours: a claim leaves its neighbours claimed by it |
+| `the-ranged-band-needs-a-line-of-sight` | a point with no line of sight is exposed; the third ranged enemy, nothing free in front, goes behind to a point it can shoot from |
+| `a-ranged-enemy-with-no-line-has-no-point` | every ranged point blocked: no point, and the answer is none |
+| `a-token-holder-steps-in-and-back-out` | a token sends a waiting enemy to the inner ring and frees its waiting point; giving it back sends it out |
+| `far-behind-the-camera-still-goes-in-front` | default weights, `max_travel` 20 m: an enemy 22 m behind the camera still goes to the front, and a ranged one 30 m off gets a point |
+| `a-point-at-the-spacing-is-not-crowded` | a waiting point exactly the spacing from an inner claim is free |
+| `an-inner-claim-crowds-the-waiting-ring` | a little wider, and the inner claim crowds the waiting point across the rings |
+| `a-token-holder-has-the-right-of-way` | a waiting claim gives way to a holder stepping in beside it, and is named as bumped |
+| `spacing-zero-still-one-per-point` | a spacing of 0: a claimed point is still claimed |
+| `ring-for-holder-waiter-and-ranged` | the ring for a holder, a waiter, and the ranged with and without a token |
+| `the-rings-follow-the-target` | the target moves, the points move with it and the claims stay; a released point is free |
 | `equal-facts-go-by-the-seed-7-left-first`, `-7-right-first`, `-8-left-first` | equal requests: the seeded hash decides, the same either way round; another seed, the other one |
 
 JSON has no infinity: in the passage vectors an impossible way, a detour

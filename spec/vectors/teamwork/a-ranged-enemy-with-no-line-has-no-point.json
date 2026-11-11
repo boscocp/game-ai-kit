@@ -1,0 +1,194 @@
+{
+ "name": "a-ranged-enemy-with-no-line-has-no-point",
+ "why": "Every point of the ranged band is behind cover: no point is left, and the answer is none.",
+ "kind": "rings",
+ "query": {
+  "config": {
+   "rings": [
+    {
+     "name": "inner",
+     "radius": 2.0,
+     "count": 4,
+     "phase": 0.0
+    },
+    {
+     "name": "waiting",
+     "radius": 4.5,
+     "count": 8,
+     "phase": 0.39269908169872414
+    },
+    {
+     "name": "ranged",
+     "radius": 9.0,
+     "count": 6,
+     "phase": 0.0
+    }
+   ],
+   "spacing": 1.5,
+   "weights": {
+    "partial_cover": 40.0,
+    "line_of_fire": 20.0,
+    "other_cover": 20.0,
+    "nearness": 20.0,
+    "preferred_range": 10.0,
+    "preferred_metres": 15.0,
+    "range_band": 10.0,
+    "max_travel": 30.0
+   }
+  },
+  "target": [
+   0.0,
+   0.0
+  ],
+  "view_from": [
+   0.0,
+   -3.0
+  ],
+  "view_forward": [
+   0.0,
+   1.0
+  ],
+  "blocked": [
+   "ranged-0",
+   "ranged-1",
+   "ranged-2",
+   "ranged-3",
+   "ranged-4",
+   "ranged-5"
+  ],
+  "script": [
+   {
+    "do": "choose",
+    "id": 7,
+    "ring": "ranged",
+    "from": [
+     7.2,
+     6.4
+    ]
+   }
+  ]
+ },
+ "expect": {
+  "points": [
+   [
+    2.0,
+    0.0
+   ],
+   [
+    1.2246467991473532e-16,
+    2.0
+   ],
+   [
+    -2.0,
+    2.4492935982947064e-16
+   ],
+   [
+    -3.6739403974420594e-16,
+    -2.0
+   ],
+   [
+    4.15745789630079,
+    1.722075445642904
+   ],
+   [
+    1.7220754456429042,
+    4.15745789630079
+   ],
+   [
+    -1.7220754456429037,
+    4.15745789630079
+   ],
+   [
+    -4.15745789630079,
+    1.7220754456429046
+   ],
+   [
+    -4.157457896300791,
+    -1.7220754456429035
+   ],
+   [
+    -1.7220754456429066,
+    -4.157457896300789
+   ],
+   [
+    1.722075445642905,
+    -4.15745789630079
+   ],
+   [
+    4.157457896300789,
+    -1.7220754456429068
+   ],
+   [
+    9.0,
+    0.0
+   ],
+   [
+    4.500000000000001,
+    7.794228634059947
+   ],
+   [
+    -4.499999999999998,
+    7.794228634059948
+   ],
+   [
+    -9.0,
+    1.102182119232618e-15
+   ],
+   [
+    -4.5000000000000036,
+    -7.794228634059945
+   ],
+   [
+    4.500000000000001,
+    -7.794228634059947
+   ]
+  ],
+  "answers": [
+   {
+    "point": "",
+    "statuses": [
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "exposed",
+     "exposed",
+     "exposed",
+     "exposed",
+     "exposed",
+     "exposed"
+    ],
+    "behind": [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true
+    ],
+    "bumped": []
+   }
+  ],
+  "claims": {}
+ }
+}

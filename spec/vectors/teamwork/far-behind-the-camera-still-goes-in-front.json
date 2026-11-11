@@ -1,0 +1,243 @@
+{
+ "name": "far-behind-the-camera-still-goes-in-front",
+ "why": "TacticalPositions' default weights, whose max_travel is 20 m. A waiting enemy 22 m behind the camera: every point in front is farther than 20 m, yet none is dropped as too far -- the query reaches the farthest point -- so it walks round to the front rather than taking the nearer point behind. A ranged enemy 30 m away still gets a point.",
+ "kind": "rings",
+ "query": {
+  "config": {
+   "rings": [
+    {
+     "name": "inner",
+     "radius": 2.0,
+     "count": 4,
+     "phase": 0.0
+    },
+    {
+     "name": "waiting",
+     "radius": 4.5,
+     "count": 8,
+     "phase": 0.39269908169872414
+    },
+    {
+     "name": "ranged",
+     "radius": 9.0,
+     "count": 6,
+     "phase": 0.0
+    }
+   ],
+   "spacing": 1.5,
+   "weights": {
+    "partial_cover": 40.0,
+    "line_of_fire": 20.0,
+    "other_cover": 20.0,
+    "nearness": 20.0,
+    "preferred_range": 10.0,
+    "preferred_metres": 15.0,
+    "range_band": 10.0,
+    "max_travel": 20.0
+   }
+  },
+  "target": [
+   0.0,
+   0.0
+  ],
+  "view_from": [
+   0.0,
+   -3.0
+  ],
+  "view_forward": [
+   0.0,
+   1.0
+  ],
+  "blocked": [],
+  "script": [
+   {
+    "do": "choose",
+    "id": 1,
+    "ring": "waiting",
+    "from": [
+     0.4,
+     -22.0
+    ]
+   },
+   {
+    "do": "choose",
+    "id": 7,
+    "ring": "ranged",
+    "from": [
+     0.4,
+     30.0
+    ]
+   }
+  ]
+ },
+ "expect": {
+  "points": [
+   [
+    2.0,
+    0.0
+   ],
+   [
+    1.2246467991473532e-16,
+    2.0
+   ],
+   [
+    -2.0,
+    2.4492935982947064e-16
+   ],
+   [
+    -3.6739403974420594e-16,
+    -2.0
+   ],
+   [
+    4.15745789630079,
+    1.722075445642904
+   ],
+   [
+    1.7220754456429042,
+    4.15745789630079
+   ],
+   [
+    -1.7220754456429037,
+    4.15745789630079
+   ],
+   [
+    -4.15745789630079,
+    1.7220754456429046
+   ],
+   [
+    -4.157457896300791,
+    -1.7220754456429035
+   ],
+   [
+    -1.7220754456429066,
+    -4.157457896300789
+   ],
+   [
+    1.722075445642905,
+    -4.15745789630079
+   ],
+   [
+    4.157457896300789,
+    -1.7220754456429068
+   ],
+   [
+    9.0,
+    0.0
+   ],
+   [
+    4.500000000000001,
+    7.794228634059947
+   ],
+   [
+    -4.499999999999998,
+    7.794228634059948
+   ],
+   [
+    -9.0,
+    1.102182119232618e-15
+   ],
+   [
+    -4.5000000000000036,
+    -7.794228634059945
+   ],
+   [
+    4.500000000000001,
+    -7.794228634059947
+   ]
+  ],
+  "answers": [
+   {
+    "point": "waiting-7",
+    "statuses": [
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "kept",
+     "kept",
+     "kept",
+     "kept",
+     "kept",
+     "outside_area",
+     "outside_area",
+     "kept",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area"
+    ],
+    "behind": [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true
+    ],
+    "bumped": []
+   },
+   {
+    "point": "ranged-1",
+    "statuses": [
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "kept",
+     "kept",
+     "kept",
+     "kept",
+     "outside_area",
+     "outside_area"
+    ],
+    "behind": [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true
+    ],
+    "bumped": []
+   }
+  ],
+  "claims": {
+   "ranged-1": 7,
+   "waiting-7": 1
+  }
+ }
+}

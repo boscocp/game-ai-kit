@@ -1,0 +1,243 @@
+{
+ "name": "a-point-at-the-spacing-is-not-crowded",
+ "why": "A token holder claims inner-0 at (2, 0); waiting-0 at (4.5, 0) is exactly the spacing, 2.5 m, away: not closer, so not crowded across the rings, and the waiter beside it takes it.",
+ "kind": "rings",
+ "query": {
+  "config": {
+   "rings": [
+    {
+     "name": "inner",
+     "radius": 2.0,
+     "count": 4,
+     "phase": 0.0
+    },
+    {
+     "name": "waiting",
+     "radius": 4.5,
+     "count": 8,
+     "phase": 0.0
+    },
+    {
+     "name": "ranged",
+     "radius": 9.0,
+     "count": 6,
+     "phase": 0.0
+    }
+   ],
+   "spacing": 2.5,
+   "weights": {
+    "partial_cover": 40.0,
+    "line_of_fire": 20.0,
+    "other_cover": 20.0,
+    "nearness": 20.0,
+    "preferred_range": 10.0,
+    "preferred_metres": 15.0,
+    "range_band": 10.0,
+    "max_travel": 30.0
+   }
+  },
+  "target": [
+   0.0,
+   0.0
+  ],
+  "view_from": [
+   0.0,
+   -3.0
+  ],
+  "view_forward": [
+   0.0,
+   1.0
+  ],
+  "blocked": [],
+  "script": [
+   {
+    "do": "choose",
+    "id": 1,
+    "ring": "inner",
+    "from": [
+     2.2,
+     0.3
+    ]
+   },
+   {
+    "do": "choose",
+    "id": 2,
+    "ring": "waiting",
+    "from": [
+     4.7,
+     0.3
+    ]
+   }
+  ]
+ },
+ "expect": {
+  "points": [
+   [
+    2.0,
+    0.0
+   ],
+   [
+    1.2246467991473532e-16,
+    2.0
+   ],
+   [
+    -2.0,
+    2.4492935982947064e-16
+   ],
+   [
+    -3.6739403974420594e-16,
+    -2.0
+   ],
+   [
+    4.5,
+    0.0
+   ],
+   [
+    3.1819805153394642,
+    3.181980515339464
+   ],
+   [
+    2.755455298081545e-16,
+    4.5
+   ],
+   [
+    -3.181980515339464,
+    3.1819805153394642
+   ],
+   [
+    -4.5,
+    5.51091059616309e-16
+   ],
+   [
+    -3.1819805153394647,
+    -3.181980515339464
+   ],
+   [
+    -8.266365894244633e-16,
+    -4.5
+   ],
+   [
+    3.181980515339463,
+    -3.1819805153394647
+   ],
+   [
+    9.0,
+    0.0
+   ],
+   [
+    4.500000000000001,
+    7.794228634059947
+   ],
+   [
+    -4.499999999999998,
+    7.794228634059948
+   ],
+   [
+    -9.0,
+    1.102182119232618e-15
+   ],
+   [
+    -4.5000000000000036,
+    -7.794228634059945
+   ],
+   [
+    4.500000000000001,
+    -7.794228634059947
+   ]
+  ],
+  "answers": [
+   {
+    "point": "inner-0",
+    "statuses": [
+     "kept",
+     "kept",
+     "kept",
+     "kept",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area"
+    ],
+    "behind": [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true,
+     true,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true
+    ],
+    "bumped": []
+   },
+   {
+    "point": "waiting-0",
+    "statuses": [
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "kept",
+     "kept",
+     "kept",
+     "kept",
+     "kept",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area"
+    ],
+    "behind": [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true,
+     true,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true
+    ],
+    "bumped": []
+   }
+  ],
+  "claims": {
+   "inner-0": 1,
+   "waiting-0": 2
+  }
+ }
+}
