@@ -40,9 +40,13 @@ a command:
            engine quits (T162)
   licence  every zip and the wheel carry LICENSE and NOTICE
 
-A `stranger.gd` run must exit 0 *and* print its marker: a script error
-inside a `-s` script still exits 0 (CLAUDE.md). It is bounded by a timeout,
-reported as a finding, should Godot be left running.
+A `stranger.gd` run must exit 0, print its marker *and* print no engine
+error: a script error inside a `-s` script still exits 0 (CLAUDE.md), and
+one printed after the marker, or in a function the marker does not wait
+for, would pass the first two. Its error lines are read as every Makefile
+`-s` gate's are since T141, by `godot_shards.engine_errors` with its
+`FORGIVEN` (T169). It is bounded by a timeout, reported as a finding,
+should Godot be left running.
 
 The check refuses a page whose steps are not exactly `STEPS` below, in
 either language: a step on the page the check does not take is a promise
@@ -59,7 +63,9 @@ or a venv with no pip, would otherwise fail every planted case for the
 wrong reason and the self-test would go green. Then, each named in what
 it prints: `grid_graph.gd` out of `ai_core`'s zip (`GakGridGraph`);
 `utility/aim.py` out of the wheel's install (`'aim'`); `NOTICE` out of a
-zip; a runner that quits 0 having printed nothing (the marker it lacks);
+zip; a runner that quits 0 having printed nothing (the marker it lacks),
+and one that prints the marker, quits 0 and then hits a `SCRIPT ERROR`
+(the error it printed);
 an unzip command pointing at a zip that is not there, and one unzipping
 into `my_game/addons/` as the page said before T149 (the step `unzip`);
 `ai_learning` unzipped there too, as the page's `infer` said until T160;
@@ -101,6 +107,7 @@ import tempfile
 import zipfile
 
 from check_published import LEAKING, load_every_class
+from godot_shards import engine_errors
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 GODOT = REPO / "scripts" / "godot"
@@ -117,6 +124,13 @@ STEPS = ("release", "unzip", "import", "route", "wheel", "train", "infer", "kit"
 KIT_ZIP = "game-ai-kit-addons-*.zip"
 #: What the reader's blank projects hold before anything is unzipped.
 BLANK_PROJECT = "config_version=5\n\n[application]\n\nconfig/name=\"A stranger's game\"\n"
+#: The planted runners: one says nothing; one decides, then breaks. The
+#: second asks to quit before the error, so the run still exits 0 with
+#: the marker printed, as a real one would whose later check aborted.
+SILENT_RUNNER = "extends SceneTree\n\n\nfunc _initialize() -> void:\n\tquit(0)\n"
+BROKEN_RUNNER = ("extends SceneTree\n\n\nfunc _initialize() -> void:\n"
+                 f"\tprint({MARKERS['route']!r})\n\tquit(0)\n"
+                 "\tvar nothing: Object = null\n\tnothing.call(\"decide\")\n")
 CLASS_NAME_RE = re.compile(r"^class_name\s+(\w+)", re.M)
 #: Long enough for an import on a loaded machine; short enough that a
 #: Godot left running by a script error is a finding, not a stalled gate.
@@ -184,7 +198,7 @@ class Planted:
     kit_folder: str = ""
     kit_extra: tuple[tuple[str, bytes], ...] = ()
     installed_file: str = ""
-    silent_runner: bool = False
+    runner: str = ""
 
 
 @dataclasses.dataclass(frozen=True)
@@ -370,10 +384,14 @@ def run_example(step: str, text: str, place: Place, planted: Planted) -> list[st
 
 
 def run_runner(step: str, example: str, project: pathlib.Path, planted: Planted) -> list[str]:
-    """`stranger.gd -- <example>` in `project`: it must exit 0 and print its marker."""
+    """`stranger.gd -- <example>` in `project`: exit 0, its marker, and no engine error.
+
+    Why the errors too: a `SCRIPT ERROR` aborts one function and the run
+    goes on, so the marker can print and the exit be 0 with a check skipped.
+    """
     runner = project / STRANGER.name
-    if planted.silent_runner:
-        runner.write_text("extends SceneTree\n\n\nfunc _initialize() -> void:\n\tquit(0)\n")
+    if planted.runner:
+        runner.write_text(planted.runner)
     else:
         shutil.copy(STRANGER, runner)
     command = [str(GODOT), "--headless", "--path", str(project), "-s", runner.name, "--", example]
@@ -387,6 +405,9 @@ def run_runner(step: str, example: str, project: pathlib.Path, planted: Planted)
         errors = [line for line in output.splitlines() if "ERROR" in line][:5]
         return [f"step {step!r}: the example did not decide (exit {ran.returncode}, "
                 f"missing {MARKERS[example]!r}): {errors}"]
+    errors = engine_errors(output)
+    if errors:
+        return [f"step {step!r}: the example decided and the engine printed an error: {errors[:5]}"]
     return []
 
 
@@ -509,7 +530,8 @@ def planted_faults(english: str) -> tuple[tuple[str, Planted, str], ...]:
         (english, Planted(zip_member="addons/ai_core/grid_graph.gd"), "GakGridGraph"),
         (english, Planted(installed_file="aim.py"), "cannot import name 'aim'"),
         (english, Planted(zip_member="addons/ai_core/NOTICE"), "carries no NOTICE"),
-        (english, Planted(silent_runner=True), f"missing {MARKERS['route']!r}"),
+        (english, Planted(runner=SILENT_RUNNER), f"missing {MARKERS['route']!r}"),
+        (english, Planted(runner=BROKEN_RUNNER), "step 'route': the example decided and the engine printed"),
         (misplaced, Planted(), "step 'unzip'"),
         (nested, Planted(), "my_game/addons/addons is not an unzipped addon"),
         (learning, Planted(), "step 'infer': my_game/addons/addons is not an unzipped addon"),
