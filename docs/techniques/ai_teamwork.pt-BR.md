@@ -7,7 +7,7 @@ tier: 2
 source: https://www.gameaipro.com/
 invalidated_if: the kit's RoleArbiter, TeamCommander, TacticalPositions, SquadConfidence, SearchCoordinator, AttackTokens or EngagementRings signatures change, or the demos that use them are renamed
 teaches: shooter-ai
-translation_of: 112913dd865f686734209b08f712798795f200a6d8b98d925f54a48501caea6e
+translation_of: 3badb75d1a0c8b9f35518d434da3f37efb7f5cae59ebec0a930da1d96408d531
 -->
 
 > English: [ai_teamwork.md](ai_teamwork.md). Os termos que ficam em inglês
@@ -194,7 +194,7 @@ quando não usar nenhum deles (em inglês):
 
 ## Anéis de combate: onde os outros esperam {#engagement-rings}
 
-Um *token* diz *quem* ataca; não diz onde os outros ficam. Sem isso, os
+Um *token* diz **quem** ataca; não diz onde os outros ficam. Sem isso, os
 que esperam se amontoam, ficam atrás do jogador, onde ele não os vê, ou
 tapam a linha de quem ataca de longe. Reckoning dividiu o círculo em volta
 do jogador num círculo de ataque e num de aproximação, para o jogador
