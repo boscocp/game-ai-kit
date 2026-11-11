@@ -9,7 +9,7 @@ A fresh context reviewed the branch's first head against its sources.
 **Verdict: correct, with one inconsistency, one dropped item, one
 optional addition and a nit. No blocker.**
 
-## What was checked and held
+## What was reviewed
 
 - **The table.** All seven rows against `git log origin/main`: wave,
   task, PR and main sha, in merge order (`ba490d0` #138 ... `6f89e9b`
@@ -44,7 +44,7 @@ optional addition and a nit. No blocker.**
 The reviewer also noted that #138's CI run had been `in_progress` for about
 1h30: the next session should look for a hung job, not only a queued one.
 
-## What was done
+## What was done about them
 
 1. "Next" now says T165 is built and merged but `wip` until the owner's
    manual check, that T166 can start on the merged code, and that whether
