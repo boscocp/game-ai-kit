@@ -67,19 +67,19 @@ func action_names() -> PackedStringArray:
 ## There is no plan: the planner tried every state it could reach and the goal
 ## was in none of them.
 static func impossible(states_visited: int) -> PlanResult:
-	return PlanResult.new([] as Array[StripsAction], false, states_visited, false)
+	return new([] as Array[StripsAction], false, states_visited, false)
 
 
 ## The planner stopped at its budget. A weaker answer than `impossible`, and
 ## deliberately a different one.
 static func ran_out(states_visited: int) -> PlanResult:
-	return PlanResult.new([] as Array[StripsAction], false, states_visited, true)
+	return new([] as Array[StripsAction], false, states_visited, true)
 
 
 ## The planner stopped at its budget, and `so_far` is the way to the world
 ## that looked nearest the goal. An empty `so_far` -- nothing looked nearer
 ## than the start -- is a plain `ran_out`, not a partial plan of no steps.
 static func partial_plan(so_far: Array[StripsAction], states_visited: int) -> PlanResult:
-	var result := PlanResult.new(so_far, false, states_visited, true)
+	var result: PlanResult = new(so_far, false, states_visited, true)
 	result.partial = not so_far.is_empty()
 	return result

@@ -54,7 +54,7 @@ func holds_all(predicates: PackedStringArray) -> bool:
 ## writes "this is still true afterwards" when it has to delete a precondition,
 ## and in the other order that predicate would quietly vanish.
 func after(removed: PackedStringArray, added: PackedStringArray) -> WorldState:
-	var next: WorldState = WorldState.new()
+	var next: WorldState = new()
 	next._facts = _facts.duplicate()
 	for predicate: String in removed:
 		next._facts.erase(predicate)
