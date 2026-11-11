@@ -1,5 +1,5 @@
 {
-  "about": "What the Godot Asset Store hands a stranger: one entry per upload, measured from the downloaded file. scripts/check_published.py (make check-published) holds each entry true. provenance is the tag whose own release.py builds this file byte for byte, or 'unknown' with a note saying what was found.",
+  "about": "What the Godot Asset Store hands a stranger: one entry per upload, measured from the downloaded file. scripts/check_published.py (make check-published) holds each entry true. provenance is the tag whose own release.py builds this file byte for byte, or 'unknown' with a note saying what was found. known_at_exit, only on an upload that leaks, holds the exact counts the engine prints at exit and why; any other leak, or a changed count, fails the gate.",
   "uploads": [
     {
       "store_page": "https://store.godotengine.org/asset/boscocp/game-ai-kit/",
@@ -10,7 +10,12 @@
       "shown_size": "322.41 KB",
       "sha256": "8538106aa2fa8adf21b7b2472349c26b9a83058bc5a7e2697f571424ecbbd1db",
       "provenance": "v0.1.0",
-      "note": "Measured on 2026-11-10 (wave 168): byte for byte the kit zip that v0.1.0's own release.py builds, 278 entries, 16 addons, no ai_bayes. The store page shows 322.41 KB, which is 314,853 x 1.024 / 1,000: the page's unit, not another file."
+      "note": "Measured on 2026-11-10 (wave 168): byte for byte the kit zip that v0.1.0's own release.py builds, 278 entries, 16 addons, no ai_bayes. The store page shows 322.41 KB, which is 314,853 x 1.024 / 1,000: the page's unit, not another file.",
+      "known_at_exit": {
+        "still_in_use": 7,
+        "leaked": 14,
+        "why": "T162, measured on 4.7.2 in wave 176: loading every script leaves grid_graph.gd, behaviour_tree.gd and five ai_learning scripts alive at exit, because they name their own class as a value (docs/godot/exit-leaks.md). Fixed in the addons for 0.2.0; this file cannot change."
+      }
     }
   ]
 }

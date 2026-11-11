@@ -90,7 +90,8 @@ static func from_dictionary(data: Dictionary, source: String) -> ModelFile:
 	if wrong != "":
 		return _refused("%s (%s)" % [wrong, source])
 
-	var loaded := ModelFile.new()
+	# `new()`, not its own class name: naming it would make the script hold itself (T162, docs/godot/exit-leaks.md).
+	var loaded: ModelFile = new()
 	loaded.generated_by = str(data.get("generated_by", "unknown"))
 	loaded.extra = data.duplicate(true)
 	loaded.extra.erase("models")
@@ -332,7 +333,8 @@ static func _size_of(value: Variant) -> String:
 
 # The result of a refusal: an error, and nothing to predict with.
 static func _refused(reason: String) -> ModelFile:
-	var refused := ModelFile.new()
+	# `new()`, not its own class name: naming it would make the script hold itself (T162, docs/godot/exit-leaks.md).
+	var refused: ModelFile = new()
 	refused.error = reason
 	return refused
 

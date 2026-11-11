@@ -121,6 +121,17 @@ func neighbours(cell: Vector2i) -> Array[Vector2i]:
 
 ## An independent copy. Used wherever a caller must not see the board change.
 func duplicate_graph() -> GakGridGraph:
-	var copy := GakGridGraph.new(width, height)
+	var copy: GakGridGraph = _sized(width, height)
 	copy._costs = _costs.duplicate()
 	return copy
+
+
+## A blank board of this size, always a `GakGridGraph`.
+##
+## Why static: in an instance function a bare `new()` builds the instance's
+## own script, so a game's subclass would get its own class back, or a
+## failed call when its `_init` differs. In a static function `new()` builds
+## the class it is written in, as `GakGridGraph.new()` did.
+static func _sized(grid_width: int, grid_height: int) -> GakGridGraph:
+	# `new()`, not its own class name: naming it would make the script hold itself (T162, docs/godot/exit-leaks.md).
+	return new(grid_width, grid_height)

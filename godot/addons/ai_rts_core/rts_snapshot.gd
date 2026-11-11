@@ -38,7 +38,8 @@ var graph: GakGridGraph
 
 ## What `world` shows `viewer` now.
 static func of(world: RtsWorld, viewer: int) -> RtsSnapshot:
-	var view := RtsSnapshot.new()
+	# `new()`, not its own class name: naming it would make the script hold itself (T162, docs/godot/exit-leaks.md).
+	var view: RtsSnapshot = new()
 	view.side = viewer
 	view.tick = world.tick
 	view.resources = world.funds(viewer).duplicate()

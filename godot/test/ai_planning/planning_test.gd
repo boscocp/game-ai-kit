@@ -197,3 +197,19 @@ func _a_door_that_opens_and_shuts() -> Array[StripsAction]:
 		StripsAction.new("open_it", ["shut"], ["shut"], ["open"]),
 		StripsAction.new("shut_it", ["open"], ["open"], ["shut"]),
 	]
+
+
+# A game's state that remembers a name: the shape a bare `new()` in `after`
+# would have handed back instead of a `WorldState` (review of wave 176).
+class NamedState extends WorldState:
+	var label: String = "named"
+
+
+func test_a_subclass_s_next_state_is_still_a_world_state() -> void:
+	var before := NamedState.new(["standing"])
+
+	var next: WorldState = before.after(["standing"], ["sitting"])
+
+	assert_bool(next.get_script() == WorldState).is_true()
+	assert_bool(next.holds("sitting")).is_true()
+	assert_bool(next.holds("standing")).is_false()

@@ -70,6 +70,47 @@ class TheRecord(unittest.TestCase):
             with self.assertRaises(GATE.Unreachable):
                 GATE.read_record(path)
 
+    def test_a_known_leak_without_its_counts_or_its_why_is_refused(self) -> None:
+        # T162: an exception nobody can trace, or one that counts nothing,
+        # would be a hole in the gate.
+        entry = {"download": "x", "version": "0.1.0", "sha256": "0" * 64, "size": 1,
+                 "provenance": "unknown", "note": ""}
+        for known in ({"still_in_use": 7, "leaked": 14}, {"still_in_use": 7, "why": "T162"},
+                      {"still_in_use": 0, "leaked": 0, "why": "T162"},
+                      {"still_in_use": "7", "leaked": 14, "why": "T162"}):
+            with self.subTest(known=known), tempfile.TemporaryDirectory() as folder:
+                path = pathlib.Path(folder) / "published.json"
+                path.write_text(json.dumps({"uploads": [{**entry, "known_at_exit": known}]}))
+                with self.assertRaises(GATE.Unreachable):
+                    GATE.read_record(path)
+
+    def test_the_0_1_0_upload_carries_its_measured_leak(self) -> None:
+        first = GATE.read_record(GATE.RECORD)[0]
+        self.assertEqual(first.version, "0.1.0")
+        self.assertEqual(first.known_at_exit, (("still_in_use", 7), ("leaked", 14)))
+
+
+class TheExitLines(unittest.TestCase):
+    """What the engine prints at exit, read as `known_at_exit` holds it (T162)."""
+
+    LEAKY = ("WARNING: 14 ObjectDB instances were leaked at exit (run with `--verbose` for details).\n"
+             "ERROR: 7 resources still in use at exit (run with --verbose for details).\n")
+
+    def test_both_counts_are_read(self) -> None:
+        self.assertEqual(GATE.exit_counts(self.LEAKY), (("still_in_use", 7), ("leaked", 14)))
+
+    def test_a_clean_run_counts_nothing(self) -> None:
+        self.assertEqual(GATE.exit_counts("PUBLISHED-CHECK: 3 script(s) loaded\n"), ())
+        self.assertEqual(GATE.exit_findings("PUBLISHED-CHECK\n", "install", ()), [])
+
+    def test_the_known_counts_pass_and_any_other_fails(self) -> None:
+        known = (("still_in_use", 7), ("leaked", 14))
+        self.assertEqual(GATE.exit_findings(self.LEAKY, "install", known), [])
+        self.assertIn("alive at exit", GATE.exit_findings(self.LEAKY, "install", ())[0])
+        other = (("still_in_use", 7), ("leaked", 13))
+        self.assertIn("a changed count", GATE.exit_findings(self.LEAKY, "install", other)[0])
+        self.assertIn("a changed count", GATE.exit_findings("clean\n", "install", known)[0])
+
 
 class TheRebuild(unittest.TestCase):
     """The compare, planted without a clone: `rebuilt_sha256` is the stub."""

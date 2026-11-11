@@ -58,6 +58,7 @@ func _init(found_path: Array[Vector2i], cells_expanded: Array[Vector2i],
 ## goal was walled off rather than that the search was broken.
 static func nothing_found(cells_expanded: Array[Vector2i],
 		cells_waiting: Array[Vector2i]) -> SearchResult:
-	return SearchResult.new(
+	# `new()`, not its own class name: naming it would make the script hold itself (T162, docs/godot/exit-leaks.md).
+	return new(
 		[] as Array[Vector2i], cells_expanded, cells_waiting, NO_ROUTE, false
 	)

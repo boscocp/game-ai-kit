@@ -32,6 +32,12 @@ extends RefCounted
 
 enum Status { SUCCESS, FAILURE, RUNNING }
 
+## Each status in words, in `Status`'s order. A constant, so the nodes below
+## read it without naming `BehaviourTree`: an inner class that names its
+## outer one makes the script hold itself, and it can outlive the engine at
+## exit (docs/godot/exit-leaks.md).
+const SAID: Array[String] = ["success", "failure", "running"]
+
 ## The root node.
 var root: TreeNode
 ## The last tick's path through the tree: "name: answer", in the order asked.
@@ -59,7 +65,7 @@ class Condition extends TreeNode:
 	## The question's answer, as success or failure.
 	func tick(facts: Dictionary, trail: Array[String]) -> Status:
 		var answer: Status = Status.SUCCESS if _question.call(facts) else Status.FAILURE
-		trail.append("%s: %s" % [name, BehaviourTree.said(answer)])
+		trail.append("%s: %s" % [name, SAID[answer]])
 		return answer
 
 
@@ -74,7 +80,7 @@ class Action extends TreeNode:
 	## What the deed answered.
 	func tick(facts: Dictionary, trail: Array[String]) -> Status:
 		var answer: Status = _deed.call(facts)
-		trail.append("%s: %s" % [name, BehaviourTree.said(answer)])
+		trail.append("%s: %s" % [name, SAID[answer]])
 		return answer
 
 
@@ -93,7 +99,7 @@ class Sequence extends TreeNode:
 			answer = child.tick(facts, trail)
 			if answer != Status.SUCCESS:
 				break
-		trail.append("%s: %s" % [name, BehaviourTree.said(answer)])
+		trail.append("%s: %s" % [name, SAID[answer]])
 		return answer
 
 
@@ -112,7 +118,7 @@ class Selector extends TreeNode:
 			answer = child.tick(facts, trail)
 			if answer != Status.FAILURE:
 				break
-		trail.append("%s: %s" % [name, BehaviourTree.said(answer)])
+		trail.append("%s: %s" % [name, SAID[answer]])
 		return answer
 
 
@@ -129,4 +135,4 @@ func tick(facts: Dictionary) -> Status:
 
 ## A status in words, for the trail.
 static func said(answer: Status) -> String:
-	return ["success", "failure", "running"][answer]
+	return SAID[answer]

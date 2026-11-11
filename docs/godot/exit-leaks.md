@@ -2,9 +2,9 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-11-10
+verified_on: 2026-11-11
 tier: 1
-source: https://docs.godotengine.org/en/4.7/tutorials/editor/command_line_tutorial.html ; https://raw.githubusercontent.com/godotengine/godot/4.7.2-stable/core/object/object.cpp ; https://raw.githubusercontent.com/godotengine/godot/4.7.2-stable/core/io/resource.cpp ; https://raw.githubusercontent.com/godotengine/godot/4.7.2-stable/modules/gdscript/gdscript.cpp ; https://raw.githubusercontent.com/godotengine/godot/4.7.2-stable/modules/gdscript/gdscript_cache.cpp ; https://forum.godotengine.org/t/95708
+source: https://docs.godotengine.org/en/4.7/tutorials/editor/command_line_tutorial.html ; https://raw.githubusercontent.com/godotengine/godot/4.7.2-stable/core/object/object.cpp ; https://raw.githubusercontent.com/godotengine/godot/4.7.2-stable/core/templates/self_list.h ; https://raw.githubusercontent.com/godotengine/godot/4.7.2-stable/core/io/resource.cpp ; https://raw.githubusercontent.com/godotengine/godot/4.7.2-stable/modules/gdscript/gdscript.cpp ; https://raw.githubusercontent.com/godotengine/godot/4.7.2-stable/modules/gdscript/gdscript_cache.cpp ; https://forum.godotengine.org/t/95708
 invalidated_if: Godot stops printing the two exit lines without --verbose, renames them, or a 4.7.x release changes how GDScriptLanguage::finish breaks cycles between scripts
 teaches: none
 -->
@@ -141,6 +141,127 @@ order the engine compiles scripts in is part of it.
 old ruleset, a body that called the ruleset, a `BlueController` in its
 signature or a `var rules: SquadRuleset` in `_ready` each made the case
 close clean, so it would no longer have shown the leak.
+
+## T162: the kit, and a mechanism that fits every case so far
+
+Measured on 4.7.2 in wave 176. The store's 0.1.0 download was put in a
+blank project, imported, and loaded with `scripts/store/load_every_class.gd`
+under `--verbose`. It loaded all 107 scripts, then printed 14 leaked
+objects and `7 resources still in use at exit`: `ai_core/grid_graph.gd`,
+`ai_behaviour/behaviour_tree.gd` and five scripts of `ai_learning`. HEAD's
+kit zip, 117 scripts, printed 17 and 10: the same, plus `ai_bayes`'s
+`bayes_network.gd` and `ai_learning`'s two tree scripts.
+
+**Bisected by addon.** Each addon loaded alone closed clean. Loading the
+addons one more at a time, in the loader's order, the leak appeared twice:
+one resource when `ai_behaviour` came after `ai_bayes`, nine more when
+`ai_llm` came after `ai_learning`. Narrowed to files, two loads were enough:
+
+| Loaded, in this order | At exit |
+|---|---|
+| `bayes_network.gd`, then `behaviour_tree.gd` | `bayes_network.gd` still in use |
+| `behaviour_tree.gd`, then `bayes_network.gd` | clean |
+| `grid_graph.gd`, `bayes_network.gd`, `behaviour_tree.gd` | both of the first two still in use |
+| `bayes_network.gd`, `behaviour_tree.gd`, `grid_graph.gd` | `bayes_network.gd` only |
+
+So one script, loaded later, made the scripts loaded *before* it leak, and
+not the ones after. In `ai_llm` that script was `recorded_runtime.gd`.
+
+**What the leaking scripts share.** Each names its own class as a value in
+its own code: `GakGridGraph.new(...)` inside `grid_graph.gd`, `return
+BayesNetwork.new(...)` inside `bayes_network.gd`, and in `behaviour_tree.gd`
+the inner nodes calling `BehaviourTree.said(...)`. Measured with four-line
+scripts in a scratch project, each loaded after a self-naming script and a
+base class:
+
+| The last script, which `extends` the base loaded before it | At exit |
+|---|---|
+| `static func make() -> RefCounted: return ToyChild.new()` | the first script still in use |
+| `func same(other: Object) -> bool: return other is ToyChild` | the first script still in use |
+| `static func make() -> ToyChild: return new()` | clean |
+| `var other: ToyChild`, or an argument typed `ToyChild` | clean |
+| the base loaded only as the child's dependency, not before it | clean |
+
+The class's own name in a **type** (a return, a member, an argument) does
+not do it. The class's own name used as a **value** does: `new()`, `is`, a
+static call. An inner class naming its outer class counts too.
+
+**What the engine source says.** Read in 4.7.2-stable, and consistent with
+every row above; not stepped through in a debugger. A script that names
+itself as a value holds a reference to itself in its compiled code. When
+the engine closes, `GDScriptCache::clear` drops its own references, and a
+script that holds itself is the only kind still alive afterwards. Only
+`GDScriptLanguage::finish` can free it: it walks `script_list` and clears
+each script's functions, which breaks the loop. `SelfList::add` puts a new
+script at the *front* of that list, so the walk goes from the newest script
+to the oldest. While it walks, it holds only the script it is on, and reads
+the next one before letting go of it. A script that holds itself and
+`extends` a base loaded before it sits just before that base on the walk.
+When the walk lets it go, it is freed, and the base is freed with it, and
+`SelfList::remove` sets the freed base's `next` to null. The next turn of
+the walk then runs `s->self()` on that freed node, makes a reference to
+the freed script and clears it, and only then reads the null `next`. That
+is a use-after-free of the script as well as of the node, so what happens
+is undefined, not a guaranteed stop. On 4.7.2 it stopped every time it was
+measured. Every older script that holds itself is never reached, and is
+still in use at exit. `behaviour_tree.gd` ends the walk the same
+way, through its inner classes.
+
+Whether this also explains T138's and T146's leaks was not measured. They
+have the same shape: what was loaded later decided whether an earlier
+script leaked. But their scripts were not checked for self-naming. Ending
+the walk this way may not be the only way to end it. Reading a list node
+after it was freed is an engine bug, and it was not reported upstream in
+this wave.
+
+**The fix, in the addons.** Inside its own file, a class does not name
+itself as a value. In a **static** function, `new(...)` builds the class
+it is written in. An inner class reads a constant of its outer class:
+`BehaviourTree.SAID`, which `said()` also reads. Sixteen scripts changed,
+and nothing a game calls was renamed. Such a script no longer holds
+itself, so it can neither leak nor end the walk. Each bare `new()` carries
+a one-line comment saying why.
+
+**Not in an instance function.** There, a bare `new()` builds the
+instance's own script, not the class it is written in. The review of wave
+176 measured it: a game's `extends GakGridGraph` got its own subclass back
+from `duplicate_graph()`, or `null` and a `SCRIPT ERROR` when its `_init`
+took other arguments. So the two instance functions that make a copy,
+`GakGridGraph.duplicate_graph` and `WorldState.after`, call a static
+factory in the same file, `_sized` and `_empty`, and that factory calls
+`new()`. `test/ai_core/grid_graph_test.gd` and
+`test/ai_planning/planning_test.gd` each subclass the class and check
+that the copy is still the addon's class. With a bare `new()` back in the
+instance function, both fail.
+
+Measured after the change: the kit zip loaded in the loader's order, in
+reverse, and in three shuffled orders, closed clean every time. Before
+it, the loader's order leaked 10 resources, and the other four orders
+leaked 26 to 33.
+
+A game's own scripts can still do it. The pattern to avoid in a class you
+publish is `MyClass.new()` inside `my_class.gd`. In a static function,
+write `new()`. In an instance function, call a static function that does.
+
+**The checks.** `check_published.py`'s install, and `library-check`'s
+`kit` step on the kit zip, read the loader's output for the two exit
+lines. `godot_shards.FORGIVEN` still forgives the line for every other
+gate. The `kit` step fails on either line. It also fails when the loader
+loaded a number of scripts other than the `.gd` files in `my_kit/addons/`,
+or none at all. `check_published.py` fails on either line too, except in
+an upload whose record has `known_at_exit`. The 0.1.0 upload can never
+change, and its record stays, so its entry in `tools/store/published.json`
+names the leak: `still_in_use` 7, `leaked` 14, and `why`. That upload
+passes only while the engine prints exactly those counts. Any leak in
+another upload, or a count that changed, is a finding.
+
+Both self-tests plant `check_published.LEAKING`, three scripts that
+reproduce the table above inside `ai_core`. `check_published.py`'s
+self-test also passes it with its exact counts recorded, and refuses it
+with one count off. It also refuses a clean zip whose record still claims
+a leak. If a later engine stops leaking on the plant, the self-tests fail,
+and this page is out of date. A static lint that refuses the pattern in
+any load order is T167.
 
 ## The gate
 

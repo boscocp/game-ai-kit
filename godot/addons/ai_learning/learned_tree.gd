@@ -45,7 +45,8 @@ static func from_entry(entry: Dictionary) -> LearnedTree:
 	var built: Array[Dictionary] = []
 	for node: Dictionary in entry["nodes"]:
 		built.append(_with_whole_numbers(node))
-	return LearnedTree.new(PackedStringArray(entry["features"]), PackedStringArray(entry["classes"]), built)
+	# `new()`, not its own class name: naming it would make the script hold itself (T162, docs/godot/exit-leaks.md).
+	return new(PackedStringArray(entry["features"]), PackedStringArray(entry["classes"]), built)
 
 
 # A new node like `node`, its children and counts ints, as JSON never gives

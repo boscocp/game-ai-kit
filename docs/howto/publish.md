@@ -230,6 +230,16 @@ file the store holds, and `make check-published` (T159) tests that one:
    zip in a clone and compares. Exit 1 is a finding, 2 a download it could
    not reach. It needs the network, so it is not in `make check`.
 
+   Loading every script must leave nothing alive when the engine quits
+   (T162). A new upload that prints "still in use at exit" or "leaked at
+   exit" is a finding: fix the addon and upload again. Do not record the
+   leak as an exception. An upload that is already out and leaks keeps its
+   entry, because the file cannot change. So the entry names the leak in
+   `known_at_exit`: `still_in_use` and `leaked`, the two counts the engine
+   prints, and `why`. 0.1.0 is the one such entry: 7 and 14, T162. The gate
+   then passes that upload only while it prints exactly those counts.
+   `docs/godot/exit-leaks.md` says what the leak is.
+
 Measured on 2026-11-10 (wave 168) for download 8161: the page shows
 322.41 KB for a file of 314,853 bytes. That is bytes x 1.024 / 1,000, the
 page's unit, so the shown size does not identify a build; the sha256 does.

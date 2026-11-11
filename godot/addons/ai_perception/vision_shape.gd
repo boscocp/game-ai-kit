@@ -48,7 +48,8 @@ static func from_row(row: Dictionary) -> VisionShape:
 	var typed: Array[Dictionary] = []
 	for zone: Dictionary in row["zones"]:
 		typed.append(zone)
-	return VisionShape.new(typed, float(row["dark_share"]), float(row["motion_bonus"]))
+	# `new()`, not its own class name: naming it would make the script hold itself (T162, docs/godot/exit-leaks.md).
+	return new(typed, float(row["dark_share"]), float(row["motion_bonus"]))
 
 
 ## The index of the most certain zone that holds a body `distance` metres
