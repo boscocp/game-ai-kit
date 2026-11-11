@@ -3,6 +3,77 @@
 The index. One row per task; the task file holds everything needed to do it.
 The topmost `## Resuming after` section is the next session's prompt.
 
+## Resuming after 2026-11-11, T141 alone, batch 181-184, then T169 and T117 (waves 180 to 187)
+
+**Where it stopped -- read first.** Seven waves merged in three steps:
+T141 alone, then T158, T165, T167 and T168 at once, then T169 and T117.
+Each was reviewed by a fresh context, every finding was applied on its
+branch, and each merged with `--admin` without waiting for its PR's CI:
+
+| wave | task | PR | main |
+|---|---|---|---|
+| 180 | T141, every `-s` gate fails on an engine error | #138 | `ba490d0` |
+| 183 | T167, no addon names itself as a value | #139 | `8a12e7c` |
+| 184 | T168, a slow self-test is not a hang | #140 | `2476266` |
+| 181 | T158, a director and three difficulties | #141 | `e04059a` |
+| 185 | T169, the library check reads engine errors | #143 | `d5bdc90` |
+| 182 | T165, the valley remembers | #142 | `68cebef` |
+| 186 | T117, the squad's MCTS searches a share of the frame | #144 | `6f89e9b` |
+
+Each review is `docs/reviews/<wave>-*.md`, and every one found something
+the implementer's own gates passed green. Among them: T141's new lint
+missed `--script`, `${GODOT}` and a wrapping variable; T167's self-test
+did not hold its regex's `$` anchor (the lint would have kept 17 of 33
+lines); T158 accepted a malformed difficulty file through a SCRIPT ERROR;
+T165's villager hit a SCRIPT ERROR when the bridge fell mid-day, and
+nothing held that the walk changes a plan; T117's at-least-one-iteration
+and one-iteration-overrun rules went unheld.
+
+**To check first in the next session: main's `make check` is owed.**
+No wave ran a full `make check`, by the owner's word. When this was
+written, main's CI runs for #138-#144 were still queued or in progress.
+T141 put every Makefile `-s` line through `godot_checked.py`, so a gate
+that printed an engine error and passed before now fails: a red gate on
+main is most likely that, to fix forward first. T168 lowered
+`run_selftests.py`'s limit back to 120 s; its estimate for GitHub's runner
+is 45-60 s for `library_check.py --self-test`, not yet measured there.
+
+**The owner's decisions, 2026-11-11 (this session).**
+
+1. Order: T141 alone; then T158, T165, T167, T168 together; then T169
+   and T117 together. T166 waits for T165, T161 is last.
+2. Merge with `--admin` once the PR is reviewed and its findings applied;
+   ignore GitHub's CI; only the essential checks (each wave's modules'
+   gates and the lints), never a full `make check`.
+3. T165's open point (T164's English refusals marked `# not shown`
+   though they appear quoted on screen): kept in English, quoted verbatim
+   by design, recorded in `docs/godot/valley.md`; a better marker is a
+   follow-up, not opened yet.
+
+**Process note.** Two implementers wrote the session's shared
+`scratchpad/pr_body.md`, and #141's and #142's bodies briefly held each
+other's text; both were rewritten and checked before merge. Give each
+agent its own prefix for scratch files (`t<N>-wave<W>-`).
+
+**Waiting for the owner:**
+- T165's manual check: play two sessions of `make demo-valley`, burn the
+  bridge in the first, see it in the second (T165 stays `wip` until then).
+- T158's manual check: easy is winnable by a newcomer, hard is harder
+  without being unfair, the director's relief shows as a pause.
+- T117's manual check: a squad decision is faster and still smooth with C
+  and V on.
+- T168's manual check: read the self-test durations on GitHub's runner.
+- T167's manual check: read the finding for a planted `Foo.new()`.
+- Still open from earlier: T157's, T164's, T162's and T160's manual
+  checks and T160's decision 5 (the store's Godot range), offering this
+  repository on godotengine/godot#125245.
+
+**Next.** Main's `make check` first (above). Then T166 (needs T165,
+done). Then the squad tasks one at a time, as they share
+`godot/game/squad/`: T127, T124, T125. T161 (0.2.0) last; its
+prerequisites are all done, and it needs the owner's word on the store's
+Godot range. T89 only if T85's manual check asks for it.
+
 ## Resuming after 2026-11-11, batches 171-174 and 175-178 merged (waves 171 to 179)
 
 **Where it stopped -- read first.** Eight waves ran in two rounds, four at
