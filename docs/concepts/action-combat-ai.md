@@ -203,8 +203,17 @@ claim about any shipped game.
   factor for the player's state. What it leaves: stealing, which Dawe and
   DOOM both use -- a holder keeps its token until it gives it back, which
   is Dawe's lock held for the whole attack; and cooldowns per attack.
-- **T155, rings**: the approach and attack circles and the free slot a
-  waiter stands at.
+- **T155, `EngagementRings` in `ai_teamwork`** -- the attack and
+  approach circles, as an inner ring for a melee token holder and a
+  waiting ring for the rest, plus a band farther out for the ranged. The
+  rings only place points; the free slot a waiter stands at is chosen by
+  `TacticalPositions`, the kit's tactical position query: another ring is
+  outside the area, a point near another's claim is claimed, a point with
+  no line of sight is exposed, the nearest of the rest wins. What it adds:
+  a point behind the player's camera only when none in front is free, so
+  the player sees who waits -- the task's own design, not a claim about a
+  shipped game. What it leaves: stealing a better-placed slot, and the
+  grid capacity -- how many may close in is the number of points.
 - **T156, telegraphs**: the warning before a blow, and an enemy that reads
   the player's.
 - **T157, the boss fight** (`godot/game3d/bossfight/`): a boss and minions,

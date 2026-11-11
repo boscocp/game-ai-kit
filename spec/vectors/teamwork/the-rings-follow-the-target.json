@@ -1,0 +1,251 @@
+{
+ "name": "the-rings-follow-the-target",
+ "why": "The target moves: every point moves with it and the claims stay. A second enemy then avoids the first one's point where it is now; a released point is free.",
+ "kind": "rings",
+ "query": {
+  "config": {
+   "rings": [
+    {
+     "name": "inner",
+     "radius": 2.0,
+     "count": 4,
+     "phase": 0.0
+    },
+    {
+     "name": "waiting",
+     "radius": 4.5,
+     "count": 8,
+     "phase": 0.39269908169872414
+    },
+    {
+     "name": "ranged",
+     "radius": 9.0,
+     "count": 6,
+     "phase": 0.0
+    }
+   ],
+   "spacing": 1.5,
+   "weights": {
+    "partial_cover": 40.0,
+    "line_of_fire": 20.0,
+    "other_cover": 20.0,
+    "nearness": 20.0,
+    "preferred_range": 10.0,
+    "preferred_metres": 15.0,
+    "range_band": 10.0,
+    "max_travel": 30.0
+   }
+  },
+  "target": [
+   0.0,
+   0.0
+  ],
+  "view_from": [
+   0.0,
+   -3.0
+  ],
+  "view_forward": [
+   0.0,
+   1.0
+  ],
+  "blocked": [],
+  "script": [
+   {
+    "do": "choose",
+    "id": 1,
+    "ring": "waiting",
+    "from": [
+     4.2,
+     1.5
+    ]
+   },
+   {
+    "do": "place",
+    "target": [
+     3.0,
+     1.0
+    ]
+   },
+   {
+    "do": "choose",
+    "id": 2,
+    "ring": "waiting",
+    "from": [
+     7.4,
+     3.0
+    ]
+   },
+   {
+    "do": "release",
+    "id": 1
+   },
+   {
+    "do": "release",
+    "id": 1
+   },
+   {
+    "do": "choose",
+    "id": 3,
+    "ring": "waiting",
+    "from": [
+     7.4,
+     3.0
+    ]
+   }
+  ]
+ },
+ "expect": {
+  "points": [
+   [
+    5.0,
+    1.0
+   ],
+   [
+    3.0,
+    3.0
+   ],
+   [
+    1.0,
+    1.0000000000000002
+   ],
+   [
+    2.9999999999999996,
+    -1.0
+   ],
+   [
+    7.15745789630079,
+    2.722075445642904
+   ],
+   [
+    4.722075445642904,
+    5.15745789630079
+   ],
+   [
+    1.2779245543570963,
+    5.15745789630079
+   ],
+   [
+    -1.15745789630079,
+    2.7220754456429046
+   ],
+   [
+    -1.1574578963007909,
+    -0.7220754456429035
+   ],
+   [
+    1.2779245543570934,
+    -3.157457896300789
+   ],
+   [
+    4.722075445642905,
+    -3.15745789630079
+   ],
+   [
+    7.157457896300789,
+    -0.7220754456429068
+   ],
+   [
+    12.0,
+    1.0
+   ],
+   [
+    7.500000000000001,
+    8.794228634059948
+   ],
+   [
+    -1.4999999999999982,
+    8.794228634059948
+   ],
+   [
+    -6.0,
+    1.000000000000001
+   ],
+   [
+    -1.5000000000000036,
+    -6.794228634059945
+   ],
+   [
+    7.500000000000001,
+    -6.794228634059947
+   ]
+  ],
+  "answers": [
+   {
+    "point": "waiting-0",
+    "statuses": [
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "kept",
+     "kept",
+     "kept",
+     "kept",
+     "kept",
+     "outside_area",
+     "outside_area",
+     "kept",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area"
+    ]
+   },
+   null,
+   {
+    "point": "waiting-1",
+    "statuses": [
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "claimed",
+     "kept",
+     "kept",
+     "kept",
+     "kept",
+     "outside_area",
+     "outside_area",
+     "kept",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area"
+    ]
+   },
+   true,
+   false,
+   {
+    "point": "waiting-0",
+    "statuses": [
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "kept",
+     "claimed",
+     "kept",
+     "kept",
+     "kept",
+     "outside_area",
+     "outside_area",
+     "kept",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area",
+     "outside_area"
+    ]
+   }
+  ],
+  "claims": {
+   "waiting-0": 3,
+   "waiting-1": 2
+  }
+ }
+}
