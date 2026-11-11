@@ -375,3 +375,16 @@ func _first_of(state: BoardState, faction: int, type_name: String) -> Unit:
 		if unit.type.type_name == type_name:
 			return unit
 	return null
+
+
+# T121: the combat vectors runner refuses a file of the wrong types before
+# it reads one. A list of rolls given as text, in a copy of a real file, was
+# a SCRIPT ERROR that skipped that vector's check.
+func test_a_combat_vector_of_the_wrong_types_is_refused() -> void:
+	var runner: GDScript = preload("res://test/tactical/combat_vectors_runner.gd")
+	var vector: Dictionary = VectorShape.read_spec("vectors/combat/an-even-fight.json")
+	assert_str(VectorShape.why_not(vector, runner.SHAPE)).is_empty()
+	var paths: Array = [["rolls"], ["fight", "counter"], ["expect", "attacker_won"]]
+	for path: Array in paths:
+		var why: String = VectorShape.why_not(VectorShape.planted(vector, path, "x"), runner.SHAPE)
+		assert_str(why).override_failure_message(str(path)).is_not_empty()

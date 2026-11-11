@@ -404,7 +404,9 @@ test-learning-vectors: import ## The learning vectors, against ai_learning
 	@# same two claims on the Python side, in `make test-python`, because a
 	@# split between training and inference is worth what the agreement
 	@# between the two halves is worth.
-	@$(GODOT) --headless --path godot -s res://test/tactical/learning_vectors_runner.gd \
+	@# Through godot_checked.py (T121's review): an engine error in the run
+	@# fails it, whatever it exits.
+	@$(PYTHON) scripts/godot_checked.py res://test/tactical/learning_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/learning
 
 .PHONY: test-ngram-vectors

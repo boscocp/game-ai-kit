@@ -40,6 +40,16 @@ func test_a_misspelt_or_short_or_lopsided_case_is_refused() -> void:
 	assert_str(NGramVector.why_not_a_vector(vector)).starts_with("V1")
 
 
+# T121: each of these, a list given as text in a copy of a real file, was
+# a SCRIPT ERROR that skipped the check and let the runner exit 0.
+func test_a_vector_of_the_wrong_types_is_refused_before_it_is_read() -> void:
+	var vector: Dictionary = _vector("decay-follows-a-change.json")
+	var paths: Array = [["actions"], ["cases"], ["sequence"], ["cases", 0, "probabilities"]]
+	for path: Array in paths:
+		var why: String = NGramVector.why_not_a_vector(VectorShape.planted(vector, path, "x"))
+		assert_str(why).override_failure_message(str(path)).starts_with("V10")
+
+
 func test_a_predictor_that_never_forgets_fails_the_decay_vector() -> void:
 	var vector: Dictionary = _vector("decay-follows-a-change.json")
 	var actions: Array[String] = []

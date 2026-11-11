@@ -13,6 +13,14 @@ extends SceneTree
 
 ## Fewer than this and the directory is wrong, not the vectors.
 const FEWEST_VECTORS: int = 7
+## The types this runner reads, checked before it reads any (T121): a cast
+## that fails in a `-s` script is a SCRIPT ERROR the run would survive.
+const SHAPE: Dictionary = {
+	"rolls": [VectorShape.NUMBER],
+	"fight": {"defender_hits_back": VectorShape.FLAG, "*": VectorShape.NUMBER},
+	"expect": {"attacker_won": VectorShape.FLAG, "attacker_left": VectorShape.NUMBER,
+			"defender_left": VectorShape.NUMBER, "rolls_used": VectorShape.NUMBER},
+}
 
 
 func _init() -> void:
@@ -30,6 +38,11 @@ func _run(directory: String) -> int:
 		printerr("combat_vectors_runner: %d vector(s) under %s, and %d is the fewest" % [
 			vectors.size(), directory, FEWEST_VECTORS])
 		return 2
+	for vector: Dictionary in vectors:
+		var why: String = VectorShape.why_not(vector, SHAPE, vector["name"])
+		if why != "":
+			printerr("combat_vectors_runner: %s" % why)
+			return 2
 	if not _planted_vector_fails(vectors[0]):
 		return 1
 	var failures: Array[String] = []

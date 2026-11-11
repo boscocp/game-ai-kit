@@ -105,6 +105,10 @@ GLOBAL = (
     ".godot-version", "godot/project.godot", "godot/export_presets.cfg",
     "godot/addons/gdUnit4/", "godot/test/project_settings_test.gd",
     "godot/test/project_settings_test.gd.uid",
+    # The shape every vectors runner checks a file against before it reads
+    # one (T121): test code that every family's gate stands on.
+    "godot/test/vector_shape.gd", "godot/test/vector_shape.gd.uid",
+    "godot/test/vector_shape_test.gd", "godot/test/vector_shape_test.gd.uid",
     "godot/.gitignore", "python/gameaikit/__init__.py", "python/tests/__init__.py",
     "python/tests/test_placeholder.py",
     # The library's own (T64): the registry imports every technique, and the

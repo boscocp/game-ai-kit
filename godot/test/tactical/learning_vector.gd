@@ -25,6 +25,22 @@ const KINDS: Array[String] = ["row", "combat", "capture"]
 
 const BOARD_FIELDS: Array[String] = ["width", "height", "costs", "units"]
 const UNIT_FIELDS: Array[String] = ["id", "faction", "x", "y", "health"]
+## The types each part reads, checked (V11, T121) after the parts' own rules
+## and before anything is cast: `int("x")` is 0, and `int(null)` a SCRIPT
+## ERROR that aborts the check and leaves "" -- "nothing wrong" -- behind.
+const UNIT_SHAPE: Dictionary = {
+	"id": VectorShape.NUMBER, "faction": VectorShape.NUMBER, "x": VectorShape.NUMBER, "y": VectorShape.NUMBER,
+	"health": VectorShape.NUMBER, "type?": VectorShape.TEXT,
+}
+const BOARD_SHAPE: Dictionary = {
+	"width": VectorShape.NUMBER, "height": VectorShape.NUMBER, "costs": [[VectorShape.NUMBER]],
+}
+const CASE_SHAPE: Dictionary = {
+	"kind": VectorShape.TEXT, "why": VectorShape.TEXT, "prediction": VectorShape.NUMBER,
+	"features": {"*": VectorShape.NUMBER},
+	"model?": VectorShape.TEXT, "attacker?": VectorShape.NUMBER, "defender?": VectorShape.NUMBER,
+	"faction?": VectorShape.NUMBER, "node?": [VectorShape.NUMBER],
+}
 
 
 ## Why this dictionary is not a usable vector, or "" when it is one.
@@ -164,6 +180,9 @@ static func _why_board_is_wrong(data: Dictionary) -> String:
 	for field: String in BOARD_FIELDS:
 		if not described.has(field):
 			return "V7 the board has no `%s`" % field
+	var types: String = VectorShape.why_not(described, BOARD_SHAPE, "the board")
+	if types != "":
+		return "V11 " + types
 	var shape: String = _why_costs_are_wrong(described)
 	if shape != "":
 		return shape
@@ -213,6 +232,9 @@ static func _why_a_unit_is_wrong(entry: Variant, described: Dictionary) -> Strin
 	for field: String in UNIT_FIELDS:
 		if not (entry as Dictionary).has(field):
 			return "V7 a unit has no `%s`" % field
+	var types: String = VectorShape.why_not(entry, UNIT_SHAPE, "a unit")
+	if types != "":
+		return "V11 " + types
 	var cell := Vector2i(int(entry["x"]), int(entry["y"]))
 	var inside: bool = (
 		cell.x >= 0 and cell.y >= 0
@@ -245,6 +267,9 @@ static func _why_a_case_is_wrong(data: Dictionary, case: Variant,
 	# no `why` is a case whose failure nobody can read.
 	if not (entry.get("why") is String) or str(entry["why"]).strip_edges() == "":
 		return "V10 case %d does not say what it is for" % index
+	var types: String = VectorShape.why_not(entry, CASE_SHAPE, "case %d" % index)
+	if types != "":
+		return "V11 " + types
 	return _why_the_case_cannot_be_run(data, entry, index)
 
 

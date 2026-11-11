@@ -16,7 +16,15 @@
 extends SceneTree
 
 const VECTOR_FILE: String = "ten-states.json"
-const FIELDS: Array[String] = ["name", "pacman", "ghost", "heading", "pellets", "value", "action", "q"]
+## Every field this runner reads and its type, checked before it reads any
+## (T121): a cast that fails in a `-s` script is a SCRIPT ERROR the run
+## survives.
+const SHAPE: Dictionary = {
+	"tolerance": VectorShape.NUMBER,
+	"cases": [{"name": VectorShape.TEXT, "pacman": [VectorShape.NUMBER], "ghost": [VectorShape.NUMBER],
+			"heading": VectorShape.TEXT, "pellets": [[VectorShape.NUMBER]], "value": VectorShape.NUMBER,
+			"action": VectorShape.TEXT, "q": {"*": VectorShape.NUMBER}}],
+}
 
 
 func _init() -> void:
@@ -30,15 +38,16 @@ func _init() -> void:
 
 func _run(path: String) -> int:
 	var document: Dictionary = _read(path)
-	var cases: Array = document.get("cases", [])
+	var why: String = VectorShape.why_not(document, SHAPE, path)
+	if why != "":
+		printerr("mdp_vectors_runner: %s" % why)
+		return 2
+	var cases: Array = document["cases"]
 	if cases.is_empty() or not MdpPacMan.is_published():
 		printerr("mdp_vectors_runner: no cases in %s, or no published tables" % path)
 		return 2
 	var failures: Array[String] = []
 	for one: Dictionary in cases:
-		if not one.has_all(FIELDS):
-			printerr("mdp_vectors_runner: a case is missing one of %s" % [FIELDS])
-			return 2
 		failures += check_case(one, float(document["tolerance"]))
 	for failure: String in failures:
 		print(failure)

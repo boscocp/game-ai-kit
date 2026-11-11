@@ -57,6 +57,18 @@ func test_a_wrong_claim_is_caught() -> void:
 	assert_str(VECTORS.answer(validator, wrong["raw"])).is_not_equal(VECTORS.claimed(wrong))
 
 
+# T121: each of these, a list given as text in a copy of the real file,
+# was a SCRIPT ERROR that skipped the cases and let the runner exit 0.
+func test_a_vector_of_the_wrong_types_is_refused_before_it_is_read() -> void:
+	var vector: Dictionary = _vector()
+	assert_str(VectorShape.why_not(vector, VECTORS.SHAPE)).is_empty()
+	var paths: Array = [["cases"], ["declaration", "secrets"], ["declaration", "intents", "greet"],
+			["format_controls", "runs"], ["format_controls", "runs", 0]]
+	for path: Array in paths:
+		var why: String = VectorShape.why_not(VectorShape.planted(vector, path, "x"), VECTORS.SHAPE)
+		assert_str(why).override_failure_message(str(path)).is_not_empty()
+
+
 func test_a_refused_reply_is_the_games_line_and_says_why() -> void:
 	var reply: LlmReply = _validator().validate("I'd rather not say.")
 	assert_bool(reply.is_accepted()).is_false()

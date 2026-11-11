@@ -359,3 +359,16 @@ func _status(scene: TicTacToeExample) -> String:
 
 func _panel(scene: TicTacToeExample) -> String:
 	return (scene.get_node("Interface/Decision") as Label).text
+
+
+# T121: the MENACE vectors runner refuses a file of the wrong types before
+# it reads one. Beads given as text, in a copy of a real file, were a SCRIPT
+# ERROR that skipped the check and let the runner exit 0.
+func test_a_menace_vector_of_the_wrong_types_is_refused() -> void:
+	var runner: GDScript = preload("res://test/tictactoe/menace_vectors_runner.gd")
+	var vector: Dictionary = VectorShape.read_spec("vectors/menace/a-turned-board.json")
+	assert_str(VectorShape.why_not(vector, runner.SHAPE)).is_empty()
+	var paths: Array = [["cases"], ["cases", 0, "beads"], ["cases", 0, "move"]]
+	for path: Array in paths:
+		var why: String = VectorShape.why_not(VectorShape.planted(vector, path, "x"), runner.SHAPE)
+		assert_str(why).override_failure_message(str(path)).is_not_empty()

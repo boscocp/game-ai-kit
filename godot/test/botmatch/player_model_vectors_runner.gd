@@ -18,8 +18,6 @@
 # is arranged against.
 extends SceneTree
 
-const FIELDS: Array[String] = ["description", "last_step", "events", "readings"]
-
 
 func _init() -> void:
 	var arguments: PackedStringArray = OS.get_cmdline_user_args()
@@ -40,8 +38,9 @@ func _run(directory: String) -> int:
 	var readings: int = 0
 	for name: String in vectors:
 		var vector: Dictionary = vectors[name]
-		if not vector.has_all(FIELDS) or (vector["readings"] as Array).is_empty():
-			printerr("player_model_vectors_runner: %s is missing one of %s, or has no reading" % [name, FIELDS])
+		var why: String = VectorShape.why_not(vector, ModelVectorFiles.SHAPE, name)
+		if why != "" or (vector["readings"] as Array).is_empty():
+			printerr("player_model_vectors_runner: %s" % (why if why != "" else name + " has no reading"))
 			return 2
 		readings += (vector["readings"] as Array).size()
 		failures += ModelConformance.check_vector(name, vector, rules)

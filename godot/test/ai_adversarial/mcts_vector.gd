@@ -19,13 +19,36 @@ const CASE_KEYS: Array[String] = ["action", "exploration", "means", "name", "pla
 const NIM: Script = preload("res://test/ai_adversarial/nim_example.gd")
 const DICE_RACE: Script = preload("res://test/ai_adversarial/dice_race.gd")
 const GAMES: Array[String] = ["dice_race", "nim"]
+## The types this reads, checked before anything reads them (T121): the
+## file's after its keys, each case's after its own. A move and a state are
+## the game's own: a number of sticks taken in Nim, a name in the dice race.
+const SHAPE: Dictionary = {"game": VectorShape.TEXT, "cases": [VectorShape.OBJECT]}
+const CASE_SHAPES: Dictionary = {
+	"nim": {
+		"action": VectorShape.NUMBER, "exploration": VectorShape.NUMBER, "means": [VectorShape.NUMBER],
+		"name": VectorShape.TEXT, "playout_limit": VectorShape.NUMBER, "seed": VectorShape.NUMBER,
+		"state": {"player": VectorShape.NUMBER, "sticks": VectorShape.NUMBER},
+		"steps": [VectorShape.NUMBER], "visits": [VectorShape.NUMBER],
+	},
+	"dice_race": {
+		"action": VectorShape.TEXT, "exploration": VectorShape.NUMBER, "means": [VectorShape.NUMBER],
+		"name": VectorShape.TEXT, "playout_limit": VectorShape.NUMBER, "seed": VectorShape.NUMBER,
+		"state": {"player": VectorShape.NUMBER, "squares": [VectorShape.NUMBER]},
+		"steps": [VectorShape.NUMBER], "visits": [VectorShape.NUMBER],
+	},
+}
+## `xorshift.json`'s draws, read by `wrong_draws`.
+const DRAWS_SHAPE: Dictionary = {"cases": [{"seed": VectorShape.NUMBER, "draws": [VectorShape.NUMBER]}]}
 
 
 ## Why this dictionary is not a usable search vector, or "" when it is one.
 ## A key nobody reads is refused: a misspelt claim would otherwise be dropped.
-static func why_not_a_vector(vector: Dictionary) -> String:
+static func why_not_a_vector(vector: Dictionary, file: String = "the file") -> String:
 	if _sorted_keys(vector) != VECTOR_KEYS:
 		return "A1 its keys are %s, not %s" % [_sorted_keys(vector), VECTOR_KEYS]
+	var types: String = VectorShape.why_not(vector, SHAPE, file)
+	if types != "":
+		return "A7 " + types
 	if not vector["game"] in GAMES:
 		return "A2 it names a game the tests do not have: %s" % vector["game"]
 	if (vector["cases"] as Array).is_empty():
@@ -33,6 +56,9 @@ static func why_not_a_vector(vector: Dictionary) -> String:
 	for case: Dictionary in vector["cases"]:
 		if _sorted_keys(case) != CASE_KEYS:
 			return "A4 a case's keys are %s, not %s" % [_sorted_keys(case), CASE_KEYS]
+		types = VectorShape.why_not(case, CASE_SHAPES[vector["game"]], "a case")
+		if types != "":
+			return "A7 " + types
 		if (case["visits"] as Array).size() != (case["means"] as Array).size():
 			return "A5 %s: visits and means name different numbers of moves" % case["name"]
 		if _sum(case["visits"]) != _sum(case["steps"]):

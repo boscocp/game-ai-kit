@@ -15,7 +15,15 @@
 # arranged against.
 extends SceneTree
 
-const FIELDS: Array[String] = ["description", "steps", "events", "intensity", "changes"]
+## Every field this runner reads and its type, checked before it reads any
+## (T121): a cast that fails in a `-s` script is a SCRIPT ERROR the run
+## survives. An event carries what its kind needs, and only that.
+const SHAPE: Dictionary = {
+	"description": VectorShape.TEXT, "steps": VectorShape.NUMBER, "intensity": [VectorShape.NUMBER],
+	"events": [{"step": VectorShape.NUMBER, "kind": VectorShape.TEXT, "distance?": VectorShape.NUMBER,
+			"metres?": VectorShape.NUMBER, "points?": VectorShape.NUMBER, "on?": VectorShape.FLAG}],
+	"changes": [{"step": VectorShape.NUMBER, "from": VectorShape.TEXT, "to": VectorShape.TEXT}],
+}
 ## As near as a step's intensity must come: the file writes Python's
 ## doubles in full, and both sides do the same arithmetic.
 const CLOSE: float = 1e-9
@@ -39,8 +47,11 @@ func _run(directory: String) -> int:
 	var steps: int = 0
 	for name: String in files:
 		var vector: Dictionary = _read_vector(directory + "/" + name)
-		if not vector.has_all(FIELDS) or int(vector["steps"]) <= 0:
-			printerr("director_vectors_runner: %s is missing one of %s, or has no step" % [name, FIELDS])
+		var why: String = VectorShape.why_not(vector, SHAPE, name)
+		if why == "" and (int(vector["steps"]) <= 0 or (vector["intensity"] as Array).size() != int(vector["steps"])):
+			why = "%s has no step, or not one intensity a step" % name
+		if why != "":
+			printerr("director_vectors_runner: %s" % why)
 			return 2
 		steps += int(vector["steps"])
 		failures += check_vector(name, vector)

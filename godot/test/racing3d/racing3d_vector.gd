@@ -26,13 +26,35 @@ const POINT_FIELDS: Array[String] = ["line_forward", "line_left", "room_left", "
 ## The fewest points a view may show: the bend at a point is measured over
 ## RaceDriver3D.BEND_REACH points either side.
 const FEWEST_POINTS: int = 2 * RaceDriver3D.BEND_REACH + 1
+## The types this reads, checked before anything reads them (T121): a cast
+## that fails in a `-s` script is a SCRIPT ERROR the run survives. A rival
+## is a list of numbers; a frame's fields are `why_not_a_frame`'s to count.
+const SHAPE: Dictionary = {
+	"driver": {
+		"level": {"title": VectorShape.TEXT, "lookahead": VectorShape.NUMBER, "grip_margin": VectorShape.NUMBER,
+				"wander": VectorShape.NUMBER},
+		"known": {"top_speed": VectorShape.NUMBER, "wheelbase": VectorShape.NUMBER, "max_steer": VectorShape.NUMBER,
+				"grip": VectorShape.NUMBER, "braking": VectorShape.NUMBER, "slip_steer": VectorShape.NUMBER},
+		"drift_phases": [VectorShape.NUMBER],
+		"switches?": {"heat_vision?": VectorShape.FLAG, "full_pid?": VectorShape.FLAG},
+	},
+	"frames": [{
+		"view": {"line_forward?": [VectorShape.NUMBER], "line_left?": [VectorShape.NUMBER],
+				"room_left?": [VectorShape.NUMBER], "room_right?": [VectorShape.NUMBER],
+				"rivals?": [[VectorShape.NUMBER]], "*": VectorShape.NUMBER},
+		"expect": {"*": VectorShape.NUMBER},
+	}],
+}
 
 
 ## Why `vector` is not a racing vector, or "" when it is one.
-static func why_not_a_vector(vector: Dictionary) -> String:
+static func why_not_a_vector(vector: Dictionary, file: String = "the file") -> String:
 	for key: String in ["name", "why", "driver", "frames"]:
 		if not vector.has(key):
 			return "it has no %s" % key
+	var types: String = VectorShape.why_not(vector, SHAPE, file)
+	if types != "":
+		return types
 	if not (vector["frames"] is Array) or (vector["frames"] as Array).is_empty():
 		return "it shows the driver nothing"
 	for frame: Variant in vector["frames"]:

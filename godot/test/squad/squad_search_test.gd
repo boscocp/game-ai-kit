@@ -118,3 +118,34 @@ func _assert_walks_are_the_boards(board: BoardState, unit: Unit) -> void:
 func _written() -> Dictionary:
 	var path: String = ProjectSettings.globalize_path("res://").path_join("../spec/squad/positions.json")
 	return JSON.parse_string(FileAccess.get_file_as_string(path))
+
+
+# T121: the squad search vectors runner refuses a file of the wrong types
+# before it reads one. A map, pieces or visits given as text, in a copy of
+# the real file, were a SCRIPT ERROR that skipped the check and exited 0.
+func test_a_positions_file_of_the_wrong_types_is_refused() -> void:
+	var runner: GDScript = preload("res://test/squad/squad_search_vectors_runner.gd")
+	var written: Dictionary = VectorShape.read_spec("squad/positions.json")
+	assert_str(VectorShape.why_not(written, runner.SHAPE)).is_empty()
+	var paths: Array = [["map"], ["positions"], ["positions", 0, "pieces"], ["positions", 0, "visits"],
+			["positions", 0, "waiting"]]
+	for path: Array in paths:
+		var why: String = VectorShape.why_not(VectorShape.planted(written, path, "x"), runner.SHAPE)
+		assert_str(why).override_failure_message(str(path)).is_not_empty()
+
+# T121's review: a piece and a visit are tuples, cast item by item. A null
+# or a wrong type in one was a SCRIPT ERROR that left "agrees" behind and
+# let the runner exit 0; and a type the table lacks would fail the same way.
+func test_a_piece_or_a_visit_of_the_wrong_type_is_refused() -> void:
+	var runner: GDScript = preload("res://test/squad/squad_search_vectors_runner.gd")
+	var written: Dictionary = VectorShape.read_spec("squad/positions.json")
+	var paths: Array = [["positions", 0, "visits", 0, 1], ["positions", 0, "visits", 0, 0],
+			["positions", 1, "pieces", 2, 2], ["positions", 0, "pieces", 5, 4]]
+	for path: Array in paths:
+		for value: Variant in [null, {}]:
+			var why: String = VectorShape.why_not(VectorShape.planted(written, path, value), runner.SHAPE)
+			assert_str(why).override_failure_message("%s = %s" % [path, value]).is_not_empty()
+	var short: Dictionary = VectorShape.planted(written, ["positions", 0, "visits", 0], ["move"])
+	assert_str(VectorShape.why_not(short, runner.SHAPE)).ends_with("is not a list of 2")
+	var stranger: Dictionary = VectorShape.planted(written, ["positions", 0, "pieces", 0, 2], "dragon")
+	assert_str(runner.why_a_type_is_unknown(stranger)).contains("dragon")

@@ -34,7 +34,7 @@ func _run(directory: String) -> int:
 		if vector.is_empty():
 			printerr("flock_vectors_runner: %s is not readable JSON" % name)
 			return 2
-		var wrong: String = FlockVector.why_not_a_vector(vector)
+		var wrong: String = FlockVector.why_not_a_vector(vector, name)
 		if wrong != "":
 			printerr("flock_vectors_runner: %s is not a flock vector -- %s" % [name, wrong])
 			return 2

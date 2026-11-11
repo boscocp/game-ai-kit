@@ -15,7 +15,16 @@
 # arranged against.
 extends SceneTree
 
-const FIELDS: Array[String] = ["description", "map", "shooter", "target", "roll", "expected"]
+## Every field this runner reads and its type, checked before it reads any
+## (T121): a cast that fails in a `-s` script is a SCRIPT ERROR the run
+## survives, printing "0 failure(s)".
+const SHAPE: Dictionary = {
+	"description": VectorShape.TEXT, "map": [VectorShape.TEXT], "roll": VectorShape.NUMBER,
+	"shooter": {"cell": [VectorShape.NUMBER], "type": VectorShape.TEXT},
+	"target": {"cell": [VectorShape.NUMBER], "type": VectorShape.TEXT, "health": VectorShape.NUMBER},
+	"expected": {"cover": VectorShape.NUMBER, "flanked": VectorShape.FLAG, "chance": VectorShape.NUMBER,
+			"hit": VectorShape.FLAG, "target_left": VectorShape.NUMBER},
+}
 
 
 func _init() -> void:
@@ -35,8 +44,9 @@ func _run(directory: String) -> int:
 	var failures: Array[String] = []
 	for name: String in files:
 		var vector: Variant = JSON.parse_string(FileAccess.get_file_as_string(directory.path_join(name)))
-		if not vector is Dictionary or not (vector as Dictionary).has_all(FIELDS):
-			printerr("squad_vectors_runner: %s is not a vector with %s" % [name, FIELDS])
+		var why: String = VectorShape.why_not(vector, SHAPE, name)
+		if why != "":
+			printerr("squad_vectors_runner: %s" % why)
 			return 2
 		failures += check_vector(name, vector)
 	for failure: String in failures:

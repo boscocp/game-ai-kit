@@ -57,3 +57,16 @@ func test_the_wheels_are_worth_turning_less_the_faster_the_car_goes() -> void:
 	var driver := RaceDriver3D.new(RaceLevel3D.new("probe", 0.7, 0.9, 0.0), Race3D.sheet_of(CarPhysics3D.new()))
 	assert_float(driver.steer_limit(40.0)).is_less(driver.steer_limit(20.0))
 	assert_float(driver.steer_limit(1.0)).is_equal(driver.max_steer)
+
+
+# T121: a vector of the wrong types is refused before it is read. Each of
+# these, a list given as text in a copy of a real file, was a SCRIPT ERROR
+# that skipped the frame and let the runner exit 1 for the wrong reason.
+func test_a_racing_vector_of_the_wrong_types_is_refused() -> void:
+	var vector: Dictionary = VectorShape.read_spec("vectors/racing3d/a-bend-ahead-brakes-in-time.json")
+	assert_str(Racing3DVector.why_not_a_vector(vector)).is_empty()
+	var paths: Array = [["driver", "drift_phases"], ["frames", 0, "view", "line_forward"],
+			["frames", 0, "view", "room_left"], ["frames", 0, "view", "rivals"], ["frames", 0, "expect", "steer"]]
+	for path: Array in paths:
+		var why: String = Racing3DVector.why_not_a_vector(VectorShape.planted(vector, path, "x"))
+		assert_str(why).override_failure_message(str(path)).contains(" is not ")

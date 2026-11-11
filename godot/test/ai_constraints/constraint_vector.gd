@@ -9,15 +9,35 @@ const KEYS: Array[String] = ["assigned", "assignments", "backtracks", "binary", 
 		"mrv", "propagate", "pruned", "seed", "solution", "variables"]
 const RELATIONS: Array[String] = ["different", "less", "queens"]
 const GLOBALS: Array[String] = ["sum-at-most", "some-equals"]
+## The types this reads, checked before anything reads them (T121). A
+## domain is numbers or names, never both: the solver compares its values
+## with `!=` and `<`, and a name beside a number is a SCRIPT ERROR there.
+## V8 holds that, which the shape cannot say. An assigned value is only
+## compared whole with the solver's, so it may be either.
+const SHAPE: Dictionary = {
+	"assigned": [[VectorShape.TEXT, VectorShape.ANY]], "assignments": VectorShape.NUMBER, "backtracks": VectorShape.NUMBER,
+	"binary": [{"between": [VectorShape.TEXT], "relation": VectorShape.TEXT, "apart?": VectorShape.NUMBER}],
+	"global": [{"over": [VectorShape.TEXT], "relation": VectorShape.TEXT, "limit?": VectorShape.NUMBER,
+			"value?": VectorShape.NUMBER}],
+	"lcv": VectorShape.FLAG, "mrv": VectorShape.FLAG, "propagate": VectorShape.FLAG, "pruned": VectorShape.NUMBER,
+	"seed": VectorShape.NUMBER, "solution": VectorShape.OBJECT_OR_NULL,
+	"variables": [{"name": VectorShape.TEXT, "values": VectorShape.LIST}],
+}
 
 
 ## Why `vector` is not a usable vector, or "" when it is one -- the same
-## rules, V1 to V6, as `test_constraints_vectors.py`.
-static func why_not_a_vector(vector: Dictionary) -> String:
+## rules, V1 to V6, as `test_constraints_vectors.py`, and V7, its types.
+static func why_not_a_vector(vector: Dictionary, file: String = "the file") -> String:
 	var keys: Array = vector.keys()
 	keys.sort()
 	if keys != KEYS:
 		return "V1 its keys are %s, not %s" % [keys, KEYS]
+	var types: String = VectorShape.why_not(vector, SHAPE, file)
+	if types != "":
+		return "V7 " + types
+	for variable: Dictionary in vector["variables"]:
+		if not _one_kind(variable["values"]):
+			return "V8 %s's values are not all numbers or all names" % variable["name"]
 	if (vector["binary"] as Array).any(func(entry: Dictionary) -> bool: return not RELATIONS.has(entry.get("relation"))):
 		return "V2 a binary constraint names a relation neither side knows"
 	if (vector["global"] as Array).any(func(entry: Dictionary) -> bool: return not GLOBALS.has(entry.get("relation"))):
@@ -74,6 +94,13 @@ static func wrong_claims(vector: Dictionary, solver: ConstraintSolver) -> Array[
 		if claim[1] != claim[2]:
 			wrong.append("%s: %s, the vector says %s" % claim)
 	return wrong
+
+
+# True when every value is a number, or every value is a name.
+static func _one_kind(values: Array) -> bool:
+	var numbers: bool = values.all(func(value: Variant) -> bool: return value is float or value is int)
+	var names: bool = values.all(func(value: Variant) -> bool: return value is String)
+	return numbers or names
 
 
 # The sum of the values `names` have been given so far.

@@ -10,15 +10,72 @@ extends RefCounted
 ## Shared with `python/tests/test_utility_vectors.py`.
 const TOLERANCE: float = 1e-4
 const KINDS: Array[String] = ["action", "errands", "aim"]
+## The types each kind reads, beside the keys every vector has, checked
+## before anything reads them (T121): a cast that fails in a `-s` script is
+## a SCRIPT ERROR the run survives. `expect` is left to `differences`, which
+## compares any value without casting it.
+const SHAPES: Dictionary = {
+	"action": {
+		"query": {
+			"actions": [{
+				"name": VectorShape.TEXT, "weight": VectorShape.NUMBER,
+				"considerations": [{
+					"percept": VectorShape.TEXT, "curve": VectorShape.TEXT, "slope?": VectorShape.NUMBER,
+					"intercept?": VectorShape.NUMBER, "at?": VectorShape.NUMBER, "below?": VectorShape.NUMBER,
+					"above?": VectorShape.NUMBER,
+				}],
+			}],
+			"percepts": [{"*": VectorShape.NUMBER}],
+		},
+	},
+	"aim": {
+		"query": {
+			"spread": VectorShape.NUMBER,
+			"zones": [{
+				"name": VectorShape.TEXT, "multiplier": VectorShape.NUMBER, "aim": [VectorShape.NUMBER],
+				"rects": [[VectorShape.NUMBER]], "exposure": VectorShape.NUMBER,
+			}],
+			"rolls": [VectorShape.NUMBER],
+		},
+	},
+	"errands": {
+		"weights": {
+			"resupply_walk": VectorShape.NUMBER, "leave_holding": VectorShape.NUMBER,
+			"leave_attacking": VectorShape.NUMBER, "health_worth": VectorShape.NUMBER,
+			"power_worth": VectorShape.NUMBER, "power_walk": VectorShape.NUMBER,
+			"power_danger": VectorShape.NUMBER, "hide_second": VectorShape.NUMBER,
+		},
+		"query": {
+			"resupply": [{
+				"spent": VectorShape.NUMBER, "hurt": VectorShape.NUMBER, "exposure": VectorShape.NUMBER,
+				"earned_power": VectorShape.FLAG, "walk_seconds": VectorShape.NUMBER,
+				"attacking": VectorShape.FLAG, "empty": VectorShape.FLAG,
+			}],
+			"fetch": [{
+				"available": VectorShape.FLAG, "walk_seconds": VectorShape.NUMBER,
+				"enemies_near": VectorShape.NUMBER,
+			}],
+			"hide": [{
+				"available": VectorShape.FLAG, "hurt": VectorShape.NUMBER, "exposure": VectorShape.NUMBER,
+				"walk_seconds": VectorShape.NUMBER, "wait_seconds": VectorShape.NUMBER,
+				"attacking": VectorShape.FLAG,
+			}],
+			"teams": [[VectorShape.NUMBER]], "pairs": [[VectorShape.NUMBER]],
+		},
+	},
+}
 
 
 ## Why `vector` is not a utility vector, or "" when it is one.
-static func why_not_a_vector(vector: Dictionary) -> String:
+static func why_not_a_vector(vector: Dictionary, file: String = "the file") -> String:
 	for key: String in ["name", "why", "kind", "query", "expect"]:
 		if not vector.has(key):
 			return "it has no %s" % key
 	if not (str(vector["kind"]) in KINDS):
 		return "its kind %s is none of %s" % [vector["kind"], KINDS]
+	var types: String = VectorShape.why_not(vector, SHAPES[str(vector["kind"])], file)
+	if types != "":
+		return types
 	if not (vector["expect"] is Dictionary) or (vector["expect"] as Dictionary).is_empty():
 		return "it expects nothing"
 	return ""

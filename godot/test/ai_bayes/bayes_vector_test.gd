@@ -80,3 +80,14 @@ func test_a_network_that_takes_any_table_fails_the_refusals() -> void:
 	for name: String in ["refused-a-row-short.json", "refused-a-row-not-summing-to-one.json"]:
 		var vector: Dictionary = _vector(name)
 		assert_array(BayesVector.wrong_claims(vector, NoRowCheck.new(vector["network"]))).override_failure_message(name).is_not_empty()
+
+
+# T121: each of these, a list given as text in a copy of a real file, was
+# a SCRIPT ERROR that skipped the check and let the runner exit 0 or 1.
+func test_a_vector_of_the_wrong_types_is_refused_before_it_is_read() -> void:
+	var vector: Dictionary = _vector("burglary-explained-away.json")
+	var paths: Array = [["queries"], ["queries", 0, "distribution"], ["network", "variables"],
+			["network", "variables", 0, "parents"], ["network", "variables", 0, "table"]]
+	for path: Array in paths:
+		var why: String = BayesVector.why_not_a_vector(VectorShape.planted(vector, path, "x"))
+		assert_str(why).override_failure_message(str(path)).starts_with("V6")

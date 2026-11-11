@@ -32,8 +32,9 @@ func _init() -> void:
 
 func _run(directory: String) -> int:
 	var draws: Variant = _read(directory.path_join("xorshift.json"))
-	if not (draws is Dictionary) or (draws.get("cases", []) as Array).is_empty():
-		printerr("mcts_vectors_runner: xorshift.json under %s is missing or claims nothing" % directory)
+	var unreadable: String = VectorShape.why_not(draws, MctsVector.DRAWS_SHAPE, "xorshift.json")
+	if unreadable != "" or (draws["cases"] as Array).is_empty():
+		printerr("mcts_vectors_runner: xorshift.json under %s is missing or claims nothing -- %s" % [directory, unreadable])
 		return 2
 	var failures: Array[String] = []
 	for wrong: String in MctsVector.wrong_draws(draws):
@@ -41,7 +42,7 @@ func _run(directory: String) -> int:
 	var cases: int = 0
 	for name: String in SEARCH_FILES:
 		var vector: Variant = _read(directory.path_join(name))
-		var why: String = MctsVector.why_not_a_vector(vector) if vector is Dictionary else "missing, or not JSON"
+		var why: String = MctsVector.why_not_a_vector(vector, name) if vector is Dictionary else "missing, or not JSON"
 		if why != "":
 			printerr("mcts_vectors_runner: %s is not a search vector -- %s" % [name, why])
 			return 2
@@ -49,7 +50,9 @@ func _run(directory: String) -> int:
 		for wrong: String in MctsVector.wrong_claims(vector, MctsVector.addon_search()):
 			failures.append("%s: %s" % [name, wrong])
 	var expected: Variant = _read(directory.path_join(EXPECTIMINIMAX_FILE))
-	var refused: String = ExpectiminimaxVector.why_not_a_vector(expected) if expected is Dictionary else "missing, or not JSON"
+	var refused: String = "missing, or not JSON"
+	if expected is Dictionary:
+		refused = ExpectiminimaxVector.why_not_a_vector(expected, EXPECTIMINIMAX_FILE)
 	if refused != "":
 		printerr("mcts_vectors_runner: %s is not an expectiminimax vector -- %s" % [EXPECTIMINIMAX_FILE, refused])
 		return 2

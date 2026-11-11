@@ -16,18 +16,38 @@ extends RefCounted
 const TOLERANCE: float = 1e-12
 const VECTOR_KEYS: Array[String] = ["description", "network", "problem", "queries"]
 const QUERY_KEYS: Array[String] = ["distribution", "evidence", "influence", "query", "value"]
+## The types this reads, checked before anything reads them (T121): the
+## file's after its keys, each query's after its own.
+const SHAPE: Dictionary = {
+	"network": {"variables": [{
+		"name": VectorShape.TEXT, "values": [VectorShape.TEXT], "parents": [VectorShape.TEXT],
+		"table": [[VectorShape.NUMBER]],
+	}]},
+	"problem": VectorShape.TEXT,
+	"queries": [VectorShape.OBJECT],
+}
+const QUERY_SHAPE: Dictionary = {
+	"distribution": [VectorShape.NUMBER], "evidence": {"*": VectorShape.TEXT},
+	"influence": {"*": VectorShape.NUMBER}, "query": VectorShape.TEXT, "value": VectorShape.TEXT,
+}
 
 
 ## Why this dictionary is not a usable vector, or "" when it is one. A key
 ## nobody reads is refused: a misspelt claim would otherwise be dropped.
-static func why_not_a_vector(vector: Dictionary) -> String:
+static func why_not_a_vector(vector: Dictionary, file: String = "the file") -> String:
 	if _sorted_keys(vector) != VECTOR_KEYS:
 		return "V1 its keys are %s, not %s" % [_sorted_keys(vector), VECTOR_KEYS]
+	var types: String = VectorShape.why_not(vector, SHAPE, file)
+	if types != "":
+		return "V6 " + types
 	if (str(vector["problem"]) != "") == not (vector["queries"] as Array).is_empty():
 		return "V2 it must either name the rule a network is refused by, or ask it something -- one, not both"
 	for asked: Dictionary in vector["queries"]:
 		if _sorted_keys(asked) != QUERY_KEYS:
 			return "V3 a query's keys are %s, not %s" % [_sorted_keys(asked), QUERY_KEYS]
+		types = VectorShape.why_not(asked, QUERY_SHAPE, "a query")
+		if types != "":
+			return "V6 " + types
 		var distribution: Array = asked["distribution"]
 		if not distribution.is_empty() and absf(_sum(distribution) - 1.0) > 1e-9:
 			return "V4 a distribution does not sum to 1"

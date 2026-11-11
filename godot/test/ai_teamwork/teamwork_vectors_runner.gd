@@ -29,8 +29,9 @@ func _run(directory: String) -> int:
 	var failures: Array[String] = []
 	for name: String in files:
 		var vector: Variant = JSON.parse_string(FileAccess.get_file_as_string(directory + "/" + name))
-		if not (vector is Dictionary) or TeamworkVector.why_not_a_vector(vector) != "":
-			printerr("teamwork_vectors_runner: %s is not a teamwork vector" % name)
+		var why: String = TeamworkVector.why_not_a_vector(vector, name) if vector is Dictionary else "not JSON"
+		if why != "":
+			printerr("teamwork_vectors_runner: %s is not a teamwork vector -- %s" % [name, why])
 			return 2
 		failures.append_array(TeamworkVector.check(name, vector))
 	for failure: String in failures:

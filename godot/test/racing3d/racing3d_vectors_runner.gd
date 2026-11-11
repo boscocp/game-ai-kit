@@ -41,8 +41,9 @@ func _run(directory: String) -> int:
 	var failures: Array[String] = []
 	for name: String in files:
 		var vector: Variant = JSON.parse_string(FileAccess.get_file_as_string(directory + "/" + name))
-		if not (vector is Dictionary) or Racing3DVector.why_not_a_vector(vector) != "":
-			printerr("racing3d_vectors_runner: %s is not a racing vector" % name)
+		var why: String = Racing3DVector.why_not_a_vector(vector, name) if vector is Dictionary else "not JSON"
+		if why != "":
+			printerr("racing3d_vectors_runner: %s is not a racing vector -- %s" % [name, why])
 			return 2
 		failures.append_array(Racing3DVector.check(name, vector))
 	var engine: String = _errors.finding("the vectors")

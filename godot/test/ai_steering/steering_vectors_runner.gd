@@ -34,7 +34,7 @@ func _run(directory: String) -> int:
 		if vector.is_empty():
 			printerr("steering_vectors_runner: %s is not readable JSON" % name)
 			return 2
-		var wrong: String = SteeringVector.why_not_a_vector(vector)
+		var wrong: String = SteeringVector.why_not_a_vector(vector, name)
 		if wrong != "":
 			printerr("steering_vectors_runner: %s is not a steering vector -- %s" % [name, wrong])
 			return 2
