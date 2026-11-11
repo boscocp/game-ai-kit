@@ -5,8 +5,12 @@
 #
 # Each decision is searched as the scene searches it: one frame's
 # iterations when it is asked, then the rest a frame at a time
-# (`MctsSquad.keep_thinking`), each frame timed. A frame is one of those
-# calls; a decision is all of them together. The times are this machine's,
+# (`MctsSquad.keep_thinking`), each frame a share of the wall clock since
+# T117, and each timed. A frame is one of those calls; a decision is all of
+# them together. The worst frame is most often the first, which also plays
+# the last decision and looks at the board; the worst of the later frames,
+# the share's own, is printed beside it. Who wins does not depend on the share: a decision is its
+# iterations whatever the frames, so the wins are a counted run's. The times are this machine's,
 # under whatever else it is doing, which is why this is a measurement and
 # not a gate: `docs/godot/squad.md` keeps what it printed, with the date.
 #
@@ -24,6 +28,7 @@ const SEATS: Array[int] = [TacticalScenario.RED, TacticalScenario.BLUE]
 
 # This seat's frames and decisions, in microseconds, while a game is on.
 var _frames: Array[int] = []
+var _later_frames: Array[int] = []
 var _decisions: Array[int] = []
 var _last_usec: int = 0
 
@@ -52,12 +57,14 @@ func _seat(seat: int, iterations: int, games: int, first: int) -> Array[Dictiona
 		var red: BlueController = searcher if seat == TacticalScenario.RED else weighing
 		var blue: BlueController = weighing if seat == TacticalScenario.RED else searcher
 		_frames.clear()
+		_later_frames.clear()
 		_decisions.clear()
 		_last_usec = Time.get_ticks_usec()
 		var played: Dictionary = SquadMatch.play(red, blue, game, _think.bind(searcher))
 		var row: Dictionary = {"game": game, "seat": TacticalGame.SIDES[seat], "winner": played["winner"],
 			"won": played["winner"] == seat, "drawn": played["winner"] == TacticalVictory.DRAW,
 			"decisions": _decisions.size(), "decision usec": _decisions.duplicate(), "worst frame usec": _max(_frames),
+			"worst later frame usec": _max(_later_frames),
 			"frames": _frames.size(), "lost actions": played["lost"][seat]}
 		print(JSON.stringify(row.merged({"decision usec": _max(_decisions)}, true)))
 		rows.append(row)
@@ -77,6 +84,7 @@ func _think(controller: BlueController, searcher: MctsSquad) -> void:
 	while searcher.keep_thinking():
 		var frame: int = Time.get_ticks_usec() - started
 		_frames.append(frame)
+		_later_frames.append(frame)
 		decision += frame
 		started = Time.get_ticks_usec()
 	_decisions.append(decision)
@@ -88,12 +96,16 @@ func _summarise(seat: int, iterations: int, rows: Array[Dictionary]) -> void:
 	var drawn: int = rows.filter(func(row: Dictionary) -> bool: return row["drawn"]).size()
 	var times: Array[int] = []
 	var worst_frame: int = 0
+	var worst_later: int = 0
+	var frames: int = 0
 	for row: Dictionary in rows:
 		times.append_array(row["decision usec"])
 		worst_frame = maxi(worst_frame, row["worst frame usec"])
-	print("mcts %d iterations as %s against weighed: %d won, %d lost, %d drawn of %d; a decision %d ms on average, %d ms at most; worst frame %d ms" % [
+		worst_later = maxi(worst_later, row["worst later frame usec"])
+		frames += row["frames"]
+	print("mcts %d iterations as %s against weighed: %d won, %d lost, %d drawn of %d; a decision %d ms on average, %d ms at most, %d frames on average; worst frame %d ms, of the later frames %.1f ms" % [
 		iterations, TacticalGame.SIDES[seat], won, rows.size() - won - drawn, drawn, rows.size(), _mean(times) / 1000,
-		_max(times) / 1000, worst_frame / 1000])
+		_max(times) / 1000, frames / maxi(times.size(), 1), worst_frame / 1000, worst_later / 1000.0])
 
 
 static func _max(values: Array[int]) -> int:

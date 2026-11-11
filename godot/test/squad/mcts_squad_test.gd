@@ -13,6 +13,10 @@
 # plays the most visited answer, shows every answer, thinks a frame at a
 # time to its budget and plays then what it would have played at once, and
 # answers a refused walk with another. A seeded game replays to its digest.
+#
+# Since T117 a frame in the scene is a share of the wall clock: it stops by
+# its share, never past the budget, and changes nothing that is played --
+# the same answer, the same visits, the same seeded game, digest for digest.
 extends GdUnitTestSuite
 
 const RED: int = TacticalScenario.RED
@@ -30,6 +34,14 @@ const AT_LEAST_HEALTH: int = 14
 ## The seeded game's digest, as `SquadMatch.play` writes it. Measured in
 ## wave 125: the weighed enemy, blue, wins in round 11, no walk refused.
 const SEEDED_GAME_DIGEST: String = "1b6efb9e0f69314d8a6a902466090a1c73f96a26de1c9ed41635dddc6be231b8"
+## A frame's share in the clock checks, in microseconds: several times one
+## iteration, so a frame that stopped by its count would stop well short.
+const TEST_SHARE_USEC: int = 30_000
+## How far past its share a frame may run here before it is a finding. One
+## iteration is about a millisecond (wave 125); the rest is room for a
+## loaded machine. A frame that ignored the clock would search the rest of
+## the budget, seconds.
+const OVERRUN_ALLOWED_USEC: int = 250_000
 
 
 ## A searcher that believes the whole board: the planted case for an AI that
@@ -132,6 +144,7 @@ func test_a_frame_at_a_time_it_thinks_to_its_budget_and_plays_what_it_would_at_o
 	var at_once: TacticalDecision = MctsSquad.new(3, 40).decide_move(_rules.start(), 1)
 	var spread := MctsSquad.new(3, 40)
 	spread.spread_over_frames()
+	spread.frame_share_usec = 0  # counted, so the frames can be counted too
 	var decision: TacticalDecision = spread.decide_move(_rules.start(), 1)
 	var per_frame: int = int(MctsSquad.search_rules()["iterations_per_frame"])
 	assert_str(spread.search_lines()[0]).contains("%d of 40" % per_frame)
@@ -142,6 +155,56 @@ func test_a_frame_at_a_time_it_thinks_to_its_budget_and_plays_what_it_would_at_o
 	assert_str(spread.search_lines()[0]).contains("40 of 40")
 	assert_object(decision.target).is_equal(at_once.target)
 	assert_str(decision.kind()).is_equal(at_once.kind())
+
+
+func test_the_scene_way_searches_a_frame_by_the_rules_share() -> void:
+	var spread := MctsSquad.new(3)
+	spread.spread_over_frames()
+	assert_int(spread.frame_share_usec).is_equal(roundi(float(MctsSquad.search_rules()["frame_share_ms"]) * 1000.0))
+	assert_int(spread.frame_share_usec).is_greater(0)
+	assert_int(MctsSquad.new(3).frame_share_usec).is_equal(0)  # built for a match: counted
+
+
+func test_a_frame_on_its_share_stops_by_the_clock() -> void:
+	var spread := MctsSquad.new(3, 5_000)
+	spread.spread_over_frames()
+	spread.frame_share_usec = TEST_SHARE_USEC
+	spread.decide_move(_rules.start(), 1)
+	var before: int = spread.work_done()
+	var started: int = Time.get_ticks_usec()
+	assert_bool(spread.keep_thinking()).is_true()
+	var spent: int = Time.get_ticks_usec() - started
+	assert_int(spent).is_greater_equal(TEST_SHARE_USEC)
+	assert_int(spent).is_less(TEST_SHARE_USEC + OVERRUN_ALLOWED_USEC)
+	assert_int(spread.work_done() - before).is_greater(int(MctsSquad.search_rules()["iterations_per_frame"]))
+
+
+func test_a_frame_on_its_share_stops_at_the_budget_and_plays_what_it_would_at_once() -> void:
+	var at_once := MctsSquad.new(3, 40)
+	var expected: TacticalDecision = at_once.decide_move(_rules.start(), 1)
+	var spread := MctsSquad.new(3, 40)
+	spread.spread_over_frames()
+	spread.frame_share_usec = 1_000_000  # far more than 40 iterations take
+	var decision: TacticalDecision = spread.decide_move(_rules.start(), 1)
+	var started: int = Time.get_ticks_usec()
+	assert_bool(spread.keep_thinking()).is_true()
+	# Its budget spent, the frame stops then, not at the end of its share.
+	assert_int(Time.get_ticks_usec() - started).is_less(OVERRUN_ALLOWED_USEC)
+	assert_bool(spread.keep_thinking()).is_false()
+	assert_int(spread.work_done()).is_equal(40)
+	assert_str(spread.search_lines()[0]).contains("40 of 40")
+	assert_object(decision.target).is_equal(expected.target)
+	assert_str(decision.kind()).is_equal(expected.kind())
+	assert_array(spread.weighed()).is_equal(at_once.weighed())
+
+
+func test_a_seeded_game_on_the_share_replays_the_counted_digest() -> void:
+	var searcher := MctsSquad.new(1, BUDGET)
+	searcher.spread_over_frames()
+	var think_to_the_end: Callable = func(_asked: BlueController) -> void:
+		while searcher.keep_thinking():
+			pass
+	assert_str(SquadMatch.play(searcher, WeighedSquad.new(), 11, think_to_the_end)["digest"]).is_equal(SEEDED_GAME_DIGEST)
 
 
 func test_with_nobody_to_shoot_it_is_not_asked_to() -> void:

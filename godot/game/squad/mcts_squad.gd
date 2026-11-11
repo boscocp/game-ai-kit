@@ -5,7 +5,9 @@
 ## that the two searches are compared on the same information.
 ##
 ## Decide: `iterations` iterations of UCT on the board its side believes in
-## (`rules.json`'s `search`), the most visited answer played. The tree is
+## (`rules.json`'s `search`), the most visited answer played. In the scene
+## they are spread over frames, each searching until `frame_share_ms` of it
+## is spent (T117); the count is the decision's, the clock only how soon. The tree is
 ## the piece's whole question -- hold, walk to each cell, or shoot each
 ## target -- and below it the rest of the turn, the other side's, and
 ## playouts scored on health. No evaluation to write: a playout's end is
@@ -108,6 +110,12 @@ func board_said() -> String:
 
 func _work_per_frame() -> int:
 	return int(search_rules()["iterations_per_frame"])
+
+
+# The rules' `frame_share_ms` (T117): in the scene, after the first frame,
+# iterations run until this much of the frame is spent.
+func _frame_share_usec() -> int:
+	return roundi(float(search_rules()["frame_share_ms"]) * 1000.0)
 
 
 func _start_search(root: SquadSearchGame.Position) -> void:
