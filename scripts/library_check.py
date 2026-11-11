@@ -35,7 +35,8 @@ a command:
            its `project.godot` still the reader's, its `addons/` holding
            exactly the addons that have a zip of their own, no `class_name`
            declared twice, and the route example run on the kit's own
-           files (T160)
+           files (T160); then every script in it loaded, with nothing
+           still alive when the engine quits (T162)
   licence  every zip and the wheel carry LICENSE and NOTICE
 
 A `stranger.gd` run must exit 0 *and* print its marker: a script error
@@ -65,8 +66,10 @@ and, in the step `kit`: the kit unzipped into `my_kit/addons/`, a kit
 without `ai_core`, one without `grid_graph.gd`, one carrying `docs/`,
 one carrying a `project.godot` (unzip refuses to replace the reader's),
 the same unzipped with `-o` (the check sees the reader's project gone),
-one with an addon no zip of its own has, and one
-whose `ai_bandit` declares `GakXorshift` again; and a page with a step the check does not
+one with an addon no zip of its own has, one
+whose `ai_bandit` declares `GakXorshift` again, and one carrying
+`check_published.LEAKING`, three scripts that leave one alive at exit;
+and a page with a step the check does not
 take, or without one it does.
 
 Exit codes
@@ -93,6 +96,8 @@ import subprocess
 import sys
 import tempfile
 import zipfile
+
+from check_published import LEAKING, load_every_class
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 GODOT = REPO / "scripts" / "godot"
@@ -315,7 +320,9 @@ def kit_findings(place: Place, planted: Planted) -> list[str]:
     folders must be the same ones, both ways. Unzipped into a project of
     its own, nothing the per-addon zips installed can stand in for a file
     the kit lacks: the route example, saved by the step `route`, then runs
-    on the kit's own `ai_core` and `ai_search`.
+    on the kit's own `ai_core` and `ai_search`. Last, every script in the
+    kit is loaded, as `check_published.py` loads the store's download, and
+    the engine must not say at exit that one is still alive (T162).
     """
     project = place.kit_project
     findings = root_findings("kit", project, {"addons", "project.godot", ".godot"})
@@ -332,7 +339,7 @@ def kit_findings(place: Place, planted: Planted) -> list[str]:
     if findings:
         return findings
     shutil.copy(place.project / "route_example.gd", project / "route_example.gd")
-    return run_runner("kit", "route", project, planted)
+    return run_runner("kit", "route", project, planted) or load_every_class(project, "step 'kit'")[0]
 
 
 def run_example(step: str, text: str, place: Place, planted: Planted) -> list[str]:
@@ -496,6 +503,7 @@ def planted_faults(english: str) -> tuple[tuple[str, Planted, str], ...]:
         (kit_over, Planted(kit_extra=project), "my_kit/project.godot is not the reader's"),
         (english, Planted(kit_extra=(("addons/ai_zzz/VERSION", b"0.1.0\n"),)), "ai_zzz has no zip of its own"),
         (english, Planted(kit_extra=clash), "class_name GakXorshift is declared by"),
+        (english, Planted(kit_extra=tuple(LEAKING.items())), "step 'kit': loading every script leaves"),
     )
 
 
