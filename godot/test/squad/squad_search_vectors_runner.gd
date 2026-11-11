@@ -17,14 +17,16 @@ extends SceneTree
 
 ## Every field this runner reads and its type, checked before it reads any
 ## (T121): a cast that fails in a `-s` script is a SCRIPT ERROR the run
-## survives, printing "0 failure(s)". A piece, and an answer with its visits,
-## mix numbers and names.
+## survives, printing "0 failure(s)". A piece and an answer with its visits
+## are tuples: a piece is [id, faction, type, x, y, health, most health].
 const SHAPE: Dictionary = {
 	"about": [VectorShape.TEXT], "map": [VectorShape.TEXT],
 	"positions": [{"name": VectorShape.TEXT, "turn": VectorShape.NUMBER, "to_move": VectorShape.NUMBER,
 			"acting": VectorShape.NUMBER, "phase": VectorShape.TEXT, "waiting": [VectorShape.NUMBER],
-			"pieces": [[VectorShape.ANY]], "seed": VectorShape.NUMBER, "iterations": VectorShape.NUMBER,
-			"visits": [[VectorShape.ANY]], "decision": VectorShape.TEXT}],
+			"pieces": [[VectorShape.NUMBER, VectorShape.NUMBER, VectorShape.TEXT, VectorShape.NUMBER,
+					VectorShape.NUMBER, VectorShape.NUMBER, VectorShape.NUMBER]],
+			"seed": VectorShape.NUMBER, "iterations": VectorShape.NUMBER,
+			"visits": [[VectorShape.TEXT, VectorShape.NUMBER]], "decision": VectorShape.TEXT}],
 }
 
 
@@ -39,7 +41,9 @@ func _init() -> void:
 
 func _run(path: String) -> int:
 	var written: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
-	var why: String = VectorShape.why_not(written, SHAPE, path)
+	var why: String = VectorShape.why_not(written, SHAPE, path.get_file())
+	if why == "":
+		why = why_a_type_is_unknown(written)
 	if why != "" or (written["positions"] as Array).is_empty():
 		printerr("squad_search_vectors_runner: %s" % (why if why != "" else path + " holds no positions"))
 		return 2
@@ -50,6 +54,18 @@ func _run(path: String) -> int:
 		print(failure)
 	print("squad search vectors: %d position(s), %d failure(s)" % [written["positions"].size(), failures.size()])
 	return 1 if not failures.is_empty() else 0
+
+
+## "" when every piece names a unit type the squad's table has, or which
+## piece does not: the table is a dictionary, and a name it lacks would be a
+## SCRIPT ERROR in `root`.
+static func why_a_type_is_unknown(written: Dictionary) -> String:
+	var types: Dictionary = SquadTable.unit_types()
+	for position: Dictionary in written["positions"]:
+		var strangers: Array = position["pieces"].filter(func(piece: Array) -> bool: return not types.has(piece[2]))
+		if not strangers.is_empty():
+			return "%s: a piece is a %s, which the squad's table has not got" % [position["name"], strangers[0][2]]
+	return ""
 
 
 ## Nothing when `rows` is the tactical map; otherwise what is wrong.

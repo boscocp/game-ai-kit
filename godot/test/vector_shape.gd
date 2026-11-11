@@ -12,12 +12,17 @@
 ##
 ## A shape is a value like the file's own:
 ##
-##     {"seed": NUMBER, "draws": [NUMBER], "name?": TEXT, "board": [[NUMBER]]}
+##     {"seed": NUMBER, "draws": [NUMBER], "name?": TEXT, "board": [[NUMBER]],
+##      "visits": [[TEXT, NUMBER]]}
 ##
 ## - a dictionary: the value is an object, every key is there and matches;
 ##   a key ending in `?` may be absent, and `*` matches every key the shape
 ##   does not name (a table keyed by names);
 ## - a one-item list: the value is a list, every item matches that item;
+## - a list of two or more: a tuple -- the value is a list of exactly that
+##   many, each matching the shape in its place (`[TEXT, NUMBER]`, an answer
+##   and its visits);
+## - an empty list: any list, the same as `LIST`;
 ## - a leaf below: what one value must be.
 ##
 ## Only types. Whether a list may be empty, whether two lists agree in
@@ -42,8 +47,10 @@ const FLAG: int = TYPE_BOOL
 const OBJECT: int = TYPE_DICTIONARY
 ## Any list at all: its items are read by something that checks them.
 const LIST: int = TYPE_ARRAY
-## Anything, null included: read only by a comparison that copes with any
-## value, never cast.
+## Anything, null included. Only for a value nothing on this side casts:
+## one compared whole by `==` or `differences()`, or one only the Python
+## half reads. A value that is cast has a real shape -- a tuple, if its
+## items differ -- and a family rule where the shape cannot say it.
 const ANY: int = TYPE_NIL
 ## A number, an object or a list, or null where the file means "none": an
 ## unbounded cost, a puzzle with no solution, a map never finished.
@@ -73,8 +80,11 @@ static func read_spec(path_under_spec: String) -> Variant:
 
 ## A deep copy of `vector` with the value at `path` -- keys and indices,
 ## outermost first -- replaced by `value`. How a suite plants a wrong type
-## in a real file without touching the file.
+## in a real file without touching the file. An empty path is the whole
+## file, so `value` itself comes back.
 static func planted(vector: Variant, path: Array, value: Variant) -> Variant:
+	if path.is_empty():
+		return value
 	var copy: Variant = vector.duplicate(true)
 	var holder: Variant = copy
 	for step: Variant in path.slice(0, path.size() - 1):
@@ -117,11 +127,17 @@ static func _why_not_a_table(value: Dictionary, shape: Dictionary, where: String
 	return ""
 
 
+# A list: of anything (`[]`), of one shape (`[x]`), or a tuple (`[x, y]`).
 static func _why_not_a_list(value: Variant, shape: Array, where: String) -> String:
 	if not value is Array:
 		return "%s is not a list" % where
+	var tuple: bool = shape.size() > 1
+	if tuple and (value as Array).size() != shape.size():
+		return "%s is not a list of %d" % [where, shape.size()]
+	if shape.is_empty():
+		return ""
 	for index: int in (value as Array).size():
-		var why: String = why_not(value[index], shape[0], "%s[%d]" % [where, index])
+		var why: String = why_not(value[index], shape[index if tuple else 0], "%s[%d]" % [where, index])
 		if why != "":
 			return why
 	return ""

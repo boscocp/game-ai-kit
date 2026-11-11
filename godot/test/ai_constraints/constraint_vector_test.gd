@@ -70,3 +70,12 @@ func test_a_vector_of_the_wrong_types_is_refused_before_it_is_read() -> void:
 	for path: Array in paths:
 		var why: String = ConstraintVector.why_not_a_vector(VectorShape.planted(vector, path, "x"))
 		assert_str(why).override_failure_message(str(path)).starts_with("V7")
+
+# T121's review: a name among numbers reached the solver's `!=` as a SCRIPT
+# ERROR. A domain of one kind is V8 now, refused before the solver runs.
+func test_a_domain_of_names_and_numbers_is_refused() -> void:
+	var vector: Dictionary = _vector("australia-in-three-colours.json")
+	var why: String = ConstraintVector.why_not_a_vector(VectorShape.planted(vector, ["variables", 3, "values", 1], 5))
+	assert_str(why).starts_with("V8")
+	why = ConstraintVector.why_not_a_vector(VectorShape.planted(vector, ["variables", 3, "values", 1], null))
+	assert_str(why).starts_with("V8")

@@ -22,12 +22,12 @@ const SHAPE: Dictionary = {
 ## rules, C1 to C6, as `test_constraints_collapse.py`, and C7, its types.
 ## C5: a map needs an attempt left, and no map means every attempt failed or
 ## the build stopped at the first, on a contradiction before any collapse.
-static func why_not_a_vector(vector: Dictionary) -> String:
+static func why_not_a_vector(vector: Dictionary, file: String = "the file") -> String:
 	var keys: Array = vector.keys()
 	keys.sort()
 	if keys != KEYS:
 		return "C1 its keys are %s, not %s" % [keys, KEYS]
-	var types: String = VectorShape.why_not(vector, SHAPE)
+	var types: String = VectorShape.why_not(vector, SHAPE, file)
 	if types != "":
 		return "C7 " + types
 	var wrong_tiles: String = TileGrid.why_not({"tiles": vector["tiles"]})

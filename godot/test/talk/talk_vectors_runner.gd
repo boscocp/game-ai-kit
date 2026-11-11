@@ -58,28 +58,51 @@ func _run() -> void:
 	for name: String in vectors:
 		var vector: Variant = JSON.parse_string(FileAccess.get_file_as_string(directory.path_join(name)))
 		var why: String = VectorShape.why_not(vector, SHAPE, name)
+		var recording: Variant = null
+		if why == "":
+			recording = read_recording(vector, directory.path_join("../../..").simplify_path())
+			why = why_not_its_recording(vector, recording)
 		if why != "":
 			printerr("talk_vectors_runner: %s is not a vector -- %s" % [name, why])
 			quit(2)
 			return
 		turns += (vector["turns"] as Array).size()
-		failures += await _failures_in(name, vector, directory.path_join("../../..").simplify_path())
+		failures += await _failures_in(name, vector, recording)
 	for failure: String in failures:
 		print(failure)
 	print("talk vectors: %d conversation(s), %d turn(s), %d failure(s)" % [vectors.size(), turns, failures.size()])
 	quit(1 if not failures.is_empty() else 0)
 
 
-# One recording played to its end, each turn against the vector's.
-func _failures_in(name: String, vector: Dictionary, repo: String) -> Array[String]:
+## The recording `vector` names, parsed, with its path kept beside it for
+## the runtime that replays it; null when there is no such file.
+static func read_recording(vector: Dictionary, repo: String) -> Variant:
 	var path: String = repo.path_join(vector["recording"])
+	if not FileAccess.file_exists(path):
+		return null
 	var recording: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
-	var unreadable: String = VectorShape.why_not(recording, RECORDING_SHAPE, path)
-	if unreadable != "":
-		return ["%s: cannot read %s -- %s" % [name, path, unreadable]]
+	if recording is Dictionary:
+		recording["_path"] = path
+	return recording
+
+
+## Why `recording` cannot be played for `vector`, or "". A recording that is
+## missing, of the wrong types or shorter than the vector is a file the run
+## cannot read, so it exits 2 like the vector's own (T121's review).
+static func why_not_its_recording(vector: Dictionary, recording: Variant) -> String:
+	if recording == null:
+		return "%s is missing" % vector["recording"]
+	var why: String = VectorShape.why_not(recording, RECORDING_SHAPE, str(vector["recording"]).get_file())
+	if why == "" and (recording["turns"] as Array).size() < (vector["turns"] as Array).size():
+		why = "%s has fewer turns than the vector" % vector["recording"]
+	return why
+
+
+# One recording played to its end, each turn against the vector's.
+func _failures_in(name: String, vector: Dictionary, recording: Dictionary) -> Array[String]:
 	var guard := TalkGuard.new(recording["language"])
 	root.add_child(guard)
-	guard.use_runtime(RecordedRuntime.from_file(path))
+	guard.use_runtime(RecordedRuntime.from_file(recording["_path"]))
 	var failures: Array[String] = []
 	for index: int in (vector["turns"] as Array).size():
 		if guard.say(recording["turns"][index]["player"]) != OK:

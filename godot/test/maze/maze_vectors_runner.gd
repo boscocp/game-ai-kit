@@ -18,11 +18,13 @@ extends SceneTree
 
 ## Every field this runner reads and its type, checked before it reads any
 ## (T121): a cast that fails in a `-s` script is a SCRIPT ERROR the run
-## survives. A ghost in a snapshot is a list of cells, moves and names.
+## survives. A ghost in a snapshot is a tuple: its cell, its next move, how
+## it chose it, and its target.
 const SHAPE: Dictionary = {
 	"description": VectorShape.TEXT, "seed": VectorShape.NUMBER, "ghosts": [VectorShape.TEXT],
 	"moves": [VectorShape.TEXT],
-	"trace": [{"facing": VectorShape.TEXT, "ghosts": [[VectorShape.ANY]], "mode": VectorShape.TEXT,
+	"trace": [{"facing": VectorShape.TEXT, "ghosts": [[VectorShape.NUMBER, VectorShape.NUMBER,
+			VectorShape.TEXT, VectorShape.TEXT, VectorShape.NUMBER, VectorShape.NUMBER]], "mode": VectorShape.TEXT,
 			"outcome": VectorShape.TEXT, "pacman": [VectorShape.NUMBER], "pellets": VectorShape.NUMBER}],
 }
 

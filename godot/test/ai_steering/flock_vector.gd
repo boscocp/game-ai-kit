@@ -28,8 +28,10 @@ const SHAPE_KEYS: Dictionary = {
 const RULES: Array[String] = ["separation", "alignment", "cohesion", "flock"]
 ## The types each shape reads, checked before anything reads them (T121):
 ## a cast that fails in a `-s` script is a SCRIPT ERROR the run survives.
+## A key the shape requires and the file lacks is refused here too, by name.
 const SHAPES: Dictionary = {
 	"forces": {
+		"name": VectorShape.TEXT,
 		"boid": {"position": [VectorShape.NUMBER], "velocity": [VectorShape.NUMBER],
 				"max_speed": VectorShape.NUMBER, "max_force": VectorShape.NUMBER},
 		"neighbours": [{"position": [VectorShape.NUMBER], "velocity": [VectorShape.NUMBER]}],
@@ -39,6 +41,7 @@ const SHAPES: Dictionary = {
 				"cohesion": [VectorShape.NUMBER], "flock": [VectorShape.NUMBER]},
 	},
 	"steps": {
+		"name": VectorShape.TEXT,
 		"boids": [{"position": [VectorShape.NUMBER], "velocity": [VectorShape.NUMBER]}],
 		"max_speed": VectorShape.NUMBER, "max_force": VectorShape.NUMBER, "separation_radius": VectorShape.NUMBER,
 		"time_to_target?": VectorShape.NUMBER, "weights?": [VectorShape.NUMBER],
@@ -50,17 +53,14 @@ const SHAPES: Dictionary = {
 
 
 ## Why `vector` is not a flock vector, or "" when it is one.
-static func why_not_a_vector(vector: Dictionary) -> String:
-	var shape: String = vector.get("shape", "")
+static func why_not_a_vector(vector: Dictionary, file: String = "the file") -> String:
+	var shape: String = str(vector.get("shape", ""))
 	if not SHAPE_KEYS.has(shape):
 		return "there is no shape called %s" % shape
 	for key: String in vector:
 		if not key in SHAPE_KEYS[shape]:
 			return "a %s vector has no field %s" % [shape, key]
-	for key: String in SHAPE_KEYS[shape]:
-		if not key in ["why", "time_to_target", "weights"] and not vector.has(key):
-			return "it has no %s" % key
-	var types: String = VectorShape.why_not(vector, SHAPES[shape])
+	var types: String = VectorShape.why_not(vector, SHAPES[shape], file)
 	if types != "":
 		return types
 	if shape == "steps" and (vector["samples"] as Array).is_empty():

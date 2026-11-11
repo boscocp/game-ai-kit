@@ -41,11 +41,11 @@ const SHAPE: Dictionary = {
 
 
 ## Why `vector` is not a steering vector, or "" when it is one.
-static func why_not_a_vector(vector: Dictionary) -> String:
+static func why_not_a_vector(vector: Dictionary, file: String = "the file") -> String:
 	for key: String in ["name", "steps_per_second", "vehicle", "behaviours", "samples"]:
 		if not vector.has(key):
 			return "it has no %s" % key
-	var types: String = VectorShape.why_not(vector, SHAPE)
+	var types: String = VectorShape.why_not(vector, SHAPE, file)
 	if types != "":
 		return types
 	if (vector["samples"] as Array).is_empty():

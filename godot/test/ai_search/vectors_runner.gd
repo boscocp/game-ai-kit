@@ -51,7 +51,7 @@ func _run(directory: String) -> int:
 			printerr("vectors_runner: %s is not readable JSON" % name)
 			return 2
 		var flood: bool = str(vector.get("kind", "")) == "flood"
-		var wrong: String = FloodVector.why_not_a_vector(vector) if flood else SearchVector.why_not_a_vector(vector)
+		var wrong: String = FloodVector.why_not_a_vector(vector, name) if flood else SearchVector.why_not_a_vector(vector, name)
 		if wrong != "":
 			printerr("vectors_runner: %s is not a search vector -- %s" % [name, wrong])
 			return 2

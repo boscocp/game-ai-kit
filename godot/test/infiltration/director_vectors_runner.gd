@@ -17,10 +17,11 @@ extends SceneTree
 
 ## Every field this runner reads and its type, checked before it reads any
 ## (T121): a cast that fails in a `-s` script is a SCRIPT ERROR the run
-## survives. An event's other fields are the director's to read.
+## survives. An event carries what its kind needs, and only that.
 const SHAPE: Dictionary = {
 	"description": VectorShape.TEXT, "steps": VectorShape.NUMBER, "intensity": [VectorShape.NUMBER],
-	"events": [{"step": VectorShape.NUMBER, "kind": VectorShape.TEXT, "*": VectorShape.ANY}],
+	"events": [{"step": VectorShape.NUMBER, "kind": VectorShape.TEXT, "distance?": VectorShape.NUMBER,
+			"metres?": VectorShape.NUMBER, "points?": VectorShape.NUMBER, "on?": VectorShape.FLAG}],
 	"changes": [{"step": VectorShape.NUMBER, "from": VectorShape.TEXT, "to": VectorShape.TEXT}],
 }
 ## As near as a step's intensity must come: the file writes Python's

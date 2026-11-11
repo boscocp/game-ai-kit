@@ -29,7 +29,7 @@ func _run(directory: String) -> int:
 	var failures: Array[String] = []
 	for name: String in files:
 		var vector: Variant = JSON.parse_string(FileAccess.get_file_as_string(directory + "/" + name))
-		var why: String = UtilityVector.why_not_a_vector(vector) if vector is Dictionary else "not JSON"
+		var why: String = UtilityVector.why_not_a_vector(vector, name) if vector is Dictionary else "not JSON"
 		if why != "":
 			printerr("utility_vectors_runner: %s is not a utility vector -- %s" % [name, why])
 			return 2

@@ -36,8 +36,8 @@ const SHAPE: Dictionary = {
 ## a dictionary and nothing else used to reach the board builder and crash it,
 ## rows of different lengths were padded or truncated in silence, and a `from`
 ## off the board produced a conforming vector whose path walked in from nowhere.
-static func why_not_a_vector(data: Dictionary) -> String:
-	var shape: String = _why_shape_is_wrong(data)
+static func why_not_a_vector(data: Dictionary, file: String = "the file") -> String:
+	var shape: String = _why_shape_is_wrong(data, file)
 	if shape != "":
 		return shape
 	var rows: Array = data["costs"]
@@ -79,11 +79,11 @@ static func check(name: String, data: Dictionary, searches: Dictionary) -> Array
 	return problems
 
 
-static func _why_shape_is_wrong(data: Dictionary) -> String:
+static func _why_shape_is_wrong(data: Dictionary, file: String) -> String:
 	for field: String in ["costs", "from", "to", "expect"]:
 		if not data.has(field):
 			return "no `%s` field" % field
-	var types: String = VectorShape.why_not(data, SHAPE)
+	var types: String = VectorShape.why_not(data, SHAPE, file)
 	if types != "":
 		return types
 	if not (data["costs"] is Array) or (data["costs"] as Array).is_empty():

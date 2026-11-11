@@ -37,7 +37,7 @@ func _run(directory: String) -> int:
 		failures.append(counter)
 	for name: String in files:
 		var vector: Variant = JSON.parse_string(FileAccess.get_file_as_string(directory + "/" + name))
-		var why: String = PerceptionVector.why_not_a_vector(vector) if vector is Dictionary else "not JSON"
+		var why: String = PerceptionVector.why_not_a_vector(vector, name) if vector is Dictionary else "not JSON"
 		if why != "":
 			printerr("perception_vectors_runner: %s is not a perception vector -- %s" % [name, why])
 			return 2

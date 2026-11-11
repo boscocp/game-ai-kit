@@ -20,50 +20,72 @@ const KINDS: Array[String] = ["shape", "loudness", "awareness", "phase", "belief
 ## compares any value without casting it.
 const SHAPES: Dictionary = {
 	"shape": {
-		"shape": {"zones": [{"name": VectorShape.TEXT, "near": VectorShape.NUMBER, "far": VectorShape.NUMBER,
-				"half_angle": VectorShape.NUMBER, "certainty": VectorShape.NUMBER}],
-				"dark_share": VectorShape.NUMBER, "motion_bonus": VectorShape.NUMBER},
-		"query": {"looks": [{"distance": VectorShape.NUMBER, "angle": VectorShape.NUMBER,
-				"points": [VectorShape.FLAG], "needed": VectorShape.NUMBER, "light": VectorShape.NUMBER,
-				"moving": VectorShape.FLAG, "hidden": VectorShape.NUMBER}]},
+		"shape": {
+			"zones": [{
+				"name": VectorShape.TEXT, "near": VectorShape.NUMBER, "far": VectorShape.NUMBER,
+				"half_angle": VectorShape.NUMBER, "certainty": VectorShape.NUMBER,
+			}],
+			"dark_share": VectorShape.NUMBER, "motion_bonus": VectorShape.NUMBER,
+		},
+		"query": {
+			"looks": [{
+				"distance": VectorShape.NUMBER, "angle": VectorShape.NUMBER, "points": [VectorShape.FLAG],
+				"needed": VectorShape.NUMBER, "light": VectorShape.NUMBER, "moving": VectorShape.FLAG,
+				"hidden": VectorShape.NUMBER,
+			}],
+		},
 	},
 	"awareness": {
-		"row": {"peak": VectorShape.NUMBER, "decay": VectorShape.NUMBER, "phases": [{"name": VectorShape.TEXT,
-				"at": VectorShape.NUMBER, "decay?": VectorShape.NUMBER}],
-				"caution": {"floor": VectorShape.NUMBER, "seconds": VectorShape.NUMBER}},
-		"query": {"steps": [{"perceived": VectorShape.FLAG, "rate": VectorShape.NUMBER,
-				"seconds": VectorShape.NUMBER, "now": VectorShape.NUMBER}]},
+		"row": {
+			"peak": VectorShape.NUMBER, "decay": VectorShape.NUMBER,
+			"phases": [{"name": VectorShape.TEXT, "at": VectorShape.NUMBER, "decay?": VectorShape.NUMBER}],
+			"caution": {"floor": VectorShape.NUMBER, "seconds": VectorShape.NUMBER},
+		},
+		"query": {
+			"steps": [{
+				"perceived": VectorShape.FLAG, "rate": VectorShape.NUMBER, "seconds": VectorShape.NUMBER,
+				"now": VectorShape.NUMBER,
+			}],
+		},
 	},
 	"belief": {
-		"query": {"neighbours": [[VectorShape.NUMBER]], "steps": [{"collapse?": VectorShape.NUMBER,
-				"seen?": [VectorShape.NUMBER], "spread?": VectorShape.NUMBER}]},
+		"query": {
+			"neighbours": [[VectorShape.NUMBER]],
+			"steps": [{
+				"collapse?": VectorShape.NUMBER, "seen?": [VectorShape.NUMBER], "spread?": VectorShape.NUMBER,
+			}],
+		},
 	},
-	"loudness": {
-		"query": {"heard": [[VectorShape.NUMBER]]},
-	},
+	"loudness": {"query": {"heard": [[VectorShape.NUMBER]]}},
 	"particles": {
-		"query": {"neighbours": [[VectorShape.NUMBER]], "count": VectorShape.NUMBER, "seed": VectorShape.NUMBER,
-				"knobs": {"walk_on": VectorShape.NUMBER, "turn": VectorShape.NUMBER,
-				"unheard": VectorShape.NUMBER}, "steps": [{"collapse?": VectorShape.NUMBER,
-				"seen?": [VectorShape.NUMBER], "unheard?": [VectorShape.NUMBER]}]},
+		"query": {
+			"neighbours": [[VectorShape.NUMBER]], "count": VectorShape.NUMBER, "seed": VectorShape.NUMBER,
+			"knobs": {"walk_on": VectorShape.NUMBER, "turn": VectorShape.NUMBER, "unheard": VectorShape.NUMBER},
+			"steps": [{
+				"collapse?": VectorShape.NUMBER, "seen?": [VectorShape.NUMBER],
+				"unheard?": [VectorShape.NUMBER],
+			}],
+		},
 	},
 	"phase": {
-		"row": {"peak": VectorShape.NUMBER, "decay": VectorShape.NUMBER, "phases": [{"name": VectorShape.TEXT,
-				"at": VectorShape.NUMBER}], "caution": {"floor": VectorShape.NUMBER,
-				"seconds": VectorShape.NUMBER}},
+		"row": {
+			"peak": VectorShape.NUMBER, "decay": VectorShape.NUMBER,
+			"phases": [{"name": VectorShape.TEXT, "at": VectorShape.NUMBER}],
+			"caution": {"floor": VectorShape.NUMBER, "seconds": VectorShape.NUMBER},
+		},
 		"query": {"numbers": [VectorShape.NUMBER]},
 	},
 }
 
 
 ## Why `vector` is not a perception vector, or "" when it is one.
-static func why_not_a_vector(vector: Dictionary) -> String:
+static func why_not_a_vector(vector: Dictionary, file: String = "the file") -> String:
 	for key: String in ["name", "why", "kind", "query", "expect"]:
 		if not vector.has(key):
 			return "it has no %s" % key
 	if not (str(vector["kind"]) in KINDS):
 		return "its kind %s is none of %s" % [vector["kind"], KINDS]
-	var types: String = VectorShape.why_not(vector, SHAPES[str(vector["kind"])])
+	var types: String = VectorShape.why_not(vector, SHAPES[str(vector["kind"])], file)
 	if types != "":
 		return types
 	if not (vector["expect"] is Dictionary) or (vector["expect"] as Dictionary).is_empty():

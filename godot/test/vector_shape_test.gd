@@ -65,3 +65,20 @@ func test_planting_leaves_the_original_alone() -> void:
 	var sound: Dictionary = _sound()
 	var _planted: Dictionary = VectorShape.planted(sound, ["cases", 0, "name"], 1)
 	assert_str(sound["cases"][0]["name"]).is_equal("first")
+
+
+# T121's review: a list whose items each have their own type -- a piece, a
+# visit -- had no shape but `ANY`, and was cast after all.
+func test_a_tuple_holds_its_length_and_each_place() -> void:
+	var visit: Array = [VectorShape.TEXT, VectorShape.NUMBER]
+	assert_str(VectorShape.why_not(["shoot", 3], visit)).is_empty()
+	assert_str(VectorShape.why_not(["shoot", null], visit)).is_equal("the file[1] is not a number")
+	assert_str(VectorShape.why_not([5, 3], visit)).is_equal("the file[0] is not text")
+	assert_str(VectorShape.why_not(["shoot"], visit)).is_equal("the file is not a list of 2")
+	assert_str(VectorShape.why_not(["shoot", 3, 4], visit)).is_equal("the file is not a list of 2")
+
+
+func test_an_empty_list_shape_is_any_list_and_an_empty_path_the_whole_file() -> void:
+	assert_str(VectorShape.why_not([1, "a", null], [])).is_empty()
+	assert_str(VectorShape.why_not("x", [])).is_equal("the file is not a list")
+	assert_str(VectorShape.planted(_sound(), [], "x")).is_equal("x")

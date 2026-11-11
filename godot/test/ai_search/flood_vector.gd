@@ -19,11 +19,11 @@ const SHAPE: Dictionary = {
 
 
 ## Why `data` is not a flood vector, or "" when it is one.
-static func why_not_a_vector(data: Dictionary) -> String:
+static func why_not_a_vector(data: Dictionary, file: String = "the file") -> String:
 	for field: String in ["costs", "from", "limit", "expect"]:
 		if not data.has(field):
 			return "no `%s` field" % field
-	var types: String = VectorShape.why_not(data, SHAPE)
+	var types: String = VectorShape.why_not(data, SHAPE, file)
 	if types != "":
 		return types
 	if not (data["expect"] is Dictionary) or not (data["expect"].get("reached") is Array):

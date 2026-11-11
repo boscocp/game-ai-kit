@@ -33,7 +33,7 @@ func _run(directory: String) -> int:
 	var failures: Array[String] = []
 	for name: String in vectors:
 		var vector: Variant = JSON.parse_string(FileAccess.get_file_as_string(directory.path_join(name)))
-		var wrong: String = NGramVector.why_not_a_vector(vector) if vector is Dictionary else "not JSON"
+		var wrong: String = NGramVector.why_not_a_vector(vector, name) if vector is Dictionary else "not JSON"
 		if wrong != "":
 			printerr("ngram_vectors_runner: %s is not an n-gram vector -- %s" % [name, wrong])
 			return 2

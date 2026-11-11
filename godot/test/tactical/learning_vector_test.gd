@@ -356,3 +356,15 @@ func test_a_vector_of_the_wrong_types_is_refused_before_it_is_read() -> void:
 	for path: Array in paths:
 		var why: String = LearningVector.why_not_a_vector(VectorShape.planted(vector, path, "x"))
 		assert_str(why).override_failure_message(str(path)).is_not_empty()
+
+# T121's review: a wrong *leaf* reached a cast. `int(null)` was a SCRIPT
+# ERROR that left "" behind, read as "nothing wrong", and `int("x")` is 0,
+# which nothing reported. Each is refused as V11 now, before any cast.
+func test_a_leaf_of_the_wrong_type_is_refused_before_it_is_cast() -> void:
+	var vector: Dictionary = VectorShape.read_spec("vectors/learning/two-nodes-one-army.json")
+	assert_str(LearningVector.why_not_a_vector(vector)).is_empty()
+	var paths: Array = [["board", "units", 1, "faction"], ["board", "costs", 0, 0], ["cases", 0, "attacker"]]
+	for path: Array in paths:
+		for value: Variant in [null, {}, "x"]:
+			var why: String = LearningVector.why_not_a_vector(VectorShape.planted(vector, path, value))
+			assert_str(why).override_failure_message("%s = %s" % [path, value]).starts_with("V11")

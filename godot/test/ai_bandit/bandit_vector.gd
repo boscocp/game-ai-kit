@@ -25,10 +25,10 @@ const SHAPE: Dictionary = {
 
 ## Why this dictionary is not a usable vector, or "" when it is one. A key
 ## nobody reads is refused: a misspelt claim would otherwise be dropped.
-static func why_not_a_vector(vector: Dictionary) -> String:
+static func why_not_a_vector(vector: Dictionary, file: String = "the file") -> String:
 	if _sorted_keys(vector) != VECTOR_KEYS:
 		return "V1 its keys are %s, not %s" % [_sorted_keys(vector), VECTOR_KEYS]
-	var types: String = VectorShape.why_not(vector, SHAPE)
+	var types: String = VectorShape.why_not(vector, SHAPE, file)
 	if types != "":
 		return "V8 " + types
 	var settings: String = bandit_of(vector).problem()

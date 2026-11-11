@@ -267,7 +267,8 @@ func test_a_maze_vector_of_the_wrong_types_is_refused() -> void:
 	var runner: GDScript = preload("res://test/maze/maze_vectors_runner.gd")
 	var vector: Dictionary = VectorShape.read_spec("vectors/maze/an-imprecise-turn-in-chase.json")
 	assert_str(VectorShape.why_not(vector, runner.SHAPE)).is_empty()
-	var paths: Array = [["ghosts"], ["moves"], ["trace"], ["trace", 0, "pacman"], ["trace", 0, "ghosts", 0]]
+	var paths: Array = [["ghosts"], ["moves"], ["trace"], ["trace", 0, "pacman"], ["trace", 0, "ghosts", 0],
+			["trace", 3, "ghosts", 0, 0]]
 	for path: Array in paths:
 		var why: String = VectorShape.why_not(VectorShape.planted(vector, path, "x"), runner.SHAPE)
 		assert_str(why).override_failure_message(str(path)).is_not_empty()

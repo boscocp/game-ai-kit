@@ -16,6 +16,7 @@ extends SceneTree
 const NAMES: Array[String] = ["fit-by-hand", "fit-capped", "fit-a-tie"]
 ## The types this runner reads, checked before it reads any (T121). The
 ## model's own are `ModelFile`'s to refuse, and a refusal is a failure.
+## `rows` is `ANY` inside: only the Python fit reads them, never this side.
 const SHAPE: Dictionary = {
 	"model": VectorShape.OBJECT, "rows": [[VectorShape.ANY]], "max_depth": VectorShape.NUMBER,
 	"min_leaf": VectorShape.NUMBER,

@@ -307,3 +307,17 @@ func test_a_talk_vector_of_the_wrong_types_is_refused() -> void:
 	var recording: Variant = VectorShape.read_spec("../" + vector["recording"])
 	assert_str(VectorShape.why_not(recording, runner.RECORDING_SHAPE)).is_empty()
 	assert_str(VectorShape.why_not(VectorShape.planted(recording, ["turns"], "x"), runner.RECORDING_SHAPE)).is_not_empty()
+
+
+# T121's review: a recording of the wrong type was a failure, exit 1. It is
+# a file the run cannot read, so it is refused like the vector's own.
+func test_a_recording_of_the_wrong_type_or_too_short_is_refused() -> void:
+	var runner: GDScript = preload("res://test/talk/talk_vectors_runner.gd")
+	var vector: Dictionary = VectorShape.read_spec("vectors/talk/becoming-the-expected.en.json")
+	var recording: Dictionary = VectorShape.read_spec("../" + vector["recording"])
+	assert_str(runner.why_not_its_recording(vector, recording)).is_empty()
+	var planted: Dictionary = VectorShape.planted(recording, ["turns"], "x")
+	assert_str(runner.why_not_its_recording(vector, planted)).contains("turns is not a list")
+	var short: Dictionary = VectorShape.planted(recording, ["turns"], [])
+	assert_str(runner.why_not_its_recording(vector, short)).contains("fewer turns")
+	assert_str(runner.why_not_its_recording(vector, null)).contains("missing")
