@@ -159,20 +159,66 @@ static func why_not_levels(data: Dictionary, table_data: Dictionary) -> String:
 	return ""
 
 
-# One level: a pool of at least one token and a delay of no less than zero
-# for each kind, a wave of at least one no larger than its cap, and tells
-# that stay readable.
+# One level: its fields of the right shape, then a pool of at least one
+# token and a delay of no less than zero for each kind, a wave of at least
+# one no larger than its cap, and tells that stay readable.
 static func _why_not_one(fields: Dictionary, table_data: Dictionary) -> String:
+	var shape: String = _why_not_shape(fields)
+	if shape != "":
+		return shape
 	for kind: String in KINDS:
-		var pool: int = int(fields.get("tokens", {}).get("pools", {}).get(kind, 0))
-		var delay: float = float(fields.get("tokens", {}).get("delays", {}).get(kind, -1.0))
-		var wave: int = int(fields.get("wave", {}).get(kind, 0))
-		var cap: int = int(fields.get("wave_cap", {}).get(kind, 0))
+		var pool: int = int(fields["tokens"]["pools"][kind])
+		var delay: float = float(fields["tokens"]["delays"][kind])
+		var wave: int = int(fields["wave"][kind])
+		var cap: int = int(fields["wave_cap"][kind])
 		if pool < 1 or delay < 0.0:
 			return "%s needs a pool of at least 1 and a delay of 0 or more" % kind  # not shown: a refusal for whoever edits the data, in its keys' English
 		if wave < 1 or cap < wave:
 			return "%s's wave is %d and its cap %d; a wave needs one minion, and no more than the cap" % [kind, wave, cap]  # not shown: a refusal for whoever edits the data, in its keys' English
 	return _why_not_readable(fields, table_data)
+
+
+# Every section an object, every count a whole number and every other
+# number a number: refused, never read as something else -- "fast" is not
+# 0 s, and 2.9 minions is not 2.
+static func _why_not_shape(fields: Dictionary) -> String:
+	var tokens: Variant = fields.get("tokens")
+	if not (tokens is Dictionary):
+		return "tokens must be an object with pools and delays"  # not shown: a refusal for whoever edits the data, in its keys' English
+	var sections: Dictionary = {"pools": tokens.get("pools"), "delays": tokens.get("delays"),
+		"wave": fields.get("wave"), "wave_cap": fields.get("wave_cap")}
+	for section: String in sections:
+		var objection: String = _why_not_section(section, sections[section])
+		if objection != "":
+			return objection
+	for key: String in ["telegraph_scale", "minimum_telegraph"]:
+		if not is_number(fields.get(key), false):
+			return "%s is %s, not a number" % [key, JSON.stringify(fields.get(key))]  # not shown: a refusal for whoever edits the data, in its keys' English
+	return ""
+
+
+## True when `value` is a number -- and, when `whole`, one with nothing
+## after the point. JSON reads every number as a float, so 3.0 is whole.
+static func is_number(value: Variant, whole: bool) -> bool:
+	if not (value is int or value is float):
+		return false
+	return not whole or float(value) == floorf(float(value))
+
+
+# One section, as `section` names it: an object with a number for each
+# kind -- a whole one, except for the delays, which are seconds.
+static func _why_not_section(section: String, value: Variant) -> String:
+	if not (value is Dictionary):
+		return "%s must be an object with melee and ranged" % section  # not shown: a refusal for whoever edits the data, in its keys' English
+	var whole: bool = section != "delays"
+	for kind: String in KINDS:
+		if not is_number(value.get(kind), whole):
+			return "%s.%s is %s, not a %s" % [section, kind, JSON.stringify(value.get(kind)), _number_word(whole)]  # not shown: a refusal for whoever edits the data, in its keys' English
+	return ""
+
+
+static func _number_word(whole: bool) -> String:
+	return "whole number" if whole else "number"  # not shown: part of a refusal for whoever edits the data
 
 
 # The tells: a speed above zero, a minimum no lower than the boss table's,

@@ -45,6 +45,36 @@ class WavesInThePeak:
 		return sent
 
 
+func test_the_director_s_numbers_are_checked_and_refused_by_name() -> void:
+	var shipped: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(BossFightRules.FILE))["director"]
+	assert_str(BossDirector.why_not_numbers(shipped)).is_empty()
+	var mistakes: Dictionary = {"wave_every": 0.0, "peak_seconds": -1.0, "relief_seconds": "soon", "relief_at": 1.5}
+	for key: String in mistakes:
+		var numbers: Dictionary = NUMBERS.duplicate()
+		numbers[key] = mistakes[key]
+		assert_str(BossDirector.why_not_numbers(numbers)).override_failure_message(key).contains(key)
+	var unpaced: Dictionary = NUMBERS.duplicate()
+	unpaced.erase("wave_every")
+	assert_str(BossDirector.why_not_numbers(unpaced)).contains("wave_every")
+
+
+func test_a_summon_late_in_a_peak_starts_its_seconds_over() -> void:
+	var director := BossDirector.new(NUMBERS)
+	director.step(1.0, [], 6, true, false)
+	director.step(14.0, SUMMON, 6, true, false)
+	assert_float(director.since).is_equal(14.0)
+	director.step(16.5, [], 6, true, false)
+	assert_str(director.state).is_equal(BossDirector.PEAK)
+
+
+func test_a_heavy_blow_is_named_only_when_a_wave_is_due() -> void:
+	var director := BossDirector.new(NUMBERS)
+	director.step(2.0, [], 3, false, true)
+	assert_str(director.waits_for()).is_equal(BossDirector.WAITS_FOR_TIME)
+	director.step(8.5, [], 3, false, true)
+	assert_str(director.waits_for()).is_equal(BossDirector.WAITS_FOR_HEAVY)
+
+
 func test_build_up_sends_a_wave_every_few_seconds() -> void:
 	var director := BossDirector.new(NUMBERS)
 	var waves: Array[float] = _run(director, 0.0, 170, 3, false, false)

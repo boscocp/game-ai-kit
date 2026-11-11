@@ -133,6 +133,21 @@ func test_the_file_s_other_mistakes_are_refused_by_name() -> void:
 	var empty_pool: Dictionary = _shipped()
 	empty_pool["levels"][1]["tokens"]["pools"]["ranged"] = 0
 	assert_str(BossDifficulty.from_data(empty_pool, _table()).refusal).contains("level normal").contains("pool")
+	var wrong_shapes: Dictionary = {
+		"a number for tokens": ["tokens", 5, "tokens must be an object"],
+		"a list for a wave": ["wave", [3, 2], "wave must be an object"],
+	}
+	for what: String in wrong_shapes:
+		var shaped: Dictionary = _shipped()
+		shaped["levels"][1][wrong_shapes[what][0]] = wrong_shapes[what][1]
+		assert_str(BossDifficulty.from_data(shaped, _table()).refusal).override_failure_message(what).contains(
+			"level normal").contains(wrong_shapes[what][2])
+	var fast: Dictionary = _shipped()
+	fast["levels"][0]["tokens"]["delays"]["melee"] = "fast"
+	assert_str(BossDifficulty.from_data(fast, _table()).refusal).contains("level easy").contains("delays.melee")
+	var fraction: Dictionary = _shipped()
+	fraction["levels"][2]["wave"]["melee"] = 2.9
+	assert_str(BossDifficulty.from_data(fraction, _table()).refusal).contains("level hard").contains("wave.melee").contains("whole")
 	var unnamed: Dictionary = _shipped()
 	unnamed["default"] = "nightmare"
 	assert_str(BossDifficulty.from_data(unnamed, _table()).refusal).contains("nightmare")

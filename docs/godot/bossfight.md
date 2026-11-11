@@ -123,7 +123,11 @@ Its three states, with `boss_fight.json`'s numbers:
 | relief | no wave | 6 s have passed: build-up again |
 
 A phase that summons brings a wave at once and the peak, from any state:
-the boss calls, and the director only times it. No wave comes while the
+the boss calls, and the director only times it. A summon during a peak
+starts the peak's 15 s over, so a summon late in a peak is not followed
+by a relief a moment later. The director's numbers are checked when the
+file is read: the seconds must be above 0 and `relief_at` a whole number,
+or the fight is refused and says which. No wave comes while the
 boss swings a heavy blow; one that is due waits until the blow ends. The
 fight's opening wave counts as the first.
 

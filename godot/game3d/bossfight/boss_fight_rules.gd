@@ -64,7 +64,8 @@ static func shared(path: String = FILE) -> BossFightRules:
 		rules.pillars.append(Vector2i(int(cell[0]), int(cell[1])))
 	rules._tokens = data.get("tokens", {})
 	rules._rings = data.get("rings", {})
-	rules.director = data.get("director", {})
+	rules.director = _object(data.get("director"))
+	rules.refusal = BossDirector.why_not_numbers(rules.director)
 	return rules
 
 
@@ -74,11 +75,20 @@ func apply(level_name: String, fields: Dictionary) -> void:
 	level = level_name
 	telegraph_scale = float(fields.get("telegraph_scale", 1.0))
 	_tokens = _tokens.duplicate(true)
+	var tokens: Dictionary = _object(fields.get("tokens"))
 	for section: String in ["pools", "delays"]:
-		_tokens[section] = fields.get("tokens", {}).get(section, {})
-	for kind: String in fields.get("wave", {}):
-		wave[kind] = int(fields["wave"][kind])
-		wave_cap[kind] = int(fields.get("wave_cap", {}).get(kind, wave[kind]))
+		_tokens[section] = _object(tokens.get(section))
+	var caps: Dictionary = _object(fields.get("wave_cap"))
+	var waves: Dictionary = _object(fields.get("wave"))
+	for kind: String in waves:
+		wave[kind] = int(waves[kind])
+		wave_cap[kind] = int(caps.get(kind, wave[kind]))
+
+
+# `value` when it is an object, or an empty one: what a level that was not
+# checked -- or a planted one -- cannot crash on.
+static func _object(value: Variant) -> Dictionary:
+	return value if value is Dictionary else {}
 
 
 ## The player's token pool's numbers, as `AttackTokens` takes them.

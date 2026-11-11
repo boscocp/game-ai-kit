@@ -22,8 +22,9 @@
 ## - **relief**: no wave for `relief_seconds`, then build-up again -- the
 ##   pause a person should feel.
 ##
-## A phase that summons brings a wave at once and the peak, from any state:
-## the boss calls, the director only times it. And no wave comes while the
+## A phase that summons brings a wave at once and the peak, from any state
+## -- the peak's seconds starting over -- : the boss calls, the director
+## only times it. And no wave comes while the
 ## boss swings a heavy attack; one that is due waits for the blow to end.
 ##
 ## A step is constant: a few comparisons. It decides when, never how many:
@@ -47,7 +48,7 @@ const WAITS_FOR_RELIEF: String = "relief"  # not shown: worded by BossfightText
 ## Seconds between two waves in build-up.
 var wave_every: float = 8.0
 ## Minions standing at or below which the peak gives way to relief.
-var relief_at: int = 1
+var relief_at: int = 2
 ## The longest a peak lasts, in seconds.
 var peak_seconds: float = 15.0
 ## Seconds of relief.
@@ -66,6 +67,18 @@ var summon_waiting: bool = false
 var events: Array[Dictionary] = []
 var _heavy: bool = false
 var _now: float = 0.0
+
+
+## Why `numbers` cannot pace a fight, or "": every one a number, the
+## seconds above zero -- a wave every 0 s is a wave every step, and a peak
+## of no seconds is no peak -- and `relief_at` a whole number, 0 or more.
+static func why_not_numbers(numbers: Dictionary) -> String:
+	for key: String in ["wave_every", "peak_seconds", "relief_seconds"]:
+		if not BossDifficulty.is_number(numbers.get(key), false) or float(numbers[key]) <= 0.0:
+			return "director: %s is %s; it must be a number of seconds above 0" % [key, JSON.stringify(numbers.get(key))]  # not shown: a refusal for whoever edits the data, in its keys' English
+	if not BossDifficulty.is_number(numbers.get("relief_at"), true) or float(numbers["relief_at"]) < 0.0:
+		return "director: relief_at is %s; it must be a whole number, 0 or more" % JSON.stringify(numbers.get("relief_at"))  # not shown: a refusal for whoever edits the data, in its keys' English
+	return ""
 
 
 ## A director on `numbers`, `boss_fight.json`'s "director"; the opening
@@ -88,7 +101,7 @@ func step(now: float, entered: Array[Dictionary], standing: int, full: bool, hea
 		summon_waiting = true
 	if summon_waiting and not heavy:
 		summon_waiting = false
-		_enter(PEAK)
+		_enter(PEAK, true)
 		return _wave(true)
 	_move_on(standing, full)
 	if state == BUILD_UP and not heavy and now - last_wave_at >= wave_every:
@@ -110,7 +123,8 @@ func next_wave_in() -> float:
 ## What the next wave waits for: WAITS_FOR_HEAVY, WAITS_FOR_FEWER (the
 ## peak), WAITS_FOR_RELIEF, or WAITS_FOR_TIME (build-up).
 func waits_for() -> String:
-	if _heavy and (summon_waiting or state == BUILD_UP):
+	var due: bool = state == BUILD_UP and _now - last_wave_at >= wave_every
+	if _heavy and (summon_waiting or due):
 		return WAITS_FOR_HEAVY
 	match state:
 		PEAK:
@@ -129,8 +143,11 @@ func _move_on(standing: int, full: bool) -> void:
 		_enter(BUILD_UP)
 
 
-func _enter(next: String) -> void:
-	if next == state:
+# Enter `next`. A summon enters the peak `again` even from the peak: its
+# seconds start over, so a summon late in a peak is not followed by a
+# relief a moment later.
+func _enter(next: String, again: bool = false) -> void:
+	if next == state and not again:
 		return
 	state = next
 	since = _now
