@@ -1,0 +1,9 @@
+{
+ "kind": "refused",
+ "description": "A header whose version is the string \"1\": not the number this game reads, and said so.",
+ "lines": [
+  "{\"version\": \"1\"}",
+  "{\"day\": 1, \"verb\": \"plant\", \"place\": \"field\"}"
+ ],
+ "names": "version \"1\" is not a number"
+}

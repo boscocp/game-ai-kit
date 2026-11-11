@@ -55,6 +55,10 @@ What each part is for:
   `{"version": 1}`, and every line after it is one deed. N20 also lets a
   deed line carry `version`, so a record that repeats it on each line is
   not refused; it is the record's key, never a person.
+  The game's reader (T164) is stricter than N20, on purpose: it refuses
+  a deed line carrying `version` like any key beyond the three, since
+  its writer never writes one. A later wave should not loosen the
+  reader to this paragraph's wording.
 - **One class writes it** (`ValleySave`, T164's name). One writer is one
   place to read when asking what the game keeps.
 - **Nothing derived is saved.** Not the world, not the standing, not a
@@ -151,7 +155,11 @@ What N20 cannot see, and what holds it instead:
 - **that a villager reads only the standing** (T165's review);
 - **the spellings its net misses**: a `ConfigFile` saved through a
   parameter (`cfg.save(p)`, a gap every rule in the gate shares), a deed's
-  key set through a renamed copy, a deed nested inside another literal.
+  key set through a renamed copy, a deed nested inside another literal;
+- **a file outside the folder that names no valley class** and writes
+  `"user://valley/deeds.json"`: it is not one of N20's targets at all
+  (T164's review). Every other rule of the gate that refuses a write
+  is just as blind to a script that names nothing it watches.
 
 ### Where the save lives
 

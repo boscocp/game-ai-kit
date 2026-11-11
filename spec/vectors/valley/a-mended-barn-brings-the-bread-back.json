@@ -1,0 +1,126 @@
+{
+ "kind": "rebuilt",
+ "description": "The barn burns on day 1 and is mended on day 3: no bread on days 2 and 3, bread again on day 4. Care falls and rises, fear only rises.",
+ "deeds": [
+  {
+   "day": 1,
+   "verb": "burn",
+   "place": "barn"
+  },
+  {
+   "day": 3,
+   "verb": "repair",
+   "place": "barn"
+  }
+ ],
+ "days": 5,
+ "worlds": [
+  {
+   "barn.standing": false,
+   "mill.standing": true,
+   "mill.turning": true,
+   "market.bread": true,
+   "market.travellers": true,
+   "bridge.standing": true,
+   "ford.footbridge": false,
+   "river.diverted": false,
+   "field.planted": false,
+   "field.watered": false,
+   "field.harvest": false,
+   "orchard.standing": true,
+   "orchard.fruit": true,
+   "square.well": false,
+   "gate.open": false
+  },
+  {
+   "barn.standing": false,
+   "mill.standing": true,
+   "mill.turning": true,
+   "market.bread": false,
+   "market.travellers": true,
+   "bridge.standing": true,
+   "ford.footbridge": false,
+   "river.diverted": false,
+   "field.planted": false,
+   "field.watered": false,
+   "field.harvest": false,
+   "orchard.standing": true,
+   "orchard.fruit": true,
+   "square.well": false,
+   "gate.open": false
+  },
+  {
+   "barn.standing": true,
+   "mill.standing": true,
+   "mill.turning": true,
+   "market.bread": false,
+   "market.travellers": true,
+   "bridge.standing": true,
+   "ford.footbridge": false,
+   "river.diverted": false,
+   "field.planted": false,
+   "field.watered": false,
+   "field.harvest": false,
+   "orchard.standing": true,
+   "orchard.fruit": true,
+   "square.well": false,
+   "gate.open": false
+  },
+  {
+   "barn.standing": true,
+   "mill.standing": true,
+   "mill.turning": true,
+   "market.bread": true,
+   "market.travellers": true,
+   "bridge.standing": true,
+   "ford.footbridge": false,
+   "river.diverted": false,
+   "field.planted": false,
+   "field.watered": false,
+   "field.harvest": false,
+   "orchard.standing": true,
+   "orchard.fruit": true,
+   "square.well": false,
+   "gate.open": false
+  },
+  {
+   "barn.standing": true,
+   "mill.standing": true,
+   "mill.turning": true,
+   "market.bread": true,
+   "market.travellers": true,
+   "bridge.standing": true,
+   "ford.footbridge": false,
+   "river.diverted": false,
+   "field.planted": false,
+   "field.watered": false,
+   "field.harvest": false,
+   "orchard.standing": true,
+   "orchard.fruit": true,
+   "square.well": false,
+   "gate.open": false
+  }
+ ],
+ "standing": [
+  {
+   "care": -3,
+   "fear": 3
+  },
+  {
+   "care": -3,
+   "fear": 3
+  },
+  {
+   "care": -1,
+   "fear": 3
+  },
+  {
+   "care": -1,
+   "fear": 3
+  },
+  {
+   "care": -1,
+   "fear": 3
+  }
+ ]
+}

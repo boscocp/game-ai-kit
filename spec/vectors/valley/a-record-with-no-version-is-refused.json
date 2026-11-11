@@ -1,0 +1,8 @@
+{
+ "kind": "refused",
+ "description": "No header: the first line is a deed, so the record carries no version.",
+ "lines": [
+  "{\"day\": 1, \"verb\": \"plant\", \"place\": \"field\"}"
+ ],
+ "names": "no version"
+}

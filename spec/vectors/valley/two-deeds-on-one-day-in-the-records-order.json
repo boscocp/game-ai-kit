@@ -1,0 +1,105 @@
+{
+ "kind": "rebuilt",
+ "description": "On day 2 the mill is burnt and then mended: the record's order is the order they happened, so it ends the day standing, the bread never fails, and the standing still counts both.",
+ "deeds": [
+  {
+   "day": 2,
+   "verb": "burn",
+   "place": "mill"
+  },
+  {
+   "day": 2,
+   "verb": "repair",
+   "place": "mill"
+  }
+ ],
+ "days": 4,
+ "worlds": [
+  {
+   "barn.standing": true,
+   "mill.standing": true,
+   "mill.turning": true,
+   "market.bread": true,
+   "market.travellers": true,
+   "bridge.standing": true,
+   "ford.footbridge": false,
+   "river.diverted": false,
+   "field.planted": false,
+   "field.watered": false,
+   "field.harvest": false,
+   "orchard.standing": true,
+   "orchard.fruit": true,
+   "square.well": false,
+   "gate.open": false
+  },
+  {
+   "barn.standing": true,
+   "mill.standing": true,
+   "mill.turning": true,
+   "market.bread": true,
+   "market.travellers": true,
+   "bridge.standing": true,
+   "ford.footbridge": false,
+   "river.diverted": false,
+   "field.planted": false,
+   "field.watered": false,
+   "field.harvest": false,
+   "orchard.standing": true,
+   "orchard.fruit": true,
+   "square.well": false,
+   "gate.open": false
+  },
+  {
+   "barn.standing": true,
+   "mill.standing": true,
+   "mill.turning": true,
+   "market.bread": true,
+   "market.travellers": true,
+   "bridge.standing": true,
+   "ford.footbridge": false,
+   "river.diverted": false,
+   "field.planted": false,
+   "field.watered": false,
+   "field.harvest": false,
+   "orchard.standing": true,
+   "orchard.fruit": true,
+   "square.well": false,
+   "gate.open": false
+  },
+  {
+   "barn.standing": true,
+   "mill.standing": true,
+   "mill.turning": true,
+   "market.bread": true,
+   "market.travellers": true,
+   "bridge.standing": true,
+   "ford.footbridge": false,
+   "river.diverted": false,
+   "field.planted": false,
+   "field.watered": false,
+   "field.harvest": false,
+   "orchard.standing": true,
+   "orchard.fruit": true,
+   "square.well": false,
+   "gate.open": false
+  }
+ ],
+ "standing": [
+  {
+   "care": 0,
+   "fear": 0
+  },
+  {
+   "care": -1,
+   "fear": 3
+  },
+  {
+   "care": -1,
+   "fear": 3
+  },
+  {
+   "care": -1,
+   "fear": 3
+  }
+ ]
+}

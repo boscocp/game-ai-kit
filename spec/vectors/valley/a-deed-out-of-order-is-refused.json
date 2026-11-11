@@ -1,0 +1,10 @@
+{
+ "kind": "refused",
+ "description": "A day-2 deed after a day-3 one: the record is kept in the order deeds were done.",
+ "lines": [
+  "{\"version\": 1}",
+  "{\"day\": 3, \"verb\": \"plant\", \"place\": \"field\"}",
+  "{\"day\": 2, \"verb\": \"dig_well\", \"place\": \"square\"}"
+ ],
+ "names": "day 2 comes after day 3"
+}

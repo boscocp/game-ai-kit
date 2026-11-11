@@ -558,6 +558,15 @@ test-director-vectors: import ## The director's intensity and phases on event li
 	@$(GODOT) --headless --path godot -s res://test/infiltration/director_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/director
 
+.PHONY: test-valley-vectors
+test-vectors: test-valley-vectors
+test-valley-vectors: import ## The valley's days and standing rebuilt from records, and records refused by name, against its Godot classes (T164)
+	@# The other half is `make test-python`; the answers came from neither,
+	@# from spec/vectors/valley/derive.py. Through godot_checked.py, which
+	@# fails the run on any engine error it prints.
+	@$(PYTHON) scripts/godot_checked.py res://test/valley/valley_vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/valley
+
 .PHONY: test-player-model-vectors
 test-vectors: test-player-model-vectors
 test-player-model-vectors: import ## The bot match's player model on event lists: counts, share, row, against PlayerModel (T100)

@@ -114,7 +114,8 @@ stops. This gate is four claims about that split:
   * N20 the valley's save (T163, ADR 0025): the one thing in the kit kept
     between sessions, and only as a record of deeds. In every file under
     `godot/game/valley/` and every GDScript naming `DeedLog`, `ValleySave`,
-    `ValleyRules`, `ValleyWorld` or `Standing`: only `valley_save.gd` writes,
+    `ValleyRules`, `ValleyWorld` or `Standing`: only `valley_save.gd` writes
+    (`READ_WRITE` and a handle's `resize` included, T164's review),
     erases or names the save (`user://`, `deeds.json`, `ValleySave.PATH`),
     and it names no derived state -- the world, the rules, the standing, a
     virtue; no deed has a key beyond `day`, `verb` and `place` (and the
@@ -340,6 +341,13 @@ VALLEY_HOLDERS_RE = re.compile(r"\b(?:DeedLog|ValleySave|ValleyRules|ValleyWorld
 VALLEY_SAVE_NAMES_RE = re.compile(r"user://|get_user_data_dir|deeds\.json|ValleySave\.(?:PATH|FOLDER)")
 # Removing a file is the erase button, and only the save erases.
 ERASING_RE = re.compile(r"\bDirAccess\.remove(?:_absolute)?\s*\(|\.remove\s*\(|\bOS\.move_to_trash\s*\(")
+# Two more writes, beside the valley only (T164's review): the save appends
+# through `READ_WRITE`, which does not truncate and so is not WRITING_RE's,
+# and a handle opened that way can cut the record short with `resize`.
+# The resize is read on a name holding `file` or `handle`, because an
+# Array's `resize` is everyday code and no write.
+VALLEY_WRITING_RE = re.compile(r"FileAccess\.(?:ModeFlags\.)?READ_WRITE\b"
+                               r"|\b\w*(?:file|handle)\w*\.resize\s*\(", re.I)
 # What is derived from the record, which the save's own file never names:
 # the world rebuilt from it, the rules that rebuild it, the standing and its
 # virtues. A save that knows them can write them.
@@ -851,7 +859,7 @@ def _valley_refusal(line: str, written: str, is_save: bool, own_standing: bool,
     """
     if not written.strip():
         return ""
-    writes = bool(WRITING_RE.search(written) or ERASING_RE.search(written))
+    writes = bool(WRITING_RE.search(written) or ERASING_RE.search(written) or VALLEY_WRITING_RE.search(written))
     if not is_save and (writes or VALLEY_SAVE_NAMES_RE.search(line)):
         return "writes, erases or names the save; only ValleySave does"
     if is_save and DERIVED_RE.search(written):
@@ -2386,6 +2394,9 @@ def _valley_plants(elsewhere: pathlib.Path) -> list[tuple[str, str, str]]:
          'var log: DeedLog\nfunc keep() -> void:\n\tResourceSaver.save(log, "res://deeds.tres")\n'),
         ("a save erased by another file", world,
          "func wipe() -> void:\n\tDirAccess.remove_absolute(path)\n"),
+        ("a save opened to append by another file", world,
+         "func keep(save: ValleySave) -> void:\n\tvar out: FileAccess = FileAccess.open(save.path, FileAccess.READ_WRITE)\n"),
+        ("a save cut short by another file", world, "func cut(file: FileAccess) -> void:\n\tfile.resize(0)\n"),
         ("a save read back by another file", str(STANDING_FILE),
          'func _init() -> void:\n\tvar text: String = FileAccess.get_file_as_string(ValleySave.PATH)\n'),
         # 2. Derived state, the standing included, beside the record.
@@ -2468,6 +2479,8 @@ def _valley_passes(elsewhere: pathlib.Path) -> list[tuple[str, str, str]]:
         ("an A* edge weight between places", villager,
          "func cost(edge: Edge) -> float:\n\tvar edge_weight: float = 0.0\n\tedge_weight = edge.length\n"
          "\treturn edge_weight\n"),
+        ("an array resized beside the valley", villager,
+         "func plan() -> void:\n\tvar steps: Array[int] = []\n\tsteps.resize(3)\n"),
         ("a version on each record line", str(VALLEY_SAVE_FILE),
          SOUND_VALLEY[str(VALLEY_SAVE_FILE)] + "func line(day: int) -> String:\n"
          '\treturn JSON.stringify({"version": 1, "day": day, "verb": "burn", "place": "barn"})\n'),

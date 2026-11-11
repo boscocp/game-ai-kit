@@ -1,0 +1,42 @@
+{
+ "about": "The player's standing in the valley (T164, ADR 0025): for each virtue, a sum of the fixed weights below over every deed in the record. A designer wrote each weight and its reason; nothing at game time changes one. Two players who did the same deeds have the same standing, however they played. It estimates no skill and sets no difficulty: the only things it may set are the consequences listed here, and T165 gives them their thresholds.",
+ "virtues": {
+  "care": "How much the valley believes the player looks after it: what was built, mended and fed, less what was ruined.",
+  "fear": "How much the valley is afraid of the player: what was destroyed or cut off, whether or not it was meant as harm."
+ },
+ "consequences": {
+  "price": "What a trader asks of the player at the market.",
+  "door": "Whether a door in the village opens to the player.",
+  "greeting": "What a villager says when the player comes near."
+ },
+ "weights": [
+  {"verb": "burn", "place": "barn", "care": -3, "fear": 3,
+   "why": "The grain burnt with the barn was everybody's bread; whoever burns it is a danger to the whole valley."},
+  {"verb": "burn", "place": "mill", "care": -3, "fear": 3,
+   "why": "Without the mill nobody grinds; it is the same harm as the barn, by another road."},
+  {"verb": "burn", "place": "orchard", "care": -2, "fear": 2,
+   "why": "The fruit burns with the trees: a loss everyone sees, though nobody goes hungry this winter for it."},
+  {"verb": "repair", "place": "barn", "care": 2, "fear": 0,
+   "why": "Mending the barn gives the valley its bread back; it frightens nobody."},
+  {"verb": "repair", "place": "mill", "care": 2, "fear": 0,
+   "why": "Mending the mill gives the valley its flour back."},
+  {"verb": "repair", "place": "bridge", "care": 2, "fear": 0,
+   "why": "A bridge built up again brings the travellers and their trade back."},
+  {"verb": "pull_down", "place": "bridge", "care": -1, "fear": 2,
+   "why": "Cutting the valley off from the road harms the market a little, and shows a strength people fear."},
+  {"verb": "build_footbridge", "place": "ford", "care": 2, "fear": 0,
+   "why": "A crossing on foot is work done for everyone who comes to the market."},
+  {"verb": "divert_water", "place": "river", "care": 0, "fear": 1,
+   "why": "It waters the field and stops the mill: help to one, harm to another, and the sign of someone who moves rivers."},
+  {"verb": "plant", "place": "field", "care": 1, "fear": 0,
+   "why": "Sowing a field is ordinary work, and a small kindness."},
+  {"verb": "plant", "place": "orchard", "care": 2, "fear": 0,
+   "why": "Setting new trees gives the valley its fruit back; it frightens nobody."},
+  {"verb": "dig_well", "place": "square", "care": 3, "fear": 0,
+   "why": "A well is the most generous thing anyone does here: water for every house, for good."},
+  {"verb": "open_gate", "place": "gate", "care": -1, "fear": 0,
+   "why": "An open gate lets the goats into the orchard: careless rather than cruel."},
+  {"verb": "close_gate", "place": "gate", "care": 1, "fear": 0,
+   "why": "Shutting the gate behind you is what a good neighbour does."}
+ ]
+}

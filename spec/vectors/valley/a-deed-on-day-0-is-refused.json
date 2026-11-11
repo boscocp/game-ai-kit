@@ -1,0 +1,9 @@
+{
+ "kind": "refused",
+ "description": "A deed on day 0: the days of the game count from 1, and the rebuild would never apply it.",
+ "lines": [
+  "{\"version\": 1}",
+  "{\"day\": 0, \"verb\": \"plant\", \"place\": \"field\"}"
+ ],
+ "names": "day 0 is not a day"
+}
