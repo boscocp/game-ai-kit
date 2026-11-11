@@ -48,10 +48,15 @@ import time
 # `library_check.py`, follows the library page once per planted fault, with
 # Godot; one after another its 17 cases took 75 s here and over 120 s on
 # GitHub's runner, and wave 179 raised this to 300 s to unblock CI. T168
-# runs those cases at once instead: measured on 2026-11-11, 13 s on 12
-# cores, 23 s on 4 (GitHub's runner has 4), 43 s on 2. So the limit is
-# back at 120 s, and each verdict prints its duration and says when it took
-# over half of it, so the CI log shows the next slow one before it fails.
+# runs those cases at once instead. Measured on 2026-11-11 on a 6-core,
+# 12-thread machine: 13 s on all 12, 23 s on 4 physical cores, 29 s on 4
+# threads of 2 physical cores -- the layout of GitHub's 4 vCPU runner,
+# which is also slower per thread (75 s here was over 120 s there). Scaled
+# by 1.6 to 2, about 45-60 s on the runner: near half the limit, and about
+# half the kill. So the limit is back at 120 s, and each verdict prints its
+# duration and says when it took over half of it, so the CI log shows the
+# next slow one before it fails. The runner's real numbers are T168's
+# manual check.
 TIMEOUT_SECONDS = 120
 MARKER = "--self-test"
 
@@ -193,10 +198,16 @@ def self_test() -> int:
         # passes, and its verdict says how long it took and that it used
         # over half -- while the fast one says its time and nothing more.
         slow = folder / "check_slow.py"
-        slow.write_text("#!/usr/bin/env python3\n# --self-test\nimport time\ntime.sleep(2)\n")
-        verdict, passed = run_one(slow, 3)
-        if not passed or not re.fullmatch(r"ok \(2\.\d s, over half the 3 s limit\)", verdict):
+        slow.write_text("#!/usr/bin/env python3\n# --self-test\nimport time\ntime.sleep(2.5)\n")
+        verdict, passed = run_one(slow, 4)
+        if not passed or not re.fullmatch(r"ok \(2\.\d s, over half the 4 s limit\)", verdict):
             failures.append(f"a slow self-test that ends is not ok and named slow ({verdict!r})")
+        # Below half, at about a third: no warning. With the slow one above,
+        # this pins the line at half, not at a quarter or at the limit.
+        slow.write_text("#!/usr/bin/env python3\n# --self-test\nimport time\ntime.sleep(1.4)\n")
+        verdict, passed = run_one(slow, 4)
+        if not passed or not re.fullmatch(r"ok \(1\.\d s\)", verdict):
+            failures.append(f"a self-test at a third of the limit is named slow ({verdict!r})")
         slow.unlink()
         verdict, passed = run_one(passing, 5)
         if not passed or not re.fullmatch(r"ok \(\d+\.\d s\)", verdict):

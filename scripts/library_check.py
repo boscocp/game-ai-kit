@@ -529,6 +529,9 @@ def planted_faults(english: str) -> tuple[tuple[str, Planted, str], ...]:
 
 def cores() -> int:
     """The cores this process may run on, which a container or `taskset` can make fewer than the machine's."""
+    # Not `os.cpu_count()`, as `godot_shards.py` uses: that counts the
+    # machine's cores and ignores the affinity, so under `taskset` it would
+    # start more cases than there are cores to run them.
     if hasattr(os, "sched_getaffinity"):
         return len(os.sched_getaffinity(0))
     return os.cpu_count() or 1
@@ -542,7 +545,9 @@ def run_cases(english: str, place: pathlib.Path) -> list[str]:
     `lint-selftests`. Each follows the page in a folder of its own. What
     they share is only read -- the clone, the engine -- and the `user://`
     of the reader's project name, the same in every case, where Godot
-    writes nothing but its log, and nothing here reads or clears it.
+    writes nothing but its log, and nothing here reads or clears it. That
+    log is written and rotated by every case at once, so it is no place to
+    debug a case from: read the finding, or follow that one case alone.
     """
     faults = planted_faults(english)
     with concurrent.futures.ThreadPoolExecutor(max_workers=cores()) as pool:
