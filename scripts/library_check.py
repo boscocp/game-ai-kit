@@ -27,8 +27,15 @@ a command:
            from site-packages, with the repository nowhere on the path
   train    the page's Python block saved as `my_game/my_training.py`
            before its block runs it
-  infer    (its block), then the model example saved in `my_game/`, and
+  infer    (its block), then `ai_learning` is in `my_game/addons/ai_learning/`
+           as `unzip` checks, the model example saved in `my_game/`, and
            `stranger.gd -- infer` adds it to the tree
+  kit      (its block), the kit zip unzipped into a second blank project,
+           `my_kit/`, as the store delivers it; then nothing new in its root,
+           its `project.godot` still the reader's, its `addons/` holding
+           exactly the addons that have a zip of their own, no `class_name`
+           declared twice, and the route example run on the kit's own
+           files (T160)
   licence  every zip and the wheel carry LICENSE and NOTICE
 
 A `stranger.gd` run must exit 0 *and* print its marker: a script error
@@ -53,7 +60,14 @@ it prints: `grid_graph.gd` out of `ai_core`'s zip (`GakGridGraph`);
 zip; a runner that quits 0 having printed nothing (the marker it lacks);
 an unzip command pointing at a zip that is not there, and one unzipping
 into `my_game/addons/` as the page said before T149 (the step `unzip`);
-and a page with a step the check does not take, or without one it does.
+`ai_learning` unzipped there too, as the page's `infer` said until T160;
+and, in the step `kit`: the kit unzipped into `my_kit/addons/`, a kit
+without `ai_core`, one without `grid_graph.gd`, one carrying `docs/`,
+one carrying a `project.godot` (unzip refuses to replace the reader's),
+the same unzipped with `-o` (the check sees the reader's project gone),
+one with an addon no zip of its own has, and one
+whose `ai_bandit` declares `GakXorshift` again; and a page with a step the check does not
+take, or without one it does.
 
 Exit codes
 ----------
@@ -90,7 +104,12 @@ MARKERS = {"route": "LIBRARY-CHECK: the route goes round the wall",
            "infer": "LIBRARY-CHECK: the model Python wrote decides in Godot"}
 #: The steps this check takes, in the page's order. The page must name
 #: these and no others.
-STEPS = ("release", "unzip", "import", "route", "wheel", "train", "infer", "licence")
+STEPS = ("release", "unzip", "import", "route", "wheel", "train", "infer", "kit", "licence")
+#: The kit's zip, every addon in one, as the store delivers it (T149).
+KIT_ZIP = "game-ai-kit-addons-*.zip"
+#: What the reader's blank projects hold before anything is unzipped.
+BLANK_PROJECT = "config_version=5\n\n[application]\n\nconfig/name=\"A stranger's game\"\n"
+CLASS_NAME_RE = re.compile(r"^class_name\s+(\w+)", re.M)
 #: Long enough for an import on a loaded machine; short enough that a
 #: Godot left running by a script error is a finding, not a stalled gate.
 BLOCK_SECONDS = 240
@@ -154,13 +173,15 @@ class Planted:
     """One fault the self-test plants; the empty one is the untouched page."""
 
     zip_member: str = ""
+    kit_folder: str = ""
+    kit_extra: tuple[tuple[str, bytes], ...] = ()
     installed_file: str = ""
     silent_runner: bool = False
 
 
 @dataclasses.dataclass(frozen=True)
 class Place:
-    """The reader's folder: the clone, the project, and a PATH holding `godot`."""
+    """The reader's folder: the clone, two projects, and a PATH holding `godot`."""
 
     root: pathlib.Path
     environment: dict[str, str]
@@ -170,15 +191,20 @@ class Place:
         return self.root / "my_game"
 
     @property
+    def kit_project(self) -> pathlib.Path:
+        return self.root / "my_kit"
+
+    @property
     def dist(self) -> pathlib.Path:
         return self.root / "library" / "dist"
 
 
 def reader_folder(root: pathlib.Path) -> Place:
-    """A folder as the page assumes it: a clone beside a blank Godot project."""
+    """A folder as the page assumes it: a clone beside two blank Godot projects."""
     (root / "my_game" / "addons").mkdir(parents=True)
-    (root / "my_game" / "project.godot").write_text(
-        "config_version=5\n\n[application]\n\nconfig/name=\"A stranger's game\"\n")
+    (root / "my_game" / "project.godot").write_text(BLANK_PROJECT)
+    (root / "my_kit").mkdir()
+    (root / "my_kit" / "project.godot").write_text(BLANK_PROJECT)
     (root / "game-ai-kit").symlink_to(REPO, target_is_directory=True)
     tools = root / "bin"
     tools.mkdir()
@@ -192,8 +218,11 @@ def run_blocks(step: str, text: str, place: Place) -> list[str]:
     """Every ```bash block of the step, as printed, from the reader's folder."""
     for block in BASH_BLOCK_RE.findall(text):
         try:
+            # No stdin: an unzip asking whether to replace a file reads
+            # end-of-file, answers no, and the check sees what stayed.
             ran = subprocess.run(["bash", "-e", "-c", block], cwd=place.root, env=place.environment,
-                                 capture_output=True, text=True, timeout=BLOCK_SECONDS)
+                                 stdin=subprocess.DEVNULL, capture_output=True, text=True,
+                                 timeout=BLOCK_SECONDS)
         except subprocess.TimeoutExpired:
             return [f"step {step!r}: its commands did not finish in {BLOCK_SECONDS} s"]
         if ran.returncode != 0:
@@ -206,9 +235,11 @@ def run_blocks(step: str, text: str, place: Place) -> list[str]:
 
 
 def without_member(archive: pathlib.Path, member: str) -> None:
-    """Rewrite `archive` with `member` taken out: a planted fault."""
+    """Rewrite `archive` with `member` taken out -- a folder's, when it ends in `/`: a planted fault."""
+    def kept(name: str) -> bool:
+        return not name.startswith(member) if member.endswith("/") else name != member
     with zipfile.ZipFile(archive) as source:
-        entries = [(entry, source.read(entry)) for entry in source.infolist() if entry.filename != member]
+        entries = [(entry, source.read(entry)) for entry in source.infolist() if kept(entry.filename)]
     with zipfile.ZipFile(archive, "w") as copy:
         for entry, data in entries:
             copy.writestr(entry, data)
@@ -220,6 +251,12 @@ def plant_in_release(place: Place, planted: Planted) -> list[str]:
         owner = planted.zip_member.split("/")[1]
         for archive in place.dist.glob(f"{owner}-*.zip"):
             without_member(archive, planted.zip_member)
+    for archive in place.dist.glob(KIT_ZIP):
+        if planted.kit_folder:
+            without_member(archive, planted.kit_folder)
+        with zipfile.ZipFile(archive, "a") as bundle:
+            for name, data in planted.kit_extra:
+                bundle.writestr(name, data)
     return []
 
 
@@ -230,37 +267,99 @@ def unzipped_findings(place: Place) -> list[str]:
     so a zip unzipped one folder too deep -- `my_game/addons/addons/ai_core/`
     -- would still pass every later step. The place is checked here instead.
     """
-    blank = {"addons", "project.godot"}
-    findings = [f"step 'unzip': my_game/{entry.name} is not where an addon goes"
-                for entry in sorted(place.project.iterdir()) if entry.name not in blank]
-    for entry in sorted((place.project / "addons").iterdir()):
-        if not (entry.name.startswith("ai_") and (entry / "VERSION").is_file()):
-            findings.append(f"step 'unzip': my_game/addons/{entry.name} is not an unzipped addon")
+    findings = root_findings("unzip", place.project, {"addons", "project.godot"})
+    findings += addon_folder_findings("unzip", place.project)
     if not findings and not any((place.project / "addons").iterdir()):
         findings.append("step 'unzip': nothing landed in my_game/addons/")
     return findings
+
+
+def root_findings(step: str, project: pathlib.Path, allowed: set[str]) -> list[str]:
+    """Nothing in the project's root but what the reader put there: a zip writes only `addons/`."""
+    return [f"step {step!r}: {project.name}/{entry.name} is not where an addon goes"
+            for entry in sorted(project.iterdir()) if entry.name not in allowed]
+
+
+def addon_folders(project: pathlib.Path) -> list[pathlib.Path]:
+    """The folders in the project's `addons/`, none when there is no such folder."""
+    addons = project / "addons"
+    return sorted(entry for entry in addons.iterdir()) if addons.is_dir() else []
+
+
+def addon_folder_findings(step: str, project: pathlib.Path) -> list[str]:
+    """Every folder in `addons/` is an unzipped addon: `ai_<name>`, holding its VERSION."""
+    return [f"step {step!r}: {project.name}/addons/{entry.name} is not an unzipped addon"
+            for entry in addon_folders(project)
+            if not (entry.name.startswith("ai_") and (entry / "VERSION").is_file())]
+
+
+def class_name_clashes(project: pathlib.Path) -> list[str]:
+    """Two scripts under `addons/` declaring one `class_name`.
+
+    Measured on 4.7.2 by wave 172's review: the import prints nothing, the
+    class cache keeps one of the two, and every script still runs -- so the
+    clash is looked for here, in the files, since no engine output shows it.
+    """
+    owners: dict[str, list[str]] = {}
+    for script in sorted((project / "addons").rglob("*.gd")):
+        for name in CLASS_NAME_RE.findall(script.read_text(encoding="utf-8")):
+            owners.setdefault(name, []).append(str(script.relative_to(project)))
+    return [f"step 'kit': class_name {name} is declared by {', '.join(paths)}"
+            for name, paths in sorted(owners.items()) if len(paths) > 1]
+
+
+def kit_findings(place: Place, planted: Planted) -> list[str]:
+    """After `kit`: the kit alone, in a blank project, holds the release's addons and nothing else.
+
+    The per-addon zips say which addons the release holds; the kit's
+    folders must be the same ones, both ways. Unzipped into a project of
+    its own, nothing the per-addon zips installed can stand in for a file
+    the kit lacks: the route example, saved by the step `route`, then runs
+    on the kit's own `ai_core` and `ai_search`.
+    """
+    project = place.kit_project
+    findings = root_findings("kit", project, {"addons", "project.godot", ".godot"})
+    if BLANK_PROJECT not in (project / "project.godot").read_text(encoding="utf-8"):
+        findings.append("step 'kit': my_kit/project.godot is not the reader's any more")
+    findings += addon_folder_findings("kit", project)
+    expected = {archive.name.rsplit("-", 1)[0] for archive in place.dist.glob("ai_*-*.zip")}
+    present = {entry.name for entry in addon_folders(project)}
+    findings += [f"step 'kit': {addon} is not in my_kit/addons/{addon}/ after the kit"
+                 for addon in sorted(expected - present)]
+    findings += [f"step 'kit': my_kit/addons/{addon} has no zip of its own"
+                 for addon in sorted(present - expected)]
+    findings += class_name_clashes(project)
+    if findings:
+        return findings
+    shutil.copy(place.project / "route_example.gd", project / "route_example.gd")
+    return run_runner("kit", "route", project, planted)
 
 
 def run_example(step: str, text: str, place: Place, planted: Planted) -> list[str]:
     """`route` and `infer`: the example in the project, added to the tree by the runner."""
     example = example_of(step, text)
     shutil.copy(example, place.project / example.name)
-    runner = place.project / STRANGER.name
+    return run_runner(step, step, place.project, planted)
+
+
+def run_runner(step: str, example: str, project: pathlib.Path, planted: Planted) -> list[str]:
+    """`stranger.gd -- <example>` in `project`: it must exit 0 and print its marker."""
+    runner = project / STRANGER.name
     if planted.silent_runner:
         runner.write_text("extends SceneTree\n\n\nfunc _initialize() -> void:\n\tquit(0)\n")
     else:
         shutil.copy(STRANGER, runner)
-    command = [str(GODOT), "--headless", "--path", str(place.project), "-s", runner.name, "--", step]
+    command = [str(GODOT), "--headless", "--path", str(project), "-s", runner.name, "--", example]
     try:
         ran = subprocess.run(command, capture_output=True, text=True, timeout=RUN_SECONDS)
     except subprocess.TimeoutExpired:
         return [f"step {step!r}: Godot was still running after {RUN_SECONDS} s -- "
                 "a script error after the frame wait leaves it running"]
     output = ran.stdout + ran.stderr
-    if ran.returncode != 0 or MARKERS[step] not in output:
+    if ran.returncode != 0 or MARKERS[example] not in output:
         errors = [line for line in output.splitlines() if "ERROR" in line][:5]
         return [f"step {step!r}: the example did not decide (exit {ran.returncode}, "
-                f"missing {MARKERS[step]!r}): {errors}"]
+                f"missing {MARKERS[example]!r}): {errors}"]
     return []
 
 
@@ -309,6 +408,10 @@ def take(step: str, text: str, place: Place, planted: Planted) -> list[str]:
         return plant_in_release(place, planted)
     if step == "unzip":
         return unzipped_findings(place)
+    if step == "infer":
+        return addon_folder_findings(step, place.project) or run_example(step, text, place, planted)
+    if step == "kit":
+        return kit_findings(place, planted)
     if step in MARKERS:
         return run_example(step, text, place, planted)
     if step == "wheel":
@@ -362,24 +465,47 @@ def page_cases(english: str) -> list[str]:
     return failures
 
 
-def run_cases(english: str, place: pathlib.Path) -> list[str]:
-    """The untouched page passes, and each planted fault is named."""
-    failures = []
-    untouched = follow(english, place / "untouched")
-    if untouched:
-        failures.append(f"the untouched page passes every step ({untouched})")
+def planted_faults(english: str) -> tuple[tuple[str, Planted, str], ...]:
+    """Each planted case: the page to follow, the fault, and what the finding must name."""
     misplaced = english.replace("unzip -q library/dist/ai_core-0.1.0.zip", "unzip -q ai_core-0.1.0.zip", 1)
     # The page's command before T149: the zips' `addons/` nests one deeper.
-    nested = english.replace("-d my_game/\n", "-d my_game/addons/\n")
-    planted_faults = (
+    nested = english.replace("-d my_game/\n", "-d my_game/addons/\n", 1)
+    # The page's `infer` before T160, and the kit unzipped the same wrong way.
+    learning = english.replace("ai_learning-0.1.0.zip -d my_game/\n",
+                               "ai_learning-0.1.0.zip -d my_game/addons/\n")
+    kit_nested = english.replace("addons-0.1.0.zip -d my_kit/\n", "addons-0.1.0.zip -d my_kit/addons/\n")
+    # A page that told the reader to overwrite, and a kit that would.
+    kit_over = english.replace("unzip -q library/dist/game-ai-kit", "unzip -q -o library/dist/game-ai-kit")
+    project = (("project.godot", b"config_version=5\n"),)
+    clash = (("addons/ai_bandit/clash.gd", b"class_name GakXorshift\nextends RefCounted\n"),)
+    return (
         (english, Planted(zip_member="addons/ai_core/grid_graph.gd"), "GakGridGraph"),
         (english, Planted(installed_file="aim.py"), "cannot import name 'aim'"),
         (english, Planted(zip_member="addons/ai_core/NOTICE"), "carries no NOTICE"),
         (english, Planted(silent_runner=True), f"missing {MARKERS['route']!r}"),
         (misplaced, Planted(), "step 'unzip'"),
         (nested, Planted(), "my_game/addons/addons is not an unzipped addon"),
+        (learning, Planted(), "step 'infer': my_game/addons/addons is not an unzipped addon"),
+        (kit_nested, Planted(), "step 'kit': my_kit/addons/addons is not an unzipped addon"),
+        (english, Planted(kit_folder="addons/ai_core/"), "ai_core is not in my_kit/addons/ai_core/"),
+        (english, Planted(kit_folder="addons/ai_core/grid_graph.gd"),
+         "step 'kit': the example did not decide"),
+        (english, Planted(kit_extra=(("docs/README.md", b"# a stray\n"),)),
+         "my_kit/docs is not where an addon goes"),
+        (english, Planted(kit_extra=project), "replace my_kit/project.godot"),
+        (kit_over, Planted(kit_extra=project), "my_kit/project.godot is not the reader's"),
+        (english, Planted(kit_extra=(("addons/ai_zzz/VERSION", b"0.1.0\n"),)), "ai_zzz has no zip of its own"),
+        (english, Planted(kit_extra=clash), "class_name GakXorshift is declared by"),
     )
-    for number, (text, planted, named) in enumerate(planted_faults):
+
+
+def run_cases(english: str, place: pathlib.Path) -> list[str]:
+    """The untouched page passes, and each planted fault is named."""
+    failures = []
+    untouched = follow(english, place / "untouched")
+    if untouched:
+        failures.append(f"the untouched page passes every step ({untouched})")
+    for number, (text, planted, named) in enumerate(planted_faults(english)):
         # A folder named for the fault would put the name in every path the
         # failure prints, and the case would pass on the path alone.
         found = follow(text, place / f"case-{number}", planted)

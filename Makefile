@@ -1287,8 +1287,14 @@ export: import ## The menu as a Linux x86_64 executable in dist/game-ai-kit-linu
 	@# or a person's generated art, and a binary that does not start.
 	@$(PYTHON) scripts/export.py
 
+.PHONY: release-version
+release-version: ## Refuse a VERSION already tagged when what ships has changed since (T160)
+	@# Before `export`, which takes minutes: the build refuses the same
+	@# thing again, but a refusal after the export is time thrown away.
+	@$(PYTHON) scripts/release.py --check-version
+
 .PHONY: release
-release: export ## One zip per addon, the kit's zip, the Python wheel and the executable into dist/, attribution checked
+release: release-version export ## One zip per addon, the kit's zip, the Python wheel and the executable into dist/, attribution checked
 	@# The build does not get to say it attributed anything: the same gate
 	@# that reads the repository opens every archive it wrote and looks.
 	@# `release.py --skip-notice` builds a release that must fail it. The
@@ -1300,7 +1306,8 @@ release: export ## One zip per addon, the kit's zip, the Python wheel and the ex
 library-check: ## Follow docs/techniques/using-the-library.md outside the repository (T64, T77)
 	@# Each step the page marks, in a throwaway folder: the wheel installed
 	@# with no index, the page's Python block training a model, a blank Godot
-	@# project with three unzipped addons running the page's two examples.
+	@# project with three unzipped addons running the page's two examples,
+	@# then the kit zip alone in a second blank project, as the store installs it.
 	@# Its planted cases -- a zip missing a file, a page step the check does
 	@# not take -- run in lint-selftests.
 	@$(PYTHON) scripts/library_check.py

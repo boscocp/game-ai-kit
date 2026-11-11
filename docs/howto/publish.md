@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: tool
-verified_on: 2026-11-06
+verified_on: 2026-11-11
 tier: 1
 source: https://docs.godotengine.org/en/stable/community/asset_store/submitting_to_asset_store.html ; https://docs.godotengine.org/en/stable/community/asset_store/what_is_asset_store.html ; https://docs.godotengine.org/en/stable/community/asset_store/faq.html ; https://docs.godotengine.org/en/stable/community/asset_store/using_in_editor.html ; https://godotengine.org/article/introducing-the-godot-asset-store/ ; https://docs.godotengine.org/en/stable/community/asset_library/submitting_to_assetlib.html ; https://github.com/godotengine/godot-asset-library/blob/master/src/Helpers/Utils.php ; https://github.com/godotengine/godot-asset-library/blob/master/src/constants.php ; https://github.com/godotengine/godot/blob/4.7.2-stable/editor/asset_library/editor_asset_installer.cpp ; https://github.com/godotengine/godot/blob/4.7.2-stable/editor/asset_library/asset_library_editor_plugin.cpp ; https://github.com/godotengine/godot/blob/4.7.2-stable/editor/settings/editor_settings.cpp ; https://docs.pypi.org/project-management/choosing-a-name/ ; https://docs.pypi.org/publishing/publishing-to-pypi/ ; https://docs.pypi.org/publishing/troubleshooting/ ; https://docs.pypi.org/your-account/two-factor-authentication/ ; https://docs.pypi.org/your-account/managing-your-account/ ; https://docs.pypi.org/trusted-publishers/creating-a-project-through-oidc/ ; https://packaging.python.org/en/latest/guides/using-testpypi/ ; https://packaging.python.org/en/latest/specifications/core-metadata/
 invalidated_if: the Asset Store documents its upload format or a dependency between assets, the Asset Library goes read-only or away, Godot's installer changes how it treats an archive's top folder, PyPI changes how a first upload or a token works, or the name gameaikit is taken
@@ -126,8 +126,21 @@ hand and kept out of the repository; trusted publishing stays off.
    ```
 
    `make release` writes `dist/` from the commit at `HEAD`, never the
-   working tree; `make library-check` installs the wheel and two addons
-   outside the repository and runs them.
+   working tree; `make library-check` installs the wheel and three addons
+   in one blank project, the kit zip in another, outside the repository,
+   and runs them.
+
+   `make release` refuses a version already published (T160): when
+   `VERSION` is already a tag, `v<VERSION>`, and `HEAD` differs from that
+   tag in any file the build reads -- `godot/addons/`, `python/gameaikit/`,
+   `python/pyproject.toml`, `python/README.md`, `modules/`, `LICENSE`,
+   `NOTICE` -- it fails before the export and says to bump `VERSION`. A
+   clone with no `v*` tag cannot see a published version; the build says
+   so in one line and goes on. The store shows no hash a stranger
+   could tell two zips of one version apart by, and PyPI refuses a file
+   name twice, so new bytes need a new number. A change only to the tests
+   or the docs ships nothing and is not refused. The bump is a wave of its
+   own, before this list starts again.
 3. Tag the commit you are about to publish, so a release names its source:
    `git tag v$(cat VERSION) && git push origin v$(cat VERSION)`.
 
@@ -173,8 +186,13 @@ route.
 2. Per asset: the name and summary in English; type **Addon**; license
    Apache 2.0; source link, the repository; tags; a thumbnail and screenshots (the repository
    has no icon yet -- one is the owner's to make or pick).
-3. **Versions:** upload the zip, name the version `$(cat VERSION)`, minimum
-   Godot `4.7`, the changelog.
+3. **Versions:** upload the zip, name the version `$(cat VERSION)`, and
+   write the changelog. The version's Godot range is a selector offering
+   3.0 to 4.8 (the store page, 2026-11-10): set its minimum to `4.7`,
+   the oldest Godot the kit is written for, and leave its maximum at the
+   newest it offers. The kit is tested only on the version in
+   `.godot-version`; the range says where it is meant to run, not where
+   it was measured.
 4. **The AI usage disclosure** is the owner's to answer at submission.
    Recommended: answer it truthfully, as the form requires.
 5. Before submitting, install the uploaded version into a blank project
@@ -195,7 +213,10 @@ file the store holds, and `make check-published` (T159) tests that one:
 
 1. Download the version once, into the toolchain, never the checkout or
    the home, and measure it: `sha256sum` and its size in bytes.
-2. Add one entry to `tools/store/published.json`: the download URL,
+2. Write the sha256 into the version's release notes -- its changelog on
+   the store page, and the GitHub release of its tag -- so a person
+   holding a downloaded file can tell which build it is; the store shows
+   no hash of its own. Then add one entry to `tools/store/published.json`: the download URL,
    copied from the asset's own page, because a download id is the store's,
    not the asset's (`…/game-ai-kit/download/1/` serves another asset's zip
    with status 200, measured on 2026-11-10); the version, the sha256, the size, the size the page shows, and
