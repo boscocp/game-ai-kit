@@ -2,16 +2,17 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-10-26
+verified_on: 2026-11-11
 tier: 1
-source: https://docs.godotengine.org/en/stable/tutorials/io/data_paths.html ; https://docs.godotengine.org/en/stable/classes/class_os.html#class-os-method-get-user-data-dir ; https://docs.godotengine.org/en/stable/tutorials/editor/command_line_tutorial.html
-invalidated_if: Godot stops deriving user:// from XDG_DATA_HOME (APPDATA on Windows), gains a command-line option for it, or gdUnit4 stops clearing user://tmp after each suite
+source: https://docs.godotengine.org/en/stable/tutorials/io/data_paths.html ; https://docs.godotengine.org/en/stable/classes/class_projectsettings.html#class-projectsettings-property-application-config-use-custom-user-dir ; https://docs.godotengine.org/en/stable/classes/class_os.html#class-os-method-get-user-data-dir ; https://docs.godotengine.org/en/stable/tutorials/editor/command_line_tutorial.html
+invalidated_if: Godot stops deriving user:// from XDG_DATA_HOME (APPDATA on Windows), changes the use_custom_user_dir layout, gains a command-line option for it, or gdUnit4 stops clearing user://tmp after each suite
 teaches: none
 -->
 
 > T83, wave 93. What the 4.7 documentation says about `user://`, what was
 > measured on the pinned engine (4.7.2) from two checkouts, and the decision
-> it led to (ADR 0022).
+> it led to (ADR 0022). T163, wave 171, added where the valley's save lives,
+> in the checkout and in an exported build (ADR 0025).
 
 ## What the documentation says
 
@@ -86,3 +87,63 @@ So the environment is the one per-process handle there is, and
   a run is killed.
 - A test that writes `user://` still uses a file of its own and removes it:
   within one checkout, the suites of one run share it.
+
+## Where the valley's save lives (T163, ADR 0025)
+
+The valley is the one example that keeps something between sessions: a
+record of deeds, `user://valley/deeds.json`. Read and measured on
+2026-11-11, before ADR 0025 was written.
+
+### What the documentation says
+
+The 4.7 page on data paths ("Godot Engine 4.7 documentation"), its table
+"On desktop platforms, the actual directory paths for `user://` are":
+
+| | Linux | Windows |
+|---|---|---|
+| default | `~/.local/share/godot/app_userdata/[project_name]` | `%APPDATA%\Godot\app_userdata\[project_name]` |
+| custom dir | `~/.local/share/[project_name]` | `%APPDATA%\[project_name]` |
+| custom dir and name | `~/.local/share/[custom_user_dir_name]` | `%APPDATA%\[custom_user_dir_name]` |
+
+"Custom dir" is `application/config/use_custom_user_dir`, and the page
+says the default keeps "prototypes and test projects ... self-contained
+within Godot's data folder". It also says "Self-contained mode is not
+supported in exported projects yet", and that `XDG_DATA_HOME` changes "the
+editor and project data paths" on Linux. The page does not say "exported"
+of the table; it is headed "On desktop platforms".
+
+### What was measured
+
+A throwaway project named `game-ai-kit`, run by the pinned binary
+(4.7.2.stable.official.ed1daf0bf) with `HOME` pointed at a scratch folder,
+printing `OS.get_user_data_dir()` and writing `user://probe.txt`:
+
+| project setting | no `XDG_DATA_HOME` | `XDG_DATA_HOME` set |
+|---|---|---|
+| default | `<home>/.local/share/godot/app_userdata/game-ai-kit` | `<xdg>/godot/app_userdata/game-ai-kit` |
+| `use_custom_user_dir` | `<home>/.local/share/game-ai-kit` | `<xdg>/game-ai-kit` |
+| and `custom_user_dir_name` | `<home>/.local/share/game-ai-kit-valley` | `<xdg>/game-ai-kit-valley` |
+
+The probe file landed in each of the six. So the documentation's table
+holds, and `XDG_DATA_HOME` moves every layout. Not measured: an exported
+binary itself (`export.py` notes the release template refuses path
+overrides on the command line), nor Windows.
+The template runs the same platform code, and `export.py` already starts
+it under the redirect.
+
+### What the repository does with it
+
+- **In the checkout** the save is
+  `.user-data/xdg/godot/app_userdata/game-ai-kit/valley/deeds.json`,
+  through `scripts/godot`'s redirect (ADR 0022). It is the one thing under
+  `.user-data/` meant to survive a session; `git clean -fdx` deletes it,
+  and `make valley-erase` removes only `valley/`, refusing a folder
+  outside the checkout's `.user-data/`, and a `.user-data/` or folder
+  below it that is a symbolic link.
+- **In an exported build** run by a player, the save lands in that
+  player's data folder, the default row above. That is where a game's save
+  belongs, and invariant 8, which is about what the repository writes on
+  the machine that develops it, does not reach it (ADR 0025).
+- **`use_custom_user_dir` stays off.** It would give the player a shorter
+  path, and it would move the checkout's too, under every reader of the
+  default layout: `check_disk_layout.py`'s D1, `make valley-erase`.

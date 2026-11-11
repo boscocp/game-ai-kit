@@ -20,7 +20,7 @@ than none.
 | 3 acceptance is a command | `check_acceptance.py` |
 | 4 gate rejects a planted case | `make lint-selftests` runs them; that each one *has* a planted case is still read by a person |
 | 5 no lesson above tier 1 | `check_tiers.py`, via each page's `teaches:` field |
-| 6 no training at game time | half held -- `check_no_training.py` is a net for the common spellings, and says so; ADR 0016's exceptions, by name, are N9, N13 and N14; T18's cloned player is N10-N12; T98's maze policy is N15; T113's published tree is N16-N17, T114's forest N18-N19 |
+| 6 no training at game time | half held -- `check_no_training.py` is a net for the common spellings, and says so; ADR 0016's exceptions, by name, are N9, N13 and N14; T18's cloned player is N10-N12; T98's maze policy is N15; T113's published tree is N16-N17, T114's forest N18-N19; the valley's save, ADR 0025, is N20 |
 | 7 LLM output validated | half held -- `check_llm_validated.py` (wave 102) is a static net for the common spellings, and says so: no way round `ai_llm`, nothing waiting on the frame (V0-V3); that the validator refuses what it must is `make test-llm-vectors` |
 | 8 nothing written into the home | half held -- `check_disk_layout.py`: this project's own `user://` and five model caches in the home (D1), `._sc_` and `editor_data/` beside the binary (D3, D4), where `user://` is sent (D6-D8); Godot's other home folders are a note, so an engine that stopped honouring `._sc_` would not be seen (T143) |
 | 9 LICENSE and NOTICE ship | `check_license.py` |
@@ -49,6 +49,11 @@ than none.
    count what they see during one fight or match -- counts and sums,
    starting empty, never saved, rebuildable from that fight's or match's
    log.
+   Between sessions, only a record of deeds may persist (ADR 0025, rule
+   N20): appended to, written by one class, and the world and the
+   player's standing rebuilt from it each session by fixed, authored
+   rules. Nothing derived is saved, nothing about a person, and the
+   standing never sets difficulty.
 7. **The LLM never blocks a frame, and nothing it returns becomes an action
    without passing a validator.**
 8. **The toolchain lives in its own directory, never in the user's home folders.**

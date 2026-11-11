@@ -1,6 +1,7 @@
 # 0022 — Each checkout has its own `user://`, inside it
 
-Status: accepted · 2026-10-26 (T83)
+Status: accepted, amended · 2026-10-26 (T83; amended by ADR 0025 on
+2026-11-11, the valley's save -- see the end)
 
 Amends ADR 0002's second mechanism: where `XDG_DATA_HOME` points, not
 whether.
@@ -80,3 +81,13 @@ and written in `docs/godot/user-data.md`.
   (T83).
 - On Windows the path is written by `pwd -W` as `D:/...`, the form the
   toolchain path already took. Not yet measured there; T83's manual check.
+
+## Amended by ADR 0025 (2026-11-11): one thing meant to survive
+
+"Nothing there is meant to survive" is no longer true of one folder: the
+valley's save, `user://valley/`, is meant to survive between sessions.
+`git clean -fdx` still deletes it with the rest, and that is accepted: a
+checkout is a working copy, and deleting the save is what the erase button
+does. `make valley-erase` removes only that folder, and refuses one outside
+the checkout's `.user-data/` or reached through a link. Tests never write
+the real save: they hand `ValleySave` a path under `user://tmp/` (ADR 0025).
