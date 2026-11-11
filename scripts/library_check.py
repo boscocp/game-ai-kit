@@ -89,6 +89,7 @@ Usage
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import dataclasses
 import os
 import pathlib
@@ -526,18 +527,36 @@ def planted_faults(english: str) -> tuple[tuple[str, Planted, str], ...]:
     )
 
 
+def cores() -> int:
+    """The cores this process may run on, which a container or `taskset` can make fewer than the machine's."""
+    if hasattr(os, "sched_getaffinity"):
+        return len(os.sched_getaffinity(0))
+    return os.cpu_count() or 1
+
+
 def run_cases(english: str, place: pathlib.Path) -> list[str]:
-    """The untouched page passes, and each planted fault is named."""
-    failures = []
-    untouched = follow(english, place / "untouched")
-    if untouched:
-        failures.append(f"the untouched page passes every step ({untouched})")
-    for number, (text, planted, named) in enumerate(planted_faults(english)):
+    """The untouched page passes, and each planted fault is named.
+
+    The cases are followed at once, one a core (T168): one after another
+    they took 75 s here and over 120 s on GitHub's runner, which killed
+    `lint-selftests`. Each follows the page in a folder of its own. What
+    they share is only read -- the clone, the engine -- and the `user://`
+    of the reader's project name, the same in every case, where Godot
+    writes nothing but its log, and nothing here reads or clears it.
+    """
+    faults = planted_faults(english)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=cores()) as pool:
+        untouched = pool.submit(follow, english, place / "untouched")
         # A folder named for the fault would put the name in every path the
         # failure prints, and the case would pass on the path alone.
-        found = follow(text, place / f"case-{number}", planted)
-        if not any(named in line for line in found):
-            failures.append(f"{planted} fails, naming {named} ({found})")
+        cases = [pool.submit(follow, text, place / f"case-{number}", planted)
+                 for number, (text, planted, _) in enumerate(faults)]
+    failures = []
+    if untouched.result():
+        failures.append(f"the untouched page passes every step ({untouched.result()})")
+    for (_, planted, named), case in zip(faults, cases):
+        if not any(named in line for line in case.result()):
+            failures.append(f"{planted} fails, naming {named} ({case.result()})")
     return failures + empty_kit_case(place / "case-empty")
 
 

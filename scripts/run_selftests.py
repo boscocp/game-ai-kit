@@ -42,13 +42,17 @@ import re
 import subprocess
 import sys
 import tempfile
+import time
 
-# A hang must still end, but a slow self-test is not a hang:
-# `library_check.py` follows the library page once per planted fault, each
-# with Godot, and took 75 s locally and over 120 s on GitHub's runner after
-# waves 172 and 176 added its kit cases. 300 s is a stopgap, not measured on
-# the runner; T168 makes that self-test fast and brings this back down.
-TIMEOUT_SECONDS = 300
+# A hang must still end, but a slow self-test is not a hang. The slowest,
+# `library_check.py`, follows the library page once per planted fault, with
+# Godot; one after another its 17 cases took 75 s here and over 120 s on
+# GitHub's runner, and wave 179 raised this to 300 s to unblock CI. T168
+# runs those cases at once instead: measured on 2026-11-11, 13 s on 12
+# cores, 23 s on 4 (GitHub's runner has 4), 43 s on 2. So the limit is
+# back at 120 s, and each verdict prints its duration and says when it took
+# over half of it, so the CI log shows the next slow one before it fails.
+TIMEOUT_SECONDS = 120
 MARKER = "--self-test"
 
 # A file named this way is a gate, whether or not it still says so.
@@ -92,11 +96,25 @@ def gates(scripts_dir: pathlib.Path) -> tuple[list[pathlib.Path], list[str]]:
     return found, missing
 
 
+def duration(seconds: float, timeout: int) -> str:
+    """How long a self-test took, and a warning when it used over half the limit.
+
+    Why both: a self-test that grows slower passes until the day it is
+    killed, and the run before that day is green. The warning is in the CI
+    log while there is still time to make it fast (T168).
+    """
+    said = f"({seconds:.1f} s"
+    if seconds > timeout / 2:
+        said += f", over half the {timeout} s limit"
+    return said + ")"
+
+
 def run_one(script: pathlib.Path, timeout: int) -> tuple[str, bool]:
     """Run one self-test. Returns the verdict to print and whether it passed."""
     runner = interpreter_for(script)
     if runner is None:
         return "NO SHEBANG", False
+    started = time.monotonic()
     try:
         done = subprocess.run(
             [runner, str(script), MARKER],
@@ -104,14 +122,15 @@ def run_one(script: pathlib.Path, timeout: int) -> tuple[str, bool]:
         )
     except subprocess.TimeoutExpired:
         return f"TIMEOUT after {timeout}s", False
+    took = duration(time.monotonic() - started, timeout)
     if done.returncode == 0:
-        return "ok", True
+        return f"ok {took}", True
     # The shell version this replaced printed nothing on failure either, and a
     # review called that a regression in the dimension the rewrite was
     # justified on: a red gate that says only FAIL tells you to go run it
     # yourself, which is the step the runner exists to save.
     output = (done.stdout + done.stderr).decode("utf-8", errors="replace").strip()
-    return ("FAIL\n" + indent(output)) if output else "FAIL", False
+    return (f"FAIL {took}\n" + indent(output)) if output else f"FAIL {took}", False
 
 
 def indent(text: str) -> str:
@@ -169,6 +188,19 @@ def self_test() -> int:
         if run(folder, 2) != 1:
             failures.append("a hanging gate did not fail the run")
         hanging.unlink()
+
+        # Planted: slow, not hung (T168). It ends inside the limit, so it
+        # passes, and its verdict says how long it took and that it used
+        # over half -- while the fast one says its time and nothing more.
+        slow = folder / "check_slow.py"
+        slow.write_text("#!/usr/bin/env python3\n# --self-test\nimport time\ntime.sleep(2)\n")
+        verdict, passed = run_one(slow, 3)
+        if not passed or not re.fullmatch(r"ok \(2\.\d s, over half the 3 s limit\)", verdict):
+            failures.append(f"a slow self-test that ends is not ok and named slow ({verdict!r})")
+        slow.unlink()
+        verdict, passed = run_one(passing, 5)
+        if not passed or not re.fullmatch(r"ok \(\d+\.\d s\)", verdict):
+            failures.append(f"a fast self-test's verdict is not ok with its time ({verdict!r})")
 
         # Planted: no shebang at all. A skip here is a gate that stops running.
         headless = folder / "check_nohead.py"
