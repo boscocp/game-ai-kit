@@ -69,16 +69,17 @@ red, fix it forward before anything else.
   2026-11-10: the valley remembers what the player did to places, and the
   player's standing, read from those deeds, sets prices and doors. It has
   no combat and no opponent, and it is 2D and turn-based. A chronicle by
-  story sifting comes later. **The owner approves T163's ADR, and that
-  gates T164-T166.**
+  story sifting comes later. T163 wrote ADR 0025 (wave 171), and the
+  owner accepted it with the recommended decisions on 2026-11-11 ("segue
+  com o recomendado"): **it no longer gates T164-T166.**
 - Manual checks: close `make demo-tactical MODE=squad` and
   `make demo-behaviour`, and look for `leaked` or `still in use` in the
   last lines.
 
 **Next.** T160 first, beside T155 and T156, at most three at once. Then
 T141 alone, and T121. Then T157 and T158, then T162, and T161 last.
-T163 can run in any batch. T164, T165 and T166 follow, in that order,
-once the owner has approved T163.
+T163 is done (wave 171). T164, T165 and T166 follow, in that order;
+the owner accepted ADR 0025 on 2026-11-11, so nothing else gates them.
 
 ## Resuming after 2026-11-10, the boss fight and the store check (tasks T154-T160)
 
@@ -1718,7 +1719,7 @@ review.
 | T160 | A version is not reused | todo | `make release` refuses a published `VERSION` with changed addons; `library-check` installs the kit zip; READMEs no longer say "in review"; store Godot versions 4.7+ |
 | T161 | Release 0.2.0 | todo | after T154-T158, T162 and the follow-ups (owner): `VERSION` bumped, built from tag `v0.2.0`, sha256 in `published.json`, release notes name the new addons; the owner uploads |
 | T162 | Loading every addon closes clean | todo | the store install (2026-11-10) loaded 107 scripts with no `SCRIPT ERROR`, but the engine printed "7 resources still in use at exit"; name them, fix the addon, and make `check_published` and `library-check` fail on it; before T161 |
-| T163 | A save is a record of deeds, not a model of the player | todo | ADR 0025 amends 0016 and 0022: only an append-only record of deeds on places persists, the world is rebuilt from it, the standing is rebuilt from it and never saved; nothing about a person is saved; N20 in `check_no_training.py`; where the save lives, read and measured; **the owner approves it, and that gates T164-T166** |
+| T163 | A save is a record of deeds, not a model of the player | done | wave 171: ADR 0025 (accepted by the owner 2026-11-11, no longer gates T164-T166) amends 0016 and 0022: only an append-only record of `{day, verb, place}` deeds persists, the world and the standing are rebuilt from it, the standing sets consequences and never difficulty; N20 in `check_no_training.py` with 14 planted cases; `user://` measured in the checkout and for an export (`docs/godot/user-data.md`), invariant 8 does not reach a player's export; `make valley-erase` |
 | T164 | The deed log and the valley's rules | todo | `DeedLog`, `ValleySave`, `ValleyRules`, `ValleyWorld` in `godot/game/valley/`; deeds `{day, verb, place}`, never a person; `Standing` from fixed weights over the deeds; rebuilt twice, same world; Python twin and vectors |
 | T165 | The valley remembers: the example | todo | 2D turn-based, no combat, no opponent: villagers plan their day over the world's facts (GOAP/HTN, A*, ActionChoice); a ferryman, merchant and priestess read the standing with fixed manners; overlay deed → fact → plan → frontier, and deeds → virtue → manner; `make demo-valley`; concept page `karma-and-world-memory` |
 | T166 | A chronicle that only tells: story sifting | todo | a new addon `ai_sifting` (name to confirm), Felt-style patterns over the deed record, read-only by test; the valley's chronicle in templates |

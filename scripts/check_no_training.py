@@ -111,6 +111,23 @@ stops. This gate is four claims about that split:
     (Q-learning, any temporal-difference step) is refused by that ADR's
     amendment; this rule is a net for its common spellings, not a proof --
     an update through a renamed copy of the table passes it.
+  * N20 the valley's save (T163, ADR 0025): the one thing in the kit kept
+    between sessions, and only as a record of deeds. In every file under
+    `godot/game/valley/` and every GDScript naming `DeedLog`, `ValleySave`,
+    `ValleyRules`, `ValleyWorld` or `Standing`: only `valley_save.gd` writes,
+    erases or names the save (`user://`, `deeds.json`, `ValleySave.PATH`),
+    and it names no derived state -- the world, the rules, the standing, a
+    virtue; no deed has a key beyond `day`, `verb` and `place`, so none has a
+    person as its target; no value moves a step towards a target, N13's net
+    (in `standing.gd`, any scaled `+=`), and no authored weight is written
+    outside `_load_weights`; and no challenge parameter -- difficulty,
+    accuracy, aim, reaction, a search depth, skill -- is named in the
+    valley's folder at all, nor beside the record or the standing anywhere
+    else. This is not ADR 0016's player model, and N14 is unchanged: the
+    standing's weights are authored, it estimates no skill, and it sets no
+    difficulty. A net for the common spellings, not a proof; that the world
+    and the standing rebuild the same from the record is held by T164's
+    tests.
 
 N4, N6, N7, N10, N15, N16 and N18 are the ones with teeth. The others are about the shape of the code and
 could all pass over a weights file somebody typed by hand.
@@ -297,6 +314,51 @@ FUNC_NAME_RE = re.compile(r"^(?:static\s+)?func\s+(\w+)")
 DECLARATION_RE = re.compile(r"^\s*(?:static\s+)?(?:var|const)\s")
 MDP_NAMES_RE = re.compile(r"game/maze/|data/maze|MdpPacMan\.|PUBLISHED_FOLDER|VALUES_FILE|POLICY_FILE"
                           r"|\b(?:values|policy)\.json\b")
+
+# The valley (T163, ADR 0025, N20): the one thing in the kit that persists
+# between sessions, and only as a record of deeds. Its targets are every
+# file in the valley's folder and any GDScript naming one of its classes
+# (T164 writes them; the names are ADR 0025's, and a wave that renames one
+# renames it here). One file writes and erases the save; the standing is a
+# sum of authored weights, read off the record, never written down.
+VALLEY_GAME = GODOT / "game" / "valley"
+VALLEY_SAVE_FILE = VALLEY_GAME / "valley_save.gd"
+STANDING_FILE = VALLEY_GAME / "standing.gd"
+VALLEY_HOLDERS_RE = re.compile(r"\b(?:DeedLog|ValleySave|ValleyRules|ValleyWorld|Standing)\b")
+# The save by name, read off the raw line: its folder under `user://`, its
+# file, the constant `ValleySave` keeps it in, the user folder itself.
+VALLEY_SAVE_NAMES_RE = re.compile(r"user://|get_user_data_dir|deeds\.json|ValleySave\.(?:PATH|FOLDER)")
+# Removing a file is the erase button, and only the save erases.
+ERASING_RE = re.compile(r"\bDirAccess\.remove(?:_absolute)?\s*\(|\.remove\s*\(|\bOS\.move_to_trash\s*\(")
+# What is derived from the record, which the save's own file never names:
+# the world rebuilt from it, the rules that rebuild it, the standing and its
+# virtues. A save that knows them can write them.
+DERIVED_RE = re.compile(r"\b(?:Standing|ValleyWorld|ValleyRules)\b|\b(?:standing|virtues?|world|facts)\b")
+# A deed is `{day, verb, place}`. A dictionary that names a `verb` and any
+# other key, or a deed given a key of its own, gives a deed a target the
+# schema does not have -- and the person it would name is what ADR 0025
+# refuses to save.
+DEED_KEYS = {"day", "verb", "place"}
+QUOTED_KEY_RE = re.compile(r"[\"'](\w+)[\"']\s*:")
+DEED_KEY_WRITE_RE = re.compile(r"\bdeed\w*\s*\[\s*[\"'](\w+)[\"']\s*\]\s*=(?!=)")
+# A weight written after it was read: an assignment into a name holding
+# `weight`, anywhere but its declaration and the one function that reads
+# `standing.json` in.
+WEIGHT_WRITE_RE = re.compile(r"\b\w*weights?\w*\b(?:\[[^\]]*\])*\s*(?:[-+*/]?=)(?!=)"
+                             r"|\b\w*weights?\w*\.(?:set|merge|erase|clear|append)\s*\(")
+WEIGHT_LOADER = "_load_weights"
+# A challenge's parameter: what difficulty is (ADR 0025). The valley has
+# none, so in its folder the words are refused outright; elsewhere they are
+# refused on a line that also names the record or the standing. Beside the
+# valley that is any of its words; in a script that names none of its
+# classes, only a standing's member, the deed log or a virtue -- the
+# tactical board says `deed = ..., depth = level.search_depth` of its own
+# moves, and botmatch has a bot `standing` on a spot.
+# Read as a word or the end of a snake_case name: `bot_aim`, `enemy_accuracy`.
+CHALLENGE_RE = re.compile(r"(?:\b|_)(?:difficulty|accuracy|aim|reaction|search_depth|max_depth|skill"
+                          r"|timing_window|hardness)\w*", re.I)
+RECORD_OR_STANDING_RE = re.compile(r"\b(?:Standing|DeedLog|ValleySave|standing|deeds?|virtues?)\b")
+STANDING_ELSEWHERE_RE = re.compile(r"\bstanding\.\w|\bdeed_log\b|\bvirtues?\b")
 
 # Writing a bead count. This rule is a net for the common spellings; the
 # guarantee is the engine's. `MenacePlayer` keeps every box in a read-only
@@ -673,6 +735,96 @@ def check_player_model(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
                 findings.append(f"N14 {label} loads state beside the player model; it starts empty "
                                 "every match, and a model read back would be a profile (ADR 0016)")
     return findings
+
+
+def holds_valley(path: pathlib.Path, root: pathlib.Path, code: list[str]) -> bool:
+    """N20's targets: a file in the valley's folder, or one naming its classes."""
+    return is_under(path, root, VALLEY_GAME) or bool(VALLEY_HOLDERS_RE.search("\n".join(code)))
+
+
+CHALLENGE_FINDING = ("reads the record or the standing to set a challenge; the standing sets "
+                     "consequences, never difficulty (ADR 0025)")
+
+
+def check_valley(root: pathlib.Path, repo: pathlib.Path) -> list[str]:
+    """N20 (ADR 0025): the save is a record of deeds, and nothing else.
+
+    Beside the valley, one file writes and erases the save and names no
+    derived state; no deed has a key beyond day, verb and place; no
+    authored weight moves; and nothing reads the record or the standing to
+    set a challenge. Outside it, only that last refusal applies.
+    """
+    findings = []
+    for path in gdscript_files(root):
+        raw = path.read_text(encoding="utf-8").splitlines()
+        code = code_only("\n".join(raw)).splitlines()
+        label = _label(path, repo)
+        if not holds_valley(path, root, code):
+            findings += [f"N20 {label}:{number} {CHALLENGE_FINDING}"
+                         for number, line in enumerate(code, start=1) if _sets_a_challenge(line, False)]
+            continue
+        findings += _valley_lines(path, root, raw, code, label)
+    return findings
+
+
+def _sets_a_challenge(line: str, beside_valley: bool = True) -> bool:
+    """True for a line of code naming both a challenge parameter and the record or standing."""
+    naming = RECORD_OR_STANDING_RE if beside_valley else STANDING_ELSEWHERE_RE
+    return bool(CHALLENGE_RE.search(line) and naming.search(line))
+
+
+def _valley_lines(path: pathlib.Path, root: pathlib.Path, raw: list[str], code: list[str],
+                  label: str) -> list[str]:
+    """N20's refusals, line by line, for one file beside the valley."""
+    findings = []
+    is_save = is_under(path, root, VALLEY_SAVE_FILE)
+    own_standing = is_under(path, root, STANDING_FILE)
+    in_folder = is_under(path, root, VALLEY_GAME)
+    function = ""
+    for number, (line, written) in enumerate(zip(raw, code), start=1):
+        named = FUNC_NAME_RE.match(written)
+        function = named.group(1) if named else function
+        why = _valley_refusal(line, written, is_save, own_standing, in_folder, function)
+        if why:
+            findings.append(f"N20 {label}:{number} {why} (ADR 0025)")
+    return findings
+
+
+def _valley_refusal(line: str, written: str, is_save: bool, own_standing: bool,
+                    in_folder: bool, function: str) -> str:
+    """Why one line beside the valley is refused, or "" when it is not.
+
+    `line` is the raw text, read for paths and keys, which are string
+    literals; `written` is the code view, read for everything else.
+    """
+    if not written.strip():
+        return ""
+    writes = bool(WRITING_RE.search(written) or ERASING_RE.search(written))
+    if not is_save and (writes or VALLEY_SAVE_NAMES_RE.search(line)):
+        return "writes, erases or names the save; only ValleySave does"
+    if is_save and DERIVED_RE.search(written):
+        return "names derived state in the save's file; only the record of deeds is saved"
+    if _gives_a_deed_a_target(line):
+        return "gives a deed a key beyond day, verb and place; no deed has a person as its target"
+    if steps_towards(written, own_standing) or scales_itself(written, own_standing):
+        return "moves a value a step towards a target; the standing's weights are authored and fixed"
+    if (WEIGHT_WRITE_RE.search(written) and not DECLARATION_RE.match(written)
+            and function != WEIGHT_LOADER):
+        return f"writes an authored weight outside {WEIGHT_LOADER}; the weights never change at game time"
+    if _sets_a_challenge(written):
+        return CHALLENGE_FINDING.removesuffix(" (ADR 0025)")
+    if in_folder and CHALLENGE_RE.search(written):
+        return "names a challenge parameter; the valley has no difficulty, only consequences"
+    return ""
+
+
+def _gives_a_deed_a_target(line: str) -> bool:
+    """True for a deed literal or assignment with a key beyond `{day, verb, place}`."""
+    keys = set(QUOTED_KEY_RE.findall(line))
+    if "verb" in keys and keys - DEED_KEYS:
+        return True
+    written = DEED_KEY_WRITE_RE.search(line)
+    return bool(written) and written.group(1) not in DEED_KEYS
 
 
 def open_braces(code: list[str]) -> list[bool]:
@@ -1145,6 +1297,7 @@ def run(repo: pathlib.Path, retrain: bool | set[str] = True) -> int:
     findings += check_mdp_updates(repo / GODOT, repo)
     findings += check_bandit_steps(repo / GODOT, repo)
     findings += check_player_model(repo / GODOT, repo)
+    findings += check_valley(repo / GODOT, repo)
     ran = {}
     for rule, refit in (("N4", check_weights), ("N6", check_beads),
                         ("N7", check_checkers_weights), ("N10", check_clone_weights),
@@ -1764,6 +1917,7 @@ def self_test() -> int:
         failures += _self_test_the_opponent_tree(root)
         failures += _self_test_the_opponent_forest(root)
         failures += _self_test_the_mdp_policy(root)
+        failures += _self_test_the_valley(root)
         failures += _self_test_the_dump(root)
         failures += _self_test_the_comparison()
 
@@ -2069,6 +2223,106 @@ def _self_test_the_mdp_policy(root: pathlib.Path) -> list[str]:
     if found or ran:
         failures.append("MDP tables whose solver could not run were not reported as unchecked")
     return failures
+
+
+SOUND_VALLEY = {
+    str(VALLEY_SAVE_FILE): (
+        'class_name ValleySave\nconst PATH: String = "user://valley/deeds.json"\n'
+        "func append(deed: Dictionary) -> void:\n"
+        "\tvar file: FileAccess = FileAccess.open(PATH, FileAccess.READ_WRITE)\n"
+        "\tfile.seek_end()\n\tfile.store_line(JSON.stringify(deed))\n"
+        "func erase() -> void:\n\tDirAccess.remove_absolute(ProjectSettings.globalize_path(PATH))\n"),
+    str(STANDING_FILE): (
+        "class_name Standing\nvar _weights: Dictionary = {}\nvar _sums: Dictionary = {}\n"
+        "func _load_weights(authored: Dictionary) -> void:\n\t_weights = authored\n"
+        "func rebuild(deeds: Array) -> void:\n\t_sums.clear()\n\tfor deed: Dictionary in deeds:\n"
+        "\t\tfor virtue: String in _weights:\n"
+        "\t\t\t_sums[virtue] = _sums.get(virtue, 0) + _weights[virtue].get(deed.verb, 0)\n"),
+    str(VALLEY_GAME / "deed_log.gd"): (
+        "class_name DeedLog\nvar _deeds: Array[Dictionary] = []\n"
+        "func add(day: int, verb: String, place: String) -> void:\n"
+        '\t_deeds.append({"day": day, "verb": verb, "place": place})\n'),
+    str(VALLEY_GAME / "ferryman.gd"): (
+        "var standing: Standing\nfunc fare() -> int:\n"
+        '\treturn 3 if standing.virtue("care") > 2 else 5\n'),
+}
+
+
+def _self_test_the_valley(root: pathlib.Path) -> list[str]:
+    """N20, ADR 0025's five refusals, each planted at least once (invariant 4),
+    beside a sound valley -- one save that appends and erases, a standing
+    summed from authored weights, a ferryman setting a fare -- that passes."""
+    failures = []
+
+    def found(name: str, extra: dict[str, str]) -> list[str]:
+        repo = root / ("valley-" + name)
+        for relative, text in {**SOUND_VALLEY, **extra}.items():
+            (repo / relative).parent.mkdir(parents=True, exist_ok=True)
+            (repo / relative).write_text(text)
+        return check_valley(repo / GODOT, repo)
+
+    if found("sound", {}):
+        failures.append(f"a sound valley was reported: {found('sound', {})}")
+    elsewhere = GODOT / "game" / "botmatch_bridge.gd"
+    for name, relative, text in _valley_plants(elsewhere):
+        if not any(finding.startswith("N20") for finding in found(name, {relative: text})):
+            failures.append(f"N20 did not refuse {name}")
+    for name, relative, text in [
+            ("the tactical board's own deed and depth", str(GODOT / "game" / "tactical" / "blue.gd"),
+             "func say() -> void:\n\tshow(deed = 1, depth = level.search_depth)\n"),
+            ("a bot standing on a spot, in botmatch", str(elsewhere),
+             "func aim_at() -> void:\n\tbot.spot = standing[0]\n\taim = 0.5\n")]:
+        if found(name.split()[1], {relative: text}):
+            failures.append(f"N20 refused good code: {name}")
+    repo = root / "valley-run"
+    (repo / VALLEY_GAME).mkdir(parents=True)
+    (repo / VALLEY_GAME / "keeper.gd").write_text('func keep() -> void:\n\tResourceSaver.save(s, "user://s.tres")\n')
+    with contextlib.redirect_stdout(io.StringIO()) as printed:
+        run(repo, retrain=False)
+    if "N20" not in printed.getvalue():
+        failures.append("run() never reached the valley check")
+    return failures
+
+
+def _valley_plants(elsewhere: pathlib.Path) -> list[tuple[str, str, str]]:
+    """The planted cases: (what, where, the file's text)."""
+    world = str(VALLEY_GAME / "valley_world.gd")
+    return [
+        # 1. A save written, erased or named by any other file.
+        ("a save written by the world", world,
+         'func keep() -> void:\n\tvar out: FileAccess = FileAccess.open("user://valley/w.json", FileAccess.WRITE)\n'),
+        ("a save written by a script holding the log", str(GODOT / "game" / "chronicle.gd"),
+         'var log: DeedLog\nfunc keep() -> void:\n\tResourceSaver.save(log, "res://deeds.tres")\n'),
+        ("a save erased by another file", world,
+         "func wipe() -> void:\n\tDirAccess.remove_absolute(path)\n"),
+        ("a save read back by another file", str(STANDING_FILE),
+         'func _init() -> void:\n\tvar text: String = FileAccess.get_file_as_string(ValleySave.PATH)\n'),
+        # 2. Derived state, the standing included, beside the record.
+        ("the standing written beside the record", str(VALLEY_SAVE_FILE),
+         SOUND_VALLEY[str(VALLEY_SAVE_FILE)] + "func keep(standing: Standing) -> void:\n"
+         "\tfile.store_line(JSON.stringify(standing.sums()))\n"),
+        ("the world written beside the record", str(VALLEY_SAVE_FILE),
+         SOUND_VALLEY[str(VALLEY_SAVE_FILE)] + "func keep(world: ValleyWorld) -> void:\n\tpass\n"),
+        # 3. An authored weight changed at game time.
+        ("a weight stepped towards a target", str(STANDING_FILE),
+         "func nudge(seen: float) -> void:\n\t_weights[verb] += 0.1 * (seen - _weights[verb])\n"),
+        ("a weight scaled with its difference named first", str(STANDING_FILE),
+         "func nudge(seen: float) -> void:\n\tvar miss: float = seen - care\n\tcare += miss * 0.1\n"),
+        ("a weight rewritten outside its loader", world,
+         "var standing: Standing\nfunc react() -> void:\n\tstanding._weights[\"burn\"] = -9\n"),
+        # 4. A deed whose target is a person.
+        ("a deed with a person for its target", str(VALLEY_GAME / "deed_log.gd"),
+         'func add(day: int) -> void:\n\t_deeds.append({"day": day, "verb": "burn", "target": "villager_3"})\n'),
+        ("a deed given a villager after it was made", world,
+         'func add(deed: Dictionary) -> void:\n\tdeed["villager"] = "ana"\n'),
+        # 5. The record or the standing read to set difficulty.
+        ("the standing setting a difficulty in the valley", str(VALLEY_GAME / "ferryman.gd"),
+         "var standing: Standing\nfunc ready() -> void:\n\tdifficulty = 2\n"),
+        ("the standing setting aim elsewhere", str(elsewhere),
+         "func tune(standing) -> void:\n\tbot_aim = standing.virtue(\"fear\") * 0.1\n"),
+        ("the record setting a search depth beside the log", str(GODOT / "game" / "rival.gd"),
+         "var log: DeedLog\nfunc tune() -> void:\n\tsearch_depth = log.deeds().size()\n"),
+    ]
 
 
 def _self_test_the_dump(root: pathlib.Path) -> list[str]:

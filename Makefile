@@ -921,6 +921,13 @@ menu: import ## Every example on one menu: up and down choose, enter plays, Esc 
 	@# The project's main scene, and what the exported executable opens on.
 	@$(GODOT) --path godot
 
+.PHONY: valley-erase
+valley-erase: ## Erase this checkout's valley save, and start again from the first day (ADR 0025)
+	@# The game's erase button, from the command line. It asks scripts/godot
+	@# where user:// is and refuses anything outside this checkout's
+	@# .user-data/. Its self-test runs in lint-selftests, found there by its --self-test.
+	@$(PYTHON) scripts/valley_erase.py
+
 .PHONY: demo-skirmish
 demo-skirmish: import ## The learned policy plays blue: click a unit, click a neighbouring cell, space ends the turn
 	@# Until T27 this was `make run`. Where the policy finally plays is T30's

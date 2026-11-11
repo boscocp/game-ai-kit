@@ -3,7 +3,7 @@
 Status: accepted, amended · 2026-10-15 (decided by the owner for T17;
 extended by the owner on 2026-10-26 to bandits and to player modelling,
 the amendment confirmed by the owner on 2026-10-29 -- see the amendment at
-the end)
+the end; amended by ADR 0025 on 2026-11-11, the valley's save)
 
 ## Context
 
@@ -200,3 +200,14 @@ Opened on 2026-10-26.
 - Ocio Barriales, S. "Using Your Combat AI Accuracy to Balance
   Difficulty." Game AI Pro 3, 2017, ch. 33 (cited by T73).
   <http://www.gameaipro.com/GameAIPro3/GameAIPro3_Chapter33_Using_Your_Combat_AI_Accuracy_to_Balance_Difficulty.pdf>
+
+## Amended by ADR 0025 (2026-11-11): a save is a record of deeds
+
+The valley (T163-T166) keeps one thing between sessions: a record of the
+player's deeds on places, appended to and never edited. ADR 0025 says why
+that is not a count that survives the fight, and why the player's
+standing, rebuilt from the record, is not this record's player model: its
+weights are fixed and authored, it estimates no skill, and it sets no
+difficulty. Its rule is N20. N14 is unchanged: the bot match's player
+model still starts empty, is never saved and is never loaded, and N20
+neither widens nor weakens it.
