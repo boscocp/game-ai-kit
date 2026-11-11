@@ -61,6 +61,8 @@ _Proposed in the review of wave 176; the owner chose a follow-up task on
   exactly the 16 files T162 changed; on main, none of 117 scripts.
 - **Not covered, said in its docstring.** A script that `preload`s its own
   path also holds itself; nobody does it here, and the lint does not look.
+  A known false positive: an argument typed `Name` after a default nested
+  two parentheses deep is refused.
 
 ## Acceptance
 

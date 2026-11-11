@@ -42,6 +42,11 @@ file with no `class_name` has no name to hold itself by. A script that
 `preload`s its own path is another way to hold itself; this lint does not
 look for it.
 
+Known false positive: an argument after a default value nested two
+parentheses deep, `func f(a: Vector2 = Vector2(maxf(1.0, 2.0), 0.0), b:
+Name = null)`, is read as a value and refused. Put that argument first, or
+move the default into the body.
+
 Exit codes
 ----------
 0   every addon script names its own class only as a type
@@ -72,12 +77,18 @@ ADDONS = ROOT / "godot" / "addons"
 ADDON_GLOB = "ai_*"
 
 CLASS_NAME = re.compile(r"\bclass_name\s+([A-Za-z_]\w*)")
+#: One piece of an argument list before the argument being read: any
+#: character but a bracket, or a whole `(...)`, `[...]` (one level deeper
+#: too, for `Dictionary[String, Array[int]]`) or `{...}`. A comma inside a
+#: default `{1: 2, CAP: Name}` is never crossed, so the `CAP:` there is not
+#: read as an argument.
+ARGUMENT_PIECE = r"(?:[^()\[\]{}]|\([^()]*\)|\[(?:[^\[\]]|\[[^\[\]]*\])*\]|\{[^{}]*\})"
 #: What may come just before a type: a return arrow, a declared name and its
 #: colon, or an argument's name and its colon inside a `func` or `signal`.
 TYPE_LEAD = (
     r"(?:->"
     r"|\b(?:var|const|for)\s+\w+\s*:"
-    r"|\b(?:func|signal)\b[^(]*\((?:(?:[^()]|\([^()]*\))*,)?\s*\w+\s*:)"
+    r"|\b(?:func|signal)\b[^(]*\((?:" + ARGUMENT_PIECE + r"*,)?\s*\w+\s*:)"
 )
 #: Inside a typed container: `Array[`, or `Dictionary[` with or without its key.
 CONTAINER = r"(?:(?:Array|Dictionary)\[\s*(?:[\w.]+\s*,\s*)?)"
@@ -92,14 +103,17 @@ def _string_end(text: str, start: int) -> int:
     """Where the string literal opening at `start` ends, one past its last quote.
 
     `start` is at the quote, or at a one-letter prefix (`r`, `&`, `^`) before it.
-    A raw string has no escapes; an unclosed one runs to the end of the text.
+    A raw string keeps its backslashes, but GDScript still does not end it
+    at a backslash and a quote (measured on 4.7.2: `r"a\\"b"` is one string),
+    so a backslash before a quote or a backslash skips that character there
+    too. An unclosed string runs to the end of the text.
     """
     raw = text[start] == "r"
     quote_at = start + 1 if text[start] in "r&^" else start
     quote = text[quote_at] * 3 if text.startswith(text[quote_at] * 3, quote_at) else text[quote_at]
     index = quote_at + len(quote)
     while index < len(text):
-        if text[index] == "\\" and not raw:
+        if text[index] == "\\" and (not raw or text[index + 1:index + 2] in ("'", '"', "\\")):
             index += 2
         elif text.startswith(quote, index):
             return index + len(quote)
@@ -157,6 +171,9 @@ def statements(code: str) -> list[tuple[int, str]]:
 
 def value_uses(code: str, name: str) -> list[int]:
     """The offsets in `code` where `name` is used as a value, not a type."""
+    # Not after `.` (another class's member), `$` or `%` (a node path). The
+    # `%` also skips modulo written with no space, `"%s"%Name.X`: rare, and
+    # accepted rather than telling a unique node `%Name` from it here.
     pattern = re.compile(rf"(?<![\w.$%]){re.escape(name)}\b")
     offsets: list[int] = []
     for start, statement in statements(code):
@@ -237,10 +254,17 @@ var many: Array[Toy] = []
 var named: Dictionary[String, Toy] = {}
 var nested: Dictionary[Toy, Array[Toy]] = {}
 var toys_seen: int = 0  # Toy.CAP in a comment
+const NONE: Toy = null
+const RAW: String = r"a\\"b Toy.new()"
 
 
 static func make() -> Toy:
 	return new()
+
+
+func keyed(table: Dictionary = {1: 2, 3: 4}, rows: Array[int] = [1, 2],
+		deep: Dictionary[String, Array[int]] = {}, last: Toy = null) -> Toy:
+	return last
 
 
 func pair(left: Toy,
@@ -268,7 +292,19 @@ VALUE_LINES = [
     ("plant_spaced_dot", "\treturn Toy . new()"),
     ("plant_in_a_container_value", "\treturn thing is Array[Toy]"),
     ("plant_after_a_string", "\treturn [\"#\", Toy.new()]"),
+    ("plant_after_a_raw_string", "\treturn [r\"\\\"\", Toy.new()]"),
+    ("plant_typed_then_built", "\tvar built: Toy = Toy.new()\n\treturn built"),
+    ("plant_typed_then_cast", "\tvar cast: Toy = thing as Toy\n\treturn cast"),
 ]
+#: Whole functions or members whose value comes after a type, on the same
+#: statement: a type lead earlier in the line does not make the rest a type.
+FUNCTION_PLANTS = {
+    "plant_default_argument": "func value(thing: Toy = Toy.make()) -> Variant:\n\treturn thing\n",
+    "plant_one_line_return": "func value() -> Toy: return Toy.new()\n",
+    "plant_exported_member": "@export var kept: Toy = Toy.new()\n",
+    "plant_inside_a_default_dictionary":
+        "func value(table: Dictionary = {1: 2, CAP: Toy}) -> int:\n\treturn table.size()\n",
+}
 PLANT_HEAD = "class_name Toy\nextends RefCounted\n\nconst CAP: int = 3\n\n\nstatic func make() -> Toy:\n\treturn new()\n\n\n"
 INNER_PLANTS = {
     "plant_inner_calls_outer":
@@ -281,7 +317,8 @@ def planted_scripts() -> dict[str, str]:
     """Every refused spelling, each alone in a file named for it."""
     plants = {stem: PLANT_HEAD + "func value(thing: Object) -> Variant:\n" + line + "\n"
               for stem, line in VALUE_LINES}
-    return {**plants, **INNER_PLANTS}
+    functions = {stem: PLANT_HEAD + text for stem, text in FUNCTION_PLANTS.items()}
+    return {**plants, **functions, **INNER_PLANTS}
 
 
 def _plant(addons: pathlib.Path, files: dict[str, str]) -> None:

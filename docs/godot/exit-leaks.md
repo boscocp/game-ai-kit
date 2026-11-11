@@ -274,8 +274,10 @@ Name]` inside one of those. Every other use is a finding, whatever its
 spelling, with the line and what to write instead. On the tree before
 T162 it names 33 lines in exactly the 16 files T162 changed. It does not
 read games, demos or tests, and it does not look for a script that
-`preload`s its own path, which would hold itself the same way. Its
-self-test plants each spelling in a file of its own, a script that names
+`preload`s its own path, which would hold itself the same way. One false
+positive is known: an argument typed `Name` after a default nested two
+parentheses deep, `a: Vector2 = Vector2(maxf(1.0, 2.0), 0.0)`, is refused.
+Its self-test plants each spelling in a file of its own, a script that names
 itself only in types, which must pass, and an empty `addons/`, which must
 not.
 
