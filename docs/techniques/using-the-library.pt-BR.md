@@ -2,12 +2,12 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-11-04
+verified_on: 2026-11-11
 tier: 2
 source: https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html ; https://docs.godotengine.org/en/stable/tutorials/editor/command_line_tutorial.html ; https://packaging.python.org/en/latest/tutorials/installing-packages/
 invalidated_if: scripts/release.py changes what an archive holds, ADR 0024 changes the prefixed names, .godot-version or python/pyproject.toml's version moves, or scripts/library_check.py stops following one of this page's steps
 teaches: none
-translation_of: 9c0f80adbc6320d3161506d1820b5a00cd43ddec212955d7d74bbaac6f6d8e26
+translation_of: e6f240bad24e516d784af5906410db7446f4d2e644df415287b854252c32a0a3
 -->
 
 > English: [using-the-library.md](using-the-library.md). Os termos que ficam
@@ -23,7 +23,9 @@ desta página que a verificação não dá faz a verificação falhar.
 
 Duas metades, cada uma usável sem a outra.
 
-- **Addons de Godot**, um zip cada. O `ai_core` é o núcleo: uma grade
+- **Addons de Godot**, um zip cada, e todos num zip só do kit, do jeito
+  que a [Asset Store do Godot](https://store.godotengine.org/asset/boscocp/game-ai-kit/)
+  os entrega. O `ai_core` é o núcleo: uma grade
   (`GakGridGraph`), uma porta de *pathfinding* (`GakPathfinder`) e um
   gerador com semente (`GakXorshift`), nenhuma lógica de jogo. Cada outro addon é uma técnica -- `ai_search`,
   `ai_behaviour`, `ai_steering`, ... -- e não depende de nada além, no
@@ -69,8 +71,10 @@ No Windows, descompacte pelo gerenciador de arquivos e leia
 ### Os arquivos {#archives}
 
 <!-- library-step: release -->
-Nada foi publicado ainda, então os arquivos são gerados a partir do
-clone. Isso só precisa de Python e git -- nada de Godot:
+O kit está na [Asset Store do Godot](https://store.godotengine.org/asset/boscocp/game-ai-kit/),
+e o *wheel* no PyPI; aqui os arquivos são gerados a partir do clone, então
+a versão que você testa é o commit que você clonou. Isso só precisa de
+Python e git -- nada de Godot:
 
 ```bash
 python3 game-ai-kit/scripts/release.py --build --output library
@@ -78,12 +82,13 @@ python3 game-ai-kit/scripts/release.py --build --output library
 
 O `library/dist/` passa a ter um `<addon>-<version>.zip` por addon, o
 `game-ai-kit-addons-<version>.zip` com todos os addons num só e o
-`gameaikit-<version>-py3-none-any.whl`. No dia em que o kit for publicado,
-são esses mesmos arquivos que você baixa. (O `make release` dentro do
+`gameaikit-<version>-py3-none-any.whl`. Os arquivos de uma versão
+publicada são o que as lojas entregam. (O `make release` dentro do
 clone é a *release* completa: ele também exporta o jogo do menu como
 executável, então precisa antes do `make bootstrap` -- o Godot fixado e os
-*templates* de exportação dele -- e de uma árvore limpa. Para a biblioteca
-você não precisa dele.)
+*templates* de exportação dele -- e de uma árvore limpa, e recusa uma
+versão já publicada quando os addons ou o pacote mudaram desde então.
+Para a biblioteca você não precisa dele.)
 
 ### Descompactar um addon {#unzip}
 
@@ -219,10 +224,10 @@ cd my_game && ../.venv/bin/python my_training.py
 
 <!-- library-step: infer -->
 No Godot, o `ai_learning` ao lado dos outros (ele não precisa do
-`ai_core`), e a importação de novo:
+`ai_core`), na raiz do projeto como eles, e a importação de novo:
 
 ```bash
-unzip -q library/dist/ai_learning-0.1.0.zip -d my_game/addons/
+unzip -q library/dist/ai_learning-0.1.0.zip -d my_game/
 godot --headless --path my_game --import
 ```
 
@@ -257,6 +262,25 @@ func _ready() -> void:
 Treinar de novo é rodar o script outra vez e entregar o arquivo novo. A
 página do [ai_learning](ai_learning.pt-BR.md) tem o formato do arquivo e o
 que faz ele ser recusado.
+
+## Todos os addons de uma vez {#kit}
+
+<!-- library-step: kit -->
+A loja entrega o kit inteiro como um pacote só, o
+`game-ai-kit-addons-<version>.zip`: todos os addons sob um `addons/`,
+então cada um cai em `res://addons/<addon>/` ao lado dos outros; o
+instalador da loja deixa você desmarcar o que não quer. Descompactado à
+mão sobre o mesmo projeto, ele junta o resto ao lado dos três que já estão
+lá (o `-o` substitui esses pelos mesmos bytes):
+
+```bash
+unzip -q -o library/dist/game-ai-kit-addons-0.1.0.zip -d my_game/
+godot --headless --path my_game --import
+```
+
+O `make library-check` então procura cada addon em `my_game/addons/<addon>/` e nada
+mais ali, e roda o exemplo da rota de novo, com todos registrados de uma
+vez.
 
 ## Versões e a licença {#versions}
 

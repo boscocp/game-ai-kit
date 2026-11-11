@@ -19,8 +19,9 @@ unreadable, it loses to the slow and readable one.
 > Status: every technique in the table below has a page explaining it, in
 > English and Portuguese, and at least one demo where it decides something;
 > `make menu` opens them all. The Python half is on PyPI
-> (`pip install gameaikit`); the addons, as one kit, are in review at the
-> Godot Asset Store. [docs/howto/publish.md](docs/howto/publish.md) is how a
+> (`pip install gameaikit`); the addons, as one kit, are published on
+> [Godot's Asset Store](https://store.godotengine.org/asset/boscocp/game-ai-kit/).
+> [docs/howto/publish.md](docs/howto/publish.md) is how a
 > release is built and published.
 
 ## What it covers

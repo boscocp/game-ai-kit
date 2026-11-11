@@ -25,7 +25,9 @@ licença, como usar um *addon* no seu projeto -- está no
 inglês, que é o que você vai digitar.
 
 A metade em Python está no PyPI (`pip install gameaikit`); os *addons*, como
-um kit só, estão em análise na Asset Store do Godot. Como uma versão é montada
+um kit só, estão publicados na
+[Asset Store do Godot](https://store.godotengine.org/asset/boscocp/game-ai-kit/).
+Como uma versão é montada
 e publicada está em [docs/howto/publish.md](docs/howto/publish.md), em inglês.
 
 ## O que o kit cobre
