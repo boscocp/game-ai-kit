@@ -980,6 +980,10 @@ demo-racing3d: import ## A 3D race, you and three AI levels: arrows/WASD drive, 
 demo-infiltration: import ## Sneak past guards in third person: WASD, mouse camera, C crouch, Z prone, Shift sprint, G throw, E takedown, click shoot; 1-6 switches, Tab a guard, L level
 	@$(GODOT) --path godot res://game3d/infiltration/infiltration.tscn
 
+.PHONY: demo-bossfight
+demo-bossfight: import ## A boss and its minions, one strikes at a time: WASD, mouse camera, click attack, Shift dodge, Q lock-on, H hide, N again
+	@$(GODOT) --path godot res://game3d/bossfight/bossfight.tscn
+
 .PHONY: demo-botmatch
 demo-botmatch: import ## A 3D bot match, six against six: 1-3 blue's claims/commander/retreat (Shift: red's), Tab a bot, T take it over, M map, C camera, P pause, N new, L the other arena
 	@$(GODOT) --path godot res://game3d/botmatch/botmatch.tscn

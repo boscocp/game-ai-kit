@@ -49,6 +49,7 @@ const SCENES: Array[String] = [
 	"res://game3d/infiltration/infiltration.tscn",
 	"res://game/maze/maze.tscn",
 	"res://game/talk/talk.tscn",
+	"res://game3d/bossfight/bossfight.tscn",
 ]
 
 ## The field each example's task says its overlay must carry, and whether it
@@ -72,6 +73,8 @@ const REQUIRED: Dictionary = {
 	"res://game3d/infiltration/infiltration.tscn": [["awareness", true], ["action", false], ["intruder", true]],
 	"res://game/maze/maze.tscn": [["target", false], ["distance", true]],
 	"res://game/talk/talk.tscn": [["trust", true], ["suspicion", true], ["thinking", false]],
+	"res://game3d/bossfight/bossfight.tscn": [["holders", false], ["queue", false], ["next_in", true], ["claims", false],
+		["telegraph", true]],
 }
 
 ## The same, for an example opened in a mode other than its first (T85),
@@ -94,6 +97,7 @@ const HAS_PAD: Array[String] = [
 	"res://game3d/racing/racing3d.tscn",
 	"res://game3d/infiltration/infiltration.tscn",
 	"res://game/maze/maze.tscn",
+	"res://game3d/bossfight/bossfight.tscn",
 ]
 
 ## Decisions each example takes before it is asked. More than one, so an

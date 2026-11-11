@@ -11,6 +11,7 @@
     "godot/test/locale/"
   ],
   "depends_on": [
+    "bossfight",
     "botmatch",
     "checkers",
     "demo_behaviour",

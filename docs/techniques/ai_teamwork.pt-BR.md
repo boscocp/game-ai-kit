@@ -7,7 +7,7 @@ tier: 2
 source: https://www.gameaipro.com/
 invalidated_if: the kit's RoleArbiter, TeamCommander, TacticalPositions, SquadConfidence, SearchCoordinator, AttackTokens or EngagementRings signatures change, or the demos that use them are renamed
 teaches: shooter-ai
-translation_of: 9a4e71937b41f603adc5106df514e5a029241a9a9a1bb85e63cef36a756a0531
+translation_of: 0e4eb0a9b0c4dd1a22c1f75c248b6db9aabc781c84caf59ed15e58b971fa3a9f
 -->
 
 > English: [ai_teamwork.md](ai_teamwork.md). Os termos que ficam em inglês
@@ -53,10 +53,10 @@ deveriam estar atacando.
 - `make demo-infiltration` -- os guardas procuram com o `SearchCoordinator`
   e lutam sob o `RoleArbiter`; **2** e **3** ligam e desligam o coordenador
   e o árbitro, **Tab** observa o próximo guarda.
-- O `AttackTokens` e o `EngagementRings` ainda não têm demo: a luta
-  contra o chefe da T157 é a que vai mostrar quem segura um *token* e os
-  anéis. Até lá, os vetores e a suíte dele
-  o rodam.
+- `make demo-bossfight` -- um chefe e os seus capangas dividem os seus
+  `AttackTokens`: um anel aos pés de cada um que segura um *token*, a fila
+  e o cronômetro de reemissão no painel, e os `EngagementRings` com cada
+  reserva no chão. **H** os esconde, **Q** trava a mira em um.
 - Qual demo usa qual técnica, nos dois sentidos: o
   [catálogo](catalogue.pt-BR.md).
 

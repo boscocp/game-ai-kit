@@ -47,8 +47,10 @@ at all.
 - `make demo-infiltration` -- the guards search with `SearchCoordinator`
   and fight under `RoleArbiter`; **2** and **3** switch the coordinator and
   the arbiter, **Tab** watches the next guard.
-- `AttackTokens` and `EngagementRings` have no demo yet: T157's boss
-  fight is the one that will show who holds a token and the rings. Until then its vectors and its suite run it.
+- `make demo-bossfight` -- a boss and its minions share your
+  `AttackTokens`: a ring at the feet of each holder, the queue and the
+  reissue timer in the panel, and the `EngagementRings` with each claim on
+  the floor. **H** hides them, **Q** locks on to one.
 - Which demo uses which technique, both ways: the
   [catalogue](catalogue.md).
 
