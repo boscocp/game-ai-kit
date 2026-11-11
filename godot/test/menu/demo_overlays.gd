@@ -20,7 +20,8 @@
 # Each rule first rejects a planted example built in memory below, because
 # `lint-selftests` only reaches `scripts/` and nothing else would notice one
 # going blind. The planted crash prints its own backtrace on every run: that
-# is the rule being shown a crash, not a failure. `check_demos.py` refuses a
+# is the rule being shown a crash, not a failure, and the Makefile names it
+# to godot_checked.py by its function, `demo_overlays_planted_crash` (T141). `check_demos.py` refuses a
 # `make demo-*` missing from SCENES.
 #
 # The examples are stepped in one language, English unless `--locale=pt_BR`
@@ -401,7 +402,7 @@ func _planted_examples() -> Array[String]:
 		"no legend": [counting + "func decision_overlay():\n\treturn {\"p_win\": 0.5, \"n\": count}", false, "has no legend"],
 		"a constant overlay": ["func step_decision():\n\tpass\nfunc decision_overlay():\n\treturn {\"p_win\": 0.5}", true, "did not change"],
 		"an empty field": [counting + "func decision_overlay():\n\treturn {\"p_win\": 0.5, \"n\": count, \"why\": []}", true, "is empty"],
-		"a crashing step": [counting.replace("count += 1\n", "count += 1\n\tvar nothing: Object = null\n\tnothing.free()\n") + "func decision_overlay():\n\treturn {\"p_win\": 0.5, \"n\": count}", true, "engine error"],
+		"a crashing step": [counting.replace("count += 1\n", "count += 1\n\tvar nothing = null\n\tnothing.demo_overlays_planted_crash()\n") + "func decision_overlay():\n\treturn {\"p_win\": 0.5, \"n\": count}", true, "engine error"],
 		"a word for a number": [counting + "func decision_overlay():\n\treturn {\"p_win\": \"0.5\", \"n\": count}", true, "not a number"],
 		"the required field missing": [counting + "func decision_overlay():\n\treturn {\"n\": count}", true, "carries no p_win"],
 	}

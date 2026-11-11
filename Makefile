@@ -64,6 +64,17 @@ endif
 
 GODOT_VERSION := $(shell tr -d '[:space:]' < .godot-version)
 GODOT := ./scripts/godot
+# A `-s` script is never started with $(GODOT): it runs as
+# `$(PYTHON) scripts/godot_checked.py res://...`, which fails it on an engine
+# error its exit code hides (T141). lint-godot-checked holds that.
+#
+# The in-script error counters (PerceptionErrors, Racing3DErrors) push one
+# error on purpose before a gate starts, to show they count (invariant 4).
+# A gate that uses one names it on its own line with one of these, which
+# forgive that error's text and nothing else, and fail the run if it is
+# NOT printed.
+PERCEPTION_PLANT := --expect-error "PerceptionErrors self-check: this error is planted"
+RACING3D_PLANT := --expect-error "Racing3DErrors self-check: this error is planted"
 
 .DEFAULT_GOAL := help
 
@@ -205,6 +216,13 @@ check-no-engine: lint-import-threads
 lint-import-threads: ## T148: the project imports on one thread, where a cold --import does not crash
 	@# Its self-test runs in lint-selftests, found there by its name.
 	@$(PYTHON) scripts/check_import_threads.py
+
+.PHONY: lint-godot-checked
+check-no-engine: lint-godot-checked
+lint-godot-checked: ## T141: every Godot -s line runs through godot_checked.py, so an engine error fails it
+	@# An exception is one target and one script, named with its reason in
+	@# the script's ALLOWED; its self-test runs in lint-selftests.
+	@$(PYTHON) scripts/check_godot_checked.py
 
 .PHONY: lint-no-assets
 lint-no-assets: ## ADR 0018: nothing from a 3D pack is tracked, and every manifest row has a sha256
@@ -371,7 +389,7 @@ test-vectors: test-core-vectors
 test-core-vectors: import ## The kit's one seeded generator, its draws, uniforms and picks, against ai_core (T109)
 	@# The other half is `make test-python`, through gameaikit.core. The
 	@# numbers came from neither: spec/vectors/core/derive.py.
-	@$(GODOT) --headless --path godot -s res://test/ai_core/xorshift_vectors_runner.gd \
+	@$(PYTHON) scripts/godot_checked.py res://test/ai_core/xorshift_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/core
 
 .PHONY: test-search-vectors
@@ -380,7 +398,7 @@ test-search-vectors: import ## The search vectors, against ai_search
 	@# The vectors live outside the Godot project so the Python side can be
 	@# held to the same answers. Godot reads an absolute path in a
 	@# non-exported build, so the directory goes in after `--`.
-	@$(GODOT) --headless --path godot -s res://test/ai_search/vectors_runner.gd \
+	@$(PYTHON) scripts/godot_checked.py res://test/ai_search/vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/search
 
 .PHONY: test-planning-vectors
@@ -390,10 +408,10 @@ test-planning-vectors: import ## The planning vectors, against ai_planning
 	@# the domain the JSON spells out. The other half -- that the PDDL files
 	@# beside it describe the same domain -- is `make test-python`, because the
 	@# reader is Python and a game does not parse a domain file in a frame.
-	@$(GODOT) --headless --path godot -s res://test/ai_planning/planning_vectors_runner.gd \
+	@$(PYTHON) scripts/godot_checked.py res://test/ai_planning/planning_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/planning
 	@# The tactical board's own domain (T11) is a vector too, beside its PDDL.
-	@$(GODOT) --headless --path godot -s res://test/ai_planning/planning_vectors_runner.gd \
+	@$(PYTHON) scripts/godot_checked.py res://test/ai_planning/planning_vectors_runner.gd \
 		-- $(CURDIR)/spec/pddl
 
 .PHONY: test-learning-vectors
@@ -413,14 +431,14 @@ test-learning-vectors: import ## The learning vectors, against ai_learning
 test-vectors: test-ngram-vectors
 test-ngram-vectors: import ## The n-gram vectors, against ai_opponent
 	@# The same files are read by `make test-python` through gameaikit.ngram.
-	@$(GODOT) --headless --path godot -s res://test/ai_opponent/ngram_vectors_runner.gd \
+	@$(PYTHON) scripts/godot_checked.py res://test/ai_opponent/ngram_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/ngram
 
 .PHONY: test-bandit-vectors
 test-vectors: test-bandit-vectors
 test-bandit-vectors: import ## The bandit vectors, against ai_bandit
 	@# The same files are read by `make test-python` through gameaikit.bandit.
-	@$(GODOT) --headless --path godot -s res://test/ai_bandit/bandit_vectors_runner.gd \
+	@$(PYTHON) scripts/godot_checked.py res://test/ai_bandit/bandit_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/bandit
 
 .PHONY: test-bayes-vectors
@@ -436,14 +454,14 @@ test-bayes-vectors: import ## The Bayesian network vectors, against ai_bayes
 test-vectors: test-constraints-vectors
 test-constraints-vectors: import ## The constraint vectors, against ai_constraints
 	@# The same files are read by `make test-python` through gameaikit.constraints.
-	@$(GODOT) --headless --path godot -s res://test/ai_constraints/constraint_vectors_runner.gd \
+	@$(PYTHON) scripts/godot_checked.py res://test/ai_constraints/constraint_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/constraints
 
 .PHONY: test-cloning-vectors
 test-vectors: test-cloning-vectors
 test-cloning-vectors: import ## The cloning vectors, against ai_learning's softmax model and case table
 	@# The same files are read by `make test-python` through gameaikit.cloning.
-	@$(GODOT) --headless --path godot -s res://test/ai_learning/cloning_vectors_runner.gd \
+	@$(PYTHON) scripts/godot_checked.py res://test/ai_learning/cloning_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/cloning
 
 .PHONY: test-tree-vectors
@@ -466,7 +484,7 @@ test-forest-vectors: import ## T114: the random-forest vectors' votes, against a
 test-vectors: test-combat-vectors
 test-combat-vectors: import ## The combat vectors, against the tactical board's fight
 	@# The same files are read by `make test-python` through gameaikit.dataset.combat.
-	@$(GODOT) --headless --path godot -s res://test/tactical/combat_vectors_runner.gd \
+	@$(PYTHON) scripts/godot_checked.py res://test/tactical/combat_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/combat
 
 .PHONY: test-llm-server-ends
@@ -480,7 +498,7 @@ test-llm-vectors: import ## What a model's reply may contain: both validators ag
 	@# Both halves here, because this is where "every refusal is refused by
 	@# both validators" is held -- by running them. No model in either.
 	@$(PYTHON) -m unittest discover -s python/tests -t python -p "test_llm_vectors.py" -q
-	@$(GODOT) --headless --path godot -s res://test/ai_llm/llm_vectors_runner.gd \
+	@$(PYTHON) scripts/godot_checked.py res://test/ai_llm/llm_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/llm
 
 .PHONY: test-talk-vectors
@@ -491,7 +509,7 @@ test-talk-vectors: import ## The guard's recorded conversations, replayed to the
 	@# suspicion. Python replays it through gameaikit.talk; Godot through the
 	@# game's own TalkGuard, RecordedRuntime and LlmConversation. No model.
 	@$(PYTHON) -m unittest discover -s python/tests -t python -p "test_talk_vectors.py" -q
-	@$(GODOT) --headless --path godot -s res://test/talk/talk_vectors_runner.gd \
+	@$(PYTHON) scripts/godot_checked.py res://test/talk/talk_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/talk
 
 .PHONY: measure-llm-requests
@@ -500,7 +518,7 @@ measure-llm-requests: import ## The worst frame while an HTTPRequest is in fligh
 	@# The stub answers like a local LLM server, with no model behind it.
 	@PYTHONPATH=python $(PYTHON) -m gameaikit.llm.stub_server --port 8765 --delay 0.5 & \
 		stub=$$!; sleep 1; \
-		$(GODOT) --headless --path godot -s res://test/ai_llm/http_frame_probe.gd -- 8765; \
+		$(PYTHON) scripts/godot_checked.py res://test/ai_llm/http_frame_probe.gd -- 8765; \
 		status=$$?; kill $$stub; exit $$status
 
 .PHONY: test-fuzzy-vectors
@@ -509,7 +527,7 @@ test-fuzzy-vectors: import ## The fuzzy vectors, against ai_fuzzy
 	@# The same file, read twice: here through the addon, and in
 	@# `make test-python` through gameaikit.fuzzy, which also checks that the
 	@# text controller beside a vector describes the same thing as its JSON.
-	@$(GODOT) --headless --path godot -s res://test/ai_fuzzy/fuzzy_vectors_runner.gd \
+	@$(PYTHON) scripts/godot_checked.py res://test/ai_fuzzy/fuzzy_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/fuzzy
 
 .PHONY: test-checkers-vectors
@@ -517,7 +535,7 @@ test-vectors: test-checkers-vectors
 test-checkers-vectors: import ## The checkers rules and evaluation vectors, against the game
 	@# The other half is `make test-python`: the same two files read through
 	@# gameaikit.checkers, the Python that self-plays and fits (T32).
-	@$(GODOT) --headless --path godot -s res://test/checkers/checkers_vectors_runner.gd \
+	@$(PYTHON) scripts/godot_checked.py res://test/checkers/checkers_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/checkers
 
 .PHONY: test-adversarial-vectors
@@ -525,7 +543,7 @@ test-vectors: test-adversarial-vectors
 test-adversarial-vectors: import ## The xorshift draws MCTS reads, and its root visits on Nim and a dice race, against ai_adversarial (T86)
 	@# The other half is `make test-python`, through gameaikit.adversarial.
 	@# The numbers came from neither: spec/vectors/adversarial/derive.py.
-	@$(GODOT) --headless --path godot -s res://test/ai_adversarial/mcts_vectors_runner.gd \
+	@$(PYTHON) scripts/godot_checked.py res://test/ai_adversarial/mcts_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/adversarial
 
 .PHONY: test-menace-vectors
@@ -533,7 +551,7 @@ test-vectors: test-menace-vectors
 test-menace-vectors: import ## The MENACE vectors, against the game's bead player
 	@# The other half is `make test-python`. Each case carries the uniform draw
 	@# itself, because Python's generator and Godot's differ.
-	@$(GODOT) --headless --path godot -s res://test/tictactoe/menace_vectors_runner.gd \
+	@$(PYTHON) scripts/godot_checked.py res://test/tictactoe/menace_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/menace
 
 .PHONY: test-maze-vectors
@@ -541,7 +559,7 @@ test-vectors: test-maze-vectors
 test-maze-vectors: import ## The maze vectors: a seed and Pac-Man's moves, every step's positions, against the game (T97)
 	@# The other half is `make test-python`; the answers came from neither,
 	@# from spec/vectors/maze/derive.py.
-	@$(GODOT) --headless --path godot -s res://test/maze/maze_vectors_runner.gd \
+	@$(PYTHON) scripts/godot_checked.py res://test/maze/maze_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/maze
 
 .PHONY: test-mdp-vectors
@@ -549,7 +567,7 @@ test-vectors: test-mdp-vectors
 test-mdp-vectors: import ## Ten maze states' values and best moves, against the policy the maze game reads (T98)
 	@# The other half is `make test-python`; the answers came from neither,
 	@# from spec/vectors/mdp/derive.py's own value iteration.
-	@$(GODOT) --headless --path godot -s res://test/maze/mdp_vectors_runner.gd \
+	@$(PYTHON) scripts/godot_checked.py res://test/maze/mdp_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/mdp
 
 .PHONY: test-director-vectors
@@ -557,7 +575,7 @@ test-vectors: test-director-vectors
 test-director-vectors: import ## The director's intensity and phases on event lists, against the infiltration level's Director (T90)
 	@# The other half is `make test-python`; the answers came from neither,
 	@# from spec/vectors/director/derive.py.
-	@$(GODOT) --headless --path godot -s res://test/infiltration/director_vectors_runner.gd \
+	@$(PYTHON) scripts/godot_checked.py res://test/infiltration/director_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/director
 
 .PHONY: test-valley-vectors
@@ -574,14 +592,14 @@ test-vectors: test-player-model-vectors
 test-player-model-vectors: import ## The bot match's player model on event lists: counts, share, row, against PlayerModel (T100)
 	@# The other half is `make test-python`; the answers came from neither,
 	@# from spec/vectors/player_model/derive.py.
-	@$(GODOT) --headless --path godot -s res://test/botmatch/player_model_vectors_runner.gd \
+	@$(PYTHON) scripts/godot_checked.py res://test/botmatch/player_model_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/player_model
 
 .PHONY: measure-player-model
 measure-player-model: import ## T100: stand-ins at three skills in the person's place, the knob each settles on, the score with the model on and off
 	@# Printed, not a gate: the table on docs/godot/botmatch.md. AIMS="4 3.5
 	@# 3 2.5 2" measures another table's aim errors, row by row.
-	@$(GODOT) --headless --path godot -s res://test/botmatch/player_model_measure.gd -- $(AIMS)
+	@$(PYTHON) scripts/godot_checked.py --timeout 86400 res://test/botmatch/player_model_measure.gd -- $(AIMS)
 
 .PHONY: record-botmatch
 record-botmatch: import ## Play the bot match and keep each match's events in this checkout's user://botmatch-logs/ (T100, ADR 0017)
@@ -590,17 +608,17 @@ record-botmatch: import ## Play the bot match and keep each match's events in th
 .PHONY: measure-director
 measure-director: import ## T90: the director over seeded runs -- seconds in each phase, peaks, relaxes, patrols sent and called back
 	@# Printed, not a gate: it exits 1 only when no run relaxed at all.
-	@$(GODOT) --headless --path godot -s res://test/infiltration/director_measure.gd
+	@$(PYTHON) scripts/godot_checked.py res://test/infiltration/director_measure.gd
 
 .PHONY: test-squad-match
 test-squad-match: import ## The XCOM mode's first enemy against a random mover: at least 80 of 100 seeded matches from each seat (T85, ~30 s)
-	@$(GODOT) --headless --path godot -s res://test/squad/squad_match_runner.gd -- $(or $(GAMES),100) $(or $(WINS),80)
+	@$(PYTHON) scripts/godot_checked.py res://test/squad/squad_match_runner.gd -- $(or $(GAMES),100) $(or $(WINS),80)
 
 .PHONY: test-squad-vectors
 test-vectors: test-squad-vectors
 test-squad-vectors: import ## The XCOM-style shot: cover, flanking, chance and die, both languages against spec/vectors/squad (T84)
 	@# The answers were worked out by hand; neither language derived them.
-	@$(GODOT) --headless --path godot -s res://test/squad/squad_vectors_runner.gd \
+	@$(PYTHON) scripts/godot_checked.py res://test/squad/squad_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/squad
 	@$(PYTHON) -m unittest discover -s python/tests -t python -q -p "test_squad_vectors.py"
 
@@ -608,14 +626,14 @@ test-squad-vectors: import ## The XCOM-style shot: cover, flanking, chance and d
 test-vectors: test-squad-search-vectors
 test-squad-search-vectors: import ## MCTS on the squad's positions: the root's visits the same in both languages (T87)
 	@# Written from one run, not by hand: what holds them is the two agreeing.
-	@$(GODOT) --headless --path godot -s res://test/squad/squad_search_vectors_runner.gd \
+	@$(PYTHON) scripts/godot_checked.py res://test/squad/squad_search_vectors_runner.gd \
 		-- $(CURDIR)/spec/squad/positions.json
 	@$(PYTHON) -m unittest discover -s python/tests -t python -q -p "test_squad_search.py"
 
 .PHONY: measure-squad-mcts
 measure-squad-mcts: import ## T87: MCTS against the weighed enemy from each seat, with a decision's time and the worst frame (ITERATIONS=1000 GAMES=100 FIRST=0; slow)
 	@# Printed, not a gate: a line a game, then a summary a seat.
-	@$(GODOT) --headless --path godot -s res://test/squad/squad_mcts_measure.gd \
+	@$(PYTHON) scripts/godot_checked.py --timeout 86400 res://test/squad/squad_mcts_measure.gd \
 		-- $(or $(ITERATIONS),1000) $(or $(GAMES),100) $(or $(FIRST),0)
 
 .PHONY: test-squad-duel
@@ -639,46 +657,46 @@ measure-squad-duel: import ## T88: the same duel on the wall clock, 50, 200 and 
 
 .PHONY: test-infiltration
 test-infiltration: import ## The infiltration level's guards: help heard, the search shared, quiet and loud, the arbiter, the halving, every decision on the overlay, portable (T70)
-	@$(GODOT) --headless --path godot -s res://test/infiltration/infiltration_properties.gd
+	@$(PYTHON) scripts/godot_checked.py $(PERCEPTION_PLANT) res://test/infiltration/infiltration_properties.gd
 
 .PHONY: test-infiltration-tracking
 test-infiltration-tracking: import ## A measurement, not in make check: grid belief against particles, every run paired, and a step's cost (T91)
-	@$(GODOT) --headless --path godot -s res://test/infiltration/infiltration_tracking.gd
+	@$(PYTHON) scripts/godot_checked.py $(PERCEPTION_PLANT) res://test/infiltration/infiltration_tracking.gd
 
 .PHONY: test-infiltration-properties
 test-infiltration-properties: import ## A guard knows only what it perceived; awareness, phases, sound and belief hold on generated levels (T69)
-	@$(GODOT) --headless --path godot -s res://test/infiltration/awareness_properties.gd
+	@$(PYTHON) scripts/godot_checked.py $(PERCEPTION_PLANT) res://test/infiltration/awareness_properties.gd
 
 .PHONY: test-pad
 test-pad: import ## A controller presses the keys an example reads: buttons, stick, triggers, mouse (wave 84)
-	@$(GODOT) --headless --path godot -s res://test/game_shared/pad_as_keys_claims.gd
+	@$(PYTHON) scripts/godot_checked.py res://test/game_shared/pad_as_keys_claims.gd
 
 .PHONY: test-perception-vectors
 test-vectors: test-perception-vectors
 test-perception-vectors: import ## The stealth senses: shape, loudness, awareness, phase, belief, particles, against ai_perception (T69, T91)
 	@# The other half is `make test-python`.
-	@$(GODOT) --headless --path godot -s res://test/ai_perception/perception_vectors_runner.gd \
+	@$(PYTHON) scripts/godot_checked.py $(PERCEPTION_PLANT) res://test/ai_perception/perception_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/perception
 
 .PHONY: test-teamwork-vectors
 test-vectors: test-teamwork-vectors
 test-teamwork-vectors: import ## Positions, influence, commander and confidence, against ai_teamwork (T51)
 	@# The other half is `make test-python`.
-	@$(GODOT) --headless --path godot -s res://test/ai_teamwork/teamwork_vectors_runner.gd \
+	@$(PYTHON) scripts/godot_checked.py res://test/ai_teamwork/teamwork_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/teamwork
 
 .PHONY: test-utility-vectors
 test-vectors: test-utility-vectors
 test-utility-vectors: import ## Actions scored by their considerations, and errands weighed, against ai_utility (T67, T101)
 	@# The other half is `make test-python`.
-	@$(GODOT) --headless --path godot -s res://test/ai_utility/utility_vectors_runner.gd \
+	@$(PYTHON) scripts/godot_checked.py res://test/ai_utility/utility_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/utility
 
 .PHONY: test-racing3d-vectors
 test-vectors: test-racing3d-vectors
 test-racing3d-vectors: import ## The 3D driver's decisions from stated snapshots, against RaceDriver3D (T54)
 	@# The other half is `make test-python`.
-	@$(GODOT) --headless --path godot -s res://test/racing3d/racing3d_vectors_runner.gd \
+	@$(PYTHON) scripts/godot_checked.py $(RACING3D_PLANT) res://test/racing3d/racing3d_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/racing3d
 
 .PHONY: test-steering-vectors
@@ -688,22 +706,22 @@ test-steering-vectors: import ## The steering trajectories and the flock's three
 	@# Vector2's 32-bit floats: docs/godot/vector2-is-single-precision.md.
 	@# The flock's runner is new (T150), so it runs through godot_checked.py,
 	@# which fails it on any engine error it prints.
-	@$(GODOT) --headless --path godot -s res://test/ai_steering/steering_vectors_runner.gd \
+	@$(PYTHON) scripts/godot_checked.py res://test/ai_steering/steering_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/steering
 	@$(PYTHON) scripts/godot_checked.py res://test/ai_steering/flock_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/steering/flock
 
 .PHONY: test-steering-properties
 test-steering-properties: import ## Arrive comes to rest, seek never does, no force breaks its limit (T22)
-	@$(GODOT) --headless --path godot -s res://test/ai_steering/steering_properties.gd
+	@$(PYTHON) scripts/godot_checked.py res://test/ai_steering/steering_properties.gd
 
 .PHONY: test-racing-ladder
 test-racing-ladder: import ## Every racing level finishes, in order, a second a lap apart (T23)
-	@$(GODOT) --headless --path godot -s res://test/demo_racing/racing_ladder.gd
+	@$(PYTHON) scripts/godot_checked.py res://test/demo_racing/racing_ladder.gd
 
 .PHONY: test-racing-does-not-cheat
 test-racing-does-not-cheat: import ## One physics for every car, no limit broken, no knob moved mid-race (T23)
-	@$(GODOT) --headless --path godot -s res://test/demo_racing/racing_does_not_cheat.gd
+	@$(PYTHON) scripts/godot_checked.py res://test/demo_racing/racing_does_not_cheat.gd
 
 .PHONY: test-botmatch-effects
 test-botmatch-effects: import ## What claims, the commander, retreat and the rest each do, over 187 bot matches in parallel shards (T51, T72)
@@ -715,37 +733,37 @@ test-botmatch-effects: import ## What claims, the commander, retreat and the res
 
 .PHONY: test-search-properties
 test-search-properties: import ## A* agrees with Dijkstra, over a few hundred boards
-	@$(GODOT) --headless --path godot -s res://test/ai_search/search_properties.gd
+	@$(PYTHON) scripts/godot_checked.py res://test/ai_search/search_properties.gd
 
 .PHONY: test-planner-properties
 test-planner-properties: import ## A plan can be run, and an unsolvable domain says so
-	@$(GODOT) --headless --path godot -s res://test/tactical/planner_properties.gd
+	@$(PYTHON) scripts/godot_checked.py res://test/tactical/planner_properties.gd
 
 .PHONY: test-behaviour-benchmark
 test-behaviour-benchmark: import ## GOAP against the HTN on the guard: worlds and microseconds a plan (T15), printed
 	@# A measurement, not a gate: the worlds are held by behaviour_test.gd,
 	@# and the microseconds are one machine's.
-	@$(GODOT) --headless --path godot -s res://test/demo_behaviour/behaviour_benchmark.gd
+	@$(PYTHON) scripts/godot_checked.py res://test/demo_behaviour/behaviour_benchmark.gd
 
 .PHONY: test-planner-benchmark
 test-planner-benchmark: import ## Every search over the tactical domain: h_max stays shortest, the guesses visit fewer worlds, a budget holds (T11)
-	@$(GODOT) --headless --path godot -s res://test/tactical/planner_benchmark.gd
+	@$(PYTHON) scripts/godot_checked.py res://test/tactical/planner_benchmark.gd
 
 .PHONY: test-rts-budget
 test-rts-budget: import ## The real-time core holds its frame share at 200 units, and ai_core does not (T19)
 	@# A measurement with a pass mark, like test-inference-budget: the old
 	@# core's ~50 ms a step is printed beside the new core's layers.
-	@$(GODOT) --headless --path godot -s res://test/ai_rts_core/rts_core_budget.gd
+	@$(PYTHON) scripts/godot_checked.py res://test/ai_rts_core/rts_core_budget.gd
 
 .PHONY: test-mcts-budget
 test-mcts-budget: import ## A frame's step of MCTS, 100 iterations of the dice race, fits in half a frame (T86)
 	@# A measurement with a pass mark, apart from the gdUnit suites because a
 	@# clock flakes under load: run it alone before believing a red.
-	@$(GODOT) --headless --path godot -s res://test/ai_adversarial/mcts_budget.gd
+	@$(PYTHON) scripts/godot_checked.py res://test/ai_adversarial/mcts_budget.gd
 
 .PHONY: test-rts-match
 test-rts-match: import ## A whole RTS match ends the same way twice, inside its frame budget, and the commander beats the queues alone (T20)
-	@$(GODOT) --headless --path godot -s res://test/rts/rts_match.gd
+	@$(PYTHON) scripts/godot_checked.py res://test/rts/rts_match.gd
 
 .PHONY: test-rts-exit
 check: test-rts-exit
@@ -779,17 +797,17 @@ test-rts-flock: import ## T19's wall-gap jam, planted, is seen; a group walking 
 
 .PHONY: rts-measure
 rts-measure: import ## Slow (minutes): the commander vs the queues, STRIPS vs HTN, each level vs the next, the seat's bias (T20)
-	@$(GODOT) --headless --path godot -s res://test/rts/rts_measure.gd
+	@$(PYTHON) scripts/godot_checked.py --timeout 86400 res://test/rts/rts_measure.gd
 
 .PHONY: test-rts-simulation
 test-rts-simulation: import ## The RTS match replays from its seed, only commands change it, fog holds, counters add up (T19)
-	@$(GODOT) --headless --path godot -s res://test/ai_rts_core/rts_simulation.gd
+	@$(PYTHON) scripts/godot_checked.py res://test/ai_rts_core/rts_simulation.gd
 
 .PHONY: test-perception-properties
 test-perception-properties: import ## Sight is symmetric, walls block both ways, suspicion holds in sight
 	@# T14's acceptance, as a target so CI runs the same command. Four
 	@# properties over three hundred generated maps, from a fixed seed.
-	@$(GODOT) --headless --path godot -s res://test/stealth/perception_properties.gd
+	@$(PYTHON) scripts/godot_checked.py res://test/stealth/perception_properties.gd
 
 .PHONY: import
 import: ## Import the art, which a fresh checkout cannot load without
@@ -818,15 +836,22 @@ import: ## Import the art, which a fresh checkout cannot load without
 test-menu-walk: import ## The menu, walked: every card plays its example, Escape frees it and comes back
 	@# T24. `lint-demos` holds the catalogue to the Makefile; this holds the
 	@# menu to the catalogue, in the engine.
-	@$(GODOT) --headless --path godot -s res://test/menu/menu_walk.gd
+	@# Its planted example pushes one error on purpose, to show the walk
+	@# sees it: expected here by its text, and nothing else (T141).
+	@$(PYTHON) scripts/godot_checked.py \
+		--expect-error "menu_walk: an error planted on purpose" res://test/menu/menu_walk.gd
 
 .PHONY: test-demo-overlays
 test-demo-overlays: import ## Every example, stepped headless: its overlay holds the AI's reasoning
 	@# The engine half of invariant 13; `lint-demos` is the half without it.
 	@# Neither can see the screen, and the seeing is each example's manual check.
 	@# Twice: in English, and in pt-BR, where a legend line is longer (T78).
-	@$(GODOT) --headless --path godot -s res://test/menu/demo_overlays.gd -- --locale=en
-	@$(GODOT) --headless --path godot -s res://test/menu/demo_overlays.gd -- --locale=pt_BR
+	@# Its planted crashing example prints a SCRIPT ERROR on purpose, named
+	@# by the function it calls (T141).
+	@$(PYTHON) scripts/godot_checked.py --expect-error demo_overlays_planted_crash \
+		res://test/menu/demo_overlays.gd -- --locale=en
+	@$(PYTHON) scripts/godot_checked.py --expect-error demo_overlays_planted_crash \
+		res://test/menu/demo_overlays.gd -- --locale=pt_BR
 
 # --- the examples in Portuguese (T78) ----------------------------------------
 
@@ -848,7 +873,7 @@ test-locale-screen: import ## Each translated example opened in pt-BR: no Contro
 		if git diff --quiet HEAD -- "$$table" && ! git diff --quiet HEAD -- "$$output"; then \
 			echo "test-locale-screen: $$output is stale against $$table; commit what make import wrote" >&2; \
 			exit 1; fi; done
-	@$(GODOT) --headless --fixed-fps 60 --path godot -s res://test/locale/locale_screen.gd
+	@$(PYTHON) scripts/godot_checked.py --fixed-fps 60 res://test/locale/locale_screen.gd
 
 # ------------------------------------------------------------------------------
 
@@ -857,7 +882,7 @@ test-decisions: import ## The two fights the learned opponent has to get right, 
 	@# T6's acceptance, as a target so that CI runs the same command. It plays
 	@# against the *published* weights rather than a hand-made model, so a
 	@# retrained opponent that stops taking a fight it should take fails here.
-	@$(GODOT) --headless --path godot -s res://test/tactical/decision_scenarios.gd
+	@$(PYTHON) scripts/godot_checked.py res://test/tactical/decision_scenarios.gd
 
 .PHONY: test-godot
 test-godot: import ## Godot tests, headless (gdUnit4)
@@ -1009,18 +1034,18 @@ demo-tactical: import ## Advance Wars style tactics against the computer: click 
 .PHONY: tactical-win-rates
 tactical-win-rates: import ## Seeded games between the tactical board's controllers: wins, rounds, stuck pieces (~1 min)
 	@# A measurement: the tuning tasks' acceptance passes it --at-most limits.
-	@$(GODOT) --headless --path godot -s res://test/tactical/tactical_win_rates.gd -- $(or $(GAMES),20) $(LIMITS)
+	@$(PYTHON) scripts/godot_checked.py --timeout 86400 res://test/tactical/tactical_win_rates.gd -- $(or $(GAMES),20) $(LIMITS)
 
 .PHONY: league
 league: import ## T25's league: every team against every other from both seats, rated with intervals, each decision's cost (~10 min)
 	@# T25's acceptance. Not in `check`: 280 games, played twice to hold the
 	@# table to its seeds, take about ten minutes. SEEDS sets seeds a seat.
-	@$(GODOT) --headless --path godot -s res://test/league/league_runner.gd -- $(or $(SEEDS),5)
+	@$(PYTHON) scripts/godot_checked.py --timeout 86400 res://test/league/league_runner.gd -- $(or $(SEEDS),5)
 
 .PHONY: test-rts-clock-limits
 check: test-rts-clock-limits
 test-rts-clock-limits: import ## T55, fast: a late and a capped side, one match each, are handed nothing (the league module's gate)
-	@$(GODOT) --headless --path godot -s res://test/league/rts_league.gd -- 1 quick
+	@$(PYTHON) scripts/godot_checked.py res://test/league/rts_league.gd -- 1 quick
 
 .PHONY: test-rts-league
 test-rts-league: import ## Slow (~5-10 min): T55's league on the RTS board, both scores with intervals, every knob costs strength and hands nothing over
@@ -1028,15 +1053,15 @@ test-rts-league: import ## Slow (~5-10 min): T55's league on the RTS board, both
 	@# league depends on rts, ai_rts_core and ai_planning, so as a gate it
 	@# would run ten minutes on every change to any of them (PR #70's
 	@# review). `test-rts-clock-limits` is the gate; this is T25's `league`.
-	@$(GODOT) --headless --path godot -s res://test/league/rts_league.gd -- $(or $(SEEDS),2)
+	@$(PYTHON) scripts/godot_checked.py --timeout 86400 res://test/league/rts_league.gd -- $(or $(SEEDS),2)
 
 .PHONY: rts-league
 rts-league: import ## Slow (minutes a seed): T55's league round robin, every RTS team against every other from both seats
-	@$(GODOT) --headless --path godot -s res://test/league/rts_league.gd -- $(or $(SEEDS),1) full
+	@$(PYTHON) scripts/godot_checked.py --timeout 86400 res://test/league/rts_league.gd -- $(or $(SEEDS),1) full
 
 .PHONY: measure-rts-clock
 measure-rts-clock: import ## The human clock's values from your recordings in data/rts/, written to the file the game reads (T55)
-	@$(GODOT) --headless --path godot -s res://test/rts/measure_clock.gd
+	@$(PYTHON) scripts/godot_checked.py res://test/rts/measure_clock.gd
 
 .PHONY: record-rts
 record-rts: import ## Play the RTS and keep every match you finish in data/rts/, the human clock's reference (T55)
@@ -1060,34 +1085,34 @@ demo-fighting: import ## Training mode, you against a dummy: A/D walk, W jump, S
 
 .PHONY: record-replay
 record-replay: import ## Record the recorded fight's per-frame digests again, after a deliberate change to the rules
-	@$(GODOT) --headless --path godot -s res://test/fighting/replay_determinism.gd -- --record
+	@$(PYTHON) scripts/godot_checked.py res://test/fighting/replay_determinism.gd -- --record
 
 .PHONY: test-replay
 test-replay: import ## Replay the recorded fight twice; the two runs must agree on every frame
-	@$(GODOT) --headless --path godot -s res://test/fighting/replay_determinism.gd
+	@$(PYTHON) scripts/godot_checked.py res://test/fighting/replay_determinism.gd
 
 .PHONY: test-opponent-properties
 test-opponent-properties: import ## The opponent model learns a habit within 40 actions, and follows a change of it
 	@# T17's acceptance, with two planted models -- one that never forgets,
 	@# one with no context -- that must fail the same claims.
-	@$(GODOT) --headless --path godot -s res://test/fighting/opponent_properties.gd
+	@$(PYTHON) scripts/godot_checked.py res://test/fighting/opponent_properties.gd
 
 .PHONY: test-difficulty-knobs
 test-difficulty-knobs: import ## The tactical levels never cheat: only the documented knobs, the same board, dice and orders
 	@# T12's allowlist, with three planted cheats it must catch. A few seconds.
-	@$(GODOT) --headless --path godot -s res://test/tactical/difficulty_knobs.gd
+	@$(PYTHON) scripts/godot_checked.py res://test/tactical/difficulty_knobs.gd
 
 .PHONY: test-difficulty-matches
 test-difficulty-matches: import ## The tactical levels are a ladder, and each beats the rules from both seats (~15 min)
 	@# T12's acceptance. Not in `check`: 575 games of up to 40 rounds take
 	@# about fifteen minutes, so CI does not hold the ladder -- run it after any
 	@# change to a level, `LeveledBlue`, `FightOdds` or the tactical rules.
-	@$(GODOT) --headless --path godot -s res://test/tactical/difficulty_matches.gd
+	@$(PYTHON) scripts/godot_checked.py res://test/tactical/difficulty_matches.gd
 
 .PHONY: test-opponent-levels
 test-opponent-levels: import ## The fixed opponent's levels are ordered: each beats the one below it 60 times in 100
 	@# T37's acceptance. About 45 seconds: 600 fights of up to 99 seconds.
-	@$(GODOT) --headless --path godot -s res://test/fighting/opponent_levels.gd
+	@$(PYTHON) scripts/godot_checked.py res://test/fighting/opponent_levels.gd
 
 # --- behaviour cloning (T18) -------------------------------------------------
 #
@@ -1104,19 +1129,19 @@ record-fights: import ## Play the training mode and keep every fight you play in
 
 .PHONY: measure-level-constraints
 measure-level-constraints: import ## Generate and test against the constraint solver over SEEDS seeds (a table, not a gate)
-	@$(GODOT) --headless --path godot -s res://test/infiltration/constraint_measure.gd -- $(or $(SEEDS),200)
+	@$(PYTHON) scripts/godot_checked.py --timeout 86400 res://test/infiltration/constraint_measure.gd -- $(or $(SEEDS),200)
 
 .PHONY: measure-bandit
 measure-bandit: import ## Measure the bandit opponent against the stand-ins and the owner's ghost (a table, not a gate)
-	@$(GODOT) --headless --path godot -s res://test/fighting/bandit_measure.gd -- $(EXPLORATION)
+	@$(PYTHON) scripts/godot_checked.py res://test/fighting/bandit_measure.gd -- $(EXPLORATION)
 
 .PHONY: record-stand-ins
 record-stand-ins: import ## Record the scripted stand-in players' fights again (deterministic)
-	@$(GODOT) --headless --path godot -s res://test/fighting/record_stand_ins.gd -- $(CURDIR)/data/fights
+	@$(PYTHON) scripts/godot_checked.py res://test/fighting/record_stand_ins.gd -- $(CURDIR)/data/fights
 
 .PHONY: clone-rows
 clone-rows: import ## Replay every recording and cut the rows behaviour cloning learns from
-	@$(GODOT) --headless --path godot -s res://test/fighting/export_clone_rows.gd \
+	@$(PYTHON) scripts/godot_checked.py res://test/fighting/export_clone_rows.gd \
 		-- $(CURDIR)/data/fights $(CURDIR)/data/cloning/rows.json
 
 .PHONY: train-clone
@@ -1128,16 +1153,16 @@ train-clone: clone-rows ## Cut the rows, fit the clone of CLONE_PLAYER, publish 
 
 .PHONY: test-clone-fights
 test-clone-fights: import ## Fight the fixed opponent with the ghosts, the clone and the learner; write the win rates (~45 s)
-	@$(GODOT) --headless --path godot -s res://test/fighting/clone_fights.gd -- $(CURDIR)/data/cloning/win_rates.json
+	@$(PYTHON) scripts/godot_checked.py res://test/fighting/clone_fights.gd -- $(CURDIR)/data/cloning/win_rates.json
 
 .PHONY: test-clone-rows
 test-clone-rows: import ## The committed rows are what the recordings cut into, today
-	@$(GODOT) --headless --path godot -s res://test/fighting/export_clone_rows.gd \
+	@$(PYTHON) scripts/godot_checked.py res://test/fighting/export_clone_rows.gd \
 		-- $(CURDIR)/data/fights $(CURDIR)/data/cloning/rows.json --check
 
 .PHONY: test-inference-budget
 test-inference-budget: import ## A cloned player's decision stays under its millisecond budget
-	@$(GODOT) --headless --path godot -s res://test/fighting/inference_budget.gd
+	@$(PYTHON) scripts/godot_checked.py res://test/fighting/inference_budget.gd
 
 .PHONY: test-clone-report
 test-clone-report: ## T18's comparison: held out, and measured on the published file
@@ -1188,7 +1213,7 @@ fighter-sheets: ## Download the fighters' CC0 template sheets into build/fighter
 
 .PHONY: fighter-strips
 fighter-strips: ## Cut the fighters' strips from the downloaded sheets, after checking their sha256
-	@$(GODOT) --headless --path godot -s $(CURDIR)/tools/fighters/crop.gd -- $(CURDIR)/$(FIGHTER_SHEETS)
+	@$(PYTHON) scripts/godot_checked.py $(CURDIR)/tools/fighters/crop.gd -- $(CURDIR)/$(FIGHTER_SHEETS)
 	@$(MAKE) --no-print-directory import
 
 # --- the RTS's pictures (T20, ADR 0020) ------------------------------------
@@ -1202,34 +1227,34 @@ assets-3d: ## Download the 3D packs into build/assets-3d/ and the files used int
 
 .PHONY: test-game3d-floor
 test-game3d-floor: import ## Headless 3D physics, rays, a baked path, a replay, and the arena with its models missing (T50)
-	@$(GODOT) --headless --path godot -s res://test/game3d/game3d_floor.gd
+	@$(PYTHON) scripts/godot_checked.py res://test/game3d/game3d_floor.gd
 
 .PHONY: test-racing3d-car
 test-racing3d-car: import ## The 3D car on a test pad: it rests on its springs, braking moves its weight forward, its tyres slide past their peak (T54)
 	@# --fixed-fps 60: the physics step is the same 1/60 s either way, but
 	@# without it Godot paces the frames in real time and this takes minutes.
-	@$(GODOT) --headless --fixed-fps 60 --path godot -s res://test/racing3d/racing3d_car.gd
+	@$(PYTHON) scripts/godot_checked.py --fixed-fps 60 $(RACING3D_PLANT) res://test/racing3d/racing3d_car.gd
 
 .PHONY: test-racing3d-ladder
 test-racing3d-ladder: import ## The 3D racer's three levels finish, in order, a second a lap apart, on two tracks (T54)
-	@$(GODOT) --headless --fixed-fps 60 --path godot -s res://test/racing3d/racing3d_ladder.gd
+	@$(PYTHON) scripts/godot_checked.py --fixed-fps 60 $(RACING3D_PLANT) res://test/racing3d/racing3d_ladder.gd
 
 .PHONY: test-racing3d-does-not-cheat
 test-racing3d-does-not-cheat: import ## One physics for every 3D car, no limit broken, no knob moved, and an honest twin race matched bit for bit (T54)
-	@$(GODOT) --headless --fixed-fps 60 --path godot -s res://test/racing3d/racing3d_does_not_cheat.gd
+	@$(PYTHON) scripts/godot_checked.py --fixed-fps 60 $(RACING3D_PLANT) res://test/racing3d/racing3d_does_not_cheat.gd
 
 .PHONY: test-racing3d-you-drive
 test-racing3d-you-drive: import ## The racer's scene starts on your car, says the keys wait for the grid, and a held Up drives it (wave 75)
-	@$(GODOT) --headless --fixed-fps 60 --path godot -s res://test/racing3d/racing3d_you_drive.gd
+	@$(PYTHON) scripts/godot_checked.py --fixed-fps 60 $(RACING3D_PLANT) res://test/racing3d/racing3d_you_drive.gd
 
 .PHONY: test-racing3d-effects
 test-racing3d-effects: import ## Slow (~75 s): what the PID, the measured grip and the heat line each do to a 3D race, measured (T54)
-	@$(GODOT) --headless --fixed-fps 60 --path godot -s res://test/racing3d/racing3d_effects.gd
+	@$(PYTHON) scripts/godot_checked.py --fixed-fps 60 $(RACING3D_PLANT) res://test/racing3d/racing3d_effects.gd
 
 .PHONY: measure-3d
 measure-3d: import ## Windowed: the 3D test arena's frame rate, with models and without (T50); not a gate
-	@$(GODOT) --path godot -s res://test/game3d/arena_fps.gd
-	@$(GODOT) --path godot -s res://test/game3d/arena_fps.gd -- --primitives
+	@$(PYTHON) scripts/godot_checked.py --windowed res://test/game3d/arena_fps.gd
+	@$(PYTHON) scripts/godot_checked.py --windowed res://test/game3d/arena_fps.gd -- --primitives
 
 .PHONY: rts-art
 rts-art: ## Download the RTS's Bos Wars sheets into build/rts-art/ (gitignored), refusing any whose sha256 differs
@@ -1286,7 +1311,7 @@ llm-bakeoff: import ## Every model on the 30 lines, in English and pt-BR, into d
 record-talk: import ## Record the guard's scripted conversations from the local model, in both languages, into data/talk/recordings/ (T94; needs make llm-serve)
 	@# A conversation the server could not answer is not written. Then
 	@# write the vectors (spec/vectors/talk/write.py) and read them by hand.
-	@$(GODOT) --headless --path godot -s res://test/talk/record_talk.gd -- \
+	@$(PYTHON) scripts/godot_checked.py --timeout 86400 res://test/talk/record_talk.gd -- \
 		$(CURDIR)/data/talk/lines.json $(CURDIR)/data/talk/recordings $(or $(MODEL),ministral-3-8b)
 
 .PHONY: record-talk-live

@@ -38,7 +38,7 @@ const PLANTED: Dictionary = {
 	"takes Escape in its own _input": ["func _input(event):\n\tget_viewport().set_input_as_handled()", ""],
 	"leaves a node": ["var kept := Node.new()\nfunc _ready():\n\tget_tree().root.add_child.call_deferred(kept)",
 		"left behind"],
-	"reports an engine error": ["func _ready():\n\tpush_error(\"planted\")", "engine error"],
+	"reports an engine error": ["func _ready():\n\tpush_error(\"menu_walk: an error planted on purpose\")", "engine error"],
 	"is not at the top when ready": ["func _ready():\n\tif get_parent() != get_tree().root:\n\t\tpush_error(\"not at the top\")",
 		""],
 }

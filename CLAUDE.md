@@ -192,8 +192,10 @@ Findings that survive both steps go in `docs/godot/`, with the source URL and a
   validator that broke reads exactly like one that found nothing, and no
   count inside the script tells them apart (wave 136's review, 5 of 12
   plants). Only the output can. `scripts/godot_checked.py` fails a `-s`
-  gate on any engine error it prints; run a new gate through it. Moving the
-  old ones is T141.
+  gate on any engine error it prints. Since wave 180 (T141) every `-s`
+  line in the `Makefile` runs through it, and `make lint-godot-checked`
+  refuses one that does not; an error printed on purpose is named on its
+  line with `--expect-error`.
 - **The forbidden-term list is untracked and a checkout can delete it.**
   `scripts/forbidden-term-hashes.txt` is gitignored (ADR 0005), but it was
   *tracked* until wave 6 — so checking out anything older and coming back
