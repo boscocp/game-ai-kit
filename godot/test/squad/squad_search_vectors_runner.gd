@@ -15,8 +15,17 @@
 # could not be read -- which includes one with no positions in it.
 extends SceneTree
 
-const FIELDS: Array[String] = ["name", "turn", "to_move", "acting", "phase", "waiting", "pieces", "seed", "iterations",
-	"visits", "decision"]
+## Every field this runner reads and its type, checked before it reads any
+## (T121): a cast that fails in a `-s` script is a SCRIPT ERROR the run
+## survives, printing "0 failure(s)". A piece, and an answer with its visits,
+## mix numbers and names.
+const SHAPE: Dictionary = {
+	"about": [VectorShape.TEXT], "map": [VectorShape.TEXT],
+	"positions": [{"name": VectorShape.TEXT, "turn": VectorShape.NUMBER, "to_move": VectorShape.NUMBER,
+			"acting": VectorShape.NUMBER, "phase": VectorShape.TEXT, "waiting": [VectorShape.NUMBER],
+			"pieces": [[VectorShape.ANY]], "seed": VectorShape.NUMBER, "iterations": VectorShape.NUMBER,
+			"visits": [[VectorShape.ANY]], "decision": VectorShape.TEXT}],
+}
 
 
 func _init() -> void:
@@ -30,14 +39,12 @@ func _init() -> void:
 
 func _run(path: String) -> int:
 	var written: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
-	if not written is Dictionary or (written as Dictionary).get("positions", []).is_empty():
-		printerr("squad_search_vectors_runner: %s holds no positions" % path)
+	var why: String = VectorShape.why_not(written, SHAPE, path)
+	if why != "" or (written["positions"] as Array).is_empty():
+		printerr("squad_search_vectors_runner: %s" % (why if why != "" else path + " holds no positions"))
 		return 2
 	var failures: Array[String] = map_drifted(written["map"])
 	for position: Dictionary in written["positions"]:
-		if not position.has_all(FIELDS):
-			printerr("squad_search_vectors_runner: a position without all of %s" % [FIELDS])
-			return 2
 		failures += check_position(position)
 	for failure: String in failures:
 		print(failure)

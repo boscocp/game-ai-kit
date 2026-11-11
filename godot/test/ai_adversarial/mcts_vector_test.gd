@@ -119,3 +119,18 @@ class MirroredExpansion extends MonteCarloSearch:
 		var child: TreeNode = _child_by_chance(branch)
 		descent.nodes.append(child)
 		return child
+
+
+# T121: each of these, a list given as text in a copy of a real file, was
+# a SCRIPT ERROR that skipped the check -- `draws` turned into a string, a
+# review showed, let the runner exit 0.
+func test_a_vector_of_the_wrong_types_is_refused_before_it_is_read() -> void:
+	var vector: Dictionary = VectorShape.read_spec("vectors/adversarial/mcts-dice-race.json")
+	var paths: Array = [["cases"], ["cases", 0, "visits"], ["cases", 0, "state", "squares"], ["cases", 0, "steps"]]
+	for path: Array in paths:
+		var why: String = MctsVector.why_not_a_vector(VectorShape.planted(vector, path, "x"))
+		assert_str(why).override_failure_message(str(path)).starts_with("A7")
+	var draws: Dictionary = VectorShape.read_spec("vectors/adversarial/xorshift.json")
+	assert_str(VectorShape.why_not(draws, MctsVector.DRAWS_SHAPE)).is_empty()
+	assert_str(VectorShape.why_not(VectorShape.planted(draws, ["cases", 0, "draws"], "x"), MctsVector.DRAWS_SHAPE)) \
+			.is_not_empty()

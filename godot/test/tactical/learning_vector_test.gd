@@ -345,3 +345,14 @@ func _why_the_board_is_wrong(changed: Dictionary) -> String:
 func _one_failure(changed: Dictionary) -> String:
 	var failures: Array[String] = LearningVector.check("planted", _but(changed))
 	return failures[0] if not failures.is_empty() else "nothing was reported"
+
+
+# T121's planted case: a list given as text, in a copy of a real file, is
+# refused before anything reads it -- this rule held before T121 measured.
+func test_a_vector_of_the_wrong_types_is_refused_before_it_is_read() -> void:
+	var vector: Dictionary = VectorShape.read_spec("vectors/learning/a-counter-on-the-board.json")
+	assert_str(LearningVector.why_not_a_vector(vector)).is_empty()
+	var paths: Array = [["cases"], ["board", "costs"], ["board", "units"], ["models", "combat", "weights"]]
+	for path: Array in paths:
+		var why: String = LearningVector.why_not_a_vector(VectorShape.planted(vector, path, "x"))
+		assert_str(why).override_failure_message(str(path)).is_not_empty()

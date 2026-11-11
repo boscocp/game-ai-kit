@@ -291,3 +291,19 @@ func test_the_lines_are_counted_before_the_visible_ones() -> void:
 	label.get_line_count()
 	TalkPanel.show_history(label, _exchanges([["a", "b"], ["c", "d"], ["e", "f"]]), "")
 	assert_str(label.text).starts_with(tr("You: {line}").format({"line": "a"}))
+
+
+# T121: the talk vectors runner refuses a file of the wrong types before it
+# plays one. A list of turns given as text, in a copy of a real file, used
+# to abort the runner's awaiting `_run` and hang the run for good.
+func test_a_talk_vector_of_the_wrong_types_is_refused() -> void:
+	var runner: GDScript = preload("res://test/talk/talk_vectors_runner.gd")
+	var vector: Dictionary = VectorShape.read_spec("vectors/talk/becoming-the-expected.en.json")
+	assert_str(VectorShape.why_not(vector, runner.SHAPE)).is_empty()
+	var paths: Array = [["turns"], ["turns", 0], ["turns", 0, "trust"]]
+	for path: Array in paths:
+		var why: String = VectorShape.why_not(VectorShape.planted(vector, path, "x"), runner.SHAPE)
+		assert_str(why).override_failure_message(str(path)).is_not_empty()
+	var recording: Variant = VectorShape.read_spec("../" + vector["recording"])
+	assert_str(VectorShape.why_not(recording, runner.RECORDING_SHAPE)).is_empty()
+	assert_str(VectorShape.why_not(VectorShape.planted(recording, ["turns"], "x"), runner.RECORDING_SHAPE)).is_not_empty()

@@ -16,7 +16,15 @@
 # arranged against.
 extends SceneTree
 
-const FIELDS: Array[String] = ["description", "seed", "ghosts", "moves", "trace"]
+## Every field this runner reads and its type, checked before it reads any
+## (T121): a cast that fails in a `-s` script is a SCRIPT ERROR the run
+## survives. A ghost in a snapshot is a list of cells, moves and names.
+const SHAPE: Dictionary = {
+	"description": VectorShape.TEXT, "seed": VectorShape.NUMBER, "ghosts": [VectorShape.TEXT],
+	"moves": [VectorShape.TEXT],
+	"trace": [{"facing": VectorShape.TEXT, "ghosts": [[VectorShape.ANY]], "mode": VectorShape.TEXT,
+			"outcome": VectorShape.TEXT, "pacman": [VectorShape.NUMBER], "pellets": VectorShape.NUMBER}],
+}
 
 
 func _init() -> void:
@@ -37,8 +45,9 @@ func _run(directory: String) -> int:
 	var snapshots: int = 0
 	for name: String in files:
 		var vector: Dictionary = _read_vector(directory + "/" + name)
-		if not vector.has_all(FIELDS) or (vector["trace"] as Array).is_empty():
-			printerr("maze_vectors_runner: %s is missing one of %s, or has no trace" % [name, FIELDS])
+		var why: String = VectorShape.why_not(vector, SHAPE, name)
+		if why != "" or (vector["trace"] as Array).is_empty():
+			printerr("maze_vectors_runner: %s" % (why if why != "" else name + " has no trace"))
 			return 2
 		snapshots += (vector["trace"] as Array).size()
 		failures += check_vector(name, vector)

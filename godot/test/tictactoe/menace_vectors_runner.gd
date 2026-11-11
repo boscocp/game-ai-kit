@@ -15,7 +15,13 @@
 # arranged against.
 extends SceneTree
 
-const FIELDS: Array[String] = ["name", "board", "box", "beads", "draw", "move"]
+## A file's cases, every field and its type, checked before anything reads
+## them (T121): a cast that fails in a `-s` script is a SCRIPT ERROR the run
+## survives, printing "0 failure(s)". A move is null when none is left.
+const SHAPE: Dictionary = {"cases": [{
+	"name": VectorShape.TEXT, "board": VectorShape.TEXT, "box": VectorShape.TEXT, "beads": [VectorShape.NUMBER],
+	"draw": VectorShape.NUMBER, "move": VectorShape.NUMBER_OR_NULL,
+}]}
 
 
 func _init() -> void:
@@ -35,9 +41,8 @@ func _run(directory: String) -> int:
 	var failures: Array[String] = []
 	var cases: int = 0
 	for name: String in files:
-		var found: Array = _cases_in(_read_vector(directory + "/" + name))
+		var found: Array = _cases_in(_read_vector(directory + "/" + name), name)
 		if found.is_empty():
-			printerr("menace_vectors_runner: %s has no cases, or a case without %s" % [name, FIELDS])
 			return 2
 		cases += found.size()
 		for case: Dictionary in found:
@@ -48,15 +53,15 @@ func _run(directory: String) -> int:
 	return 1 if not failures.is_empty() else 0
 
 
-# The vector's cases, or [] when it has none or one is missing a field.
-func _cases_in(vector: Dictionary) -> Array:
-	var cases: Variant = vector.get("cases")
-	if not cases is Array:
+# The vector's cases, or [] when it has none or is not the shape, said why.
+func _cases_in(vector: Dictionary, name: String) -> Array:
+	var why: String = VectorShape.why_not(vector, SHAPE, name)
+	if why == "" and (vector["cases"] as Array).is_empty():
+		why = "%s has no cases" % name
+	if why != "":
+		printerr("menace_vectors_runner: %s" % why)
 		return []
-	for case: Variant in cases:
-		if not case is Dictionary or not (case as Dictionary).has_all(FIELDS):
-			return []
-	return cases
+	return vector["cases"]
 
 
 ## What is wrong with one case, checked against the file and nothing else.

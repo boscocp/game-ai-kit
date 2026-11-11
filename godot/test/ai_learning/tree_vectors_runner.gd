@@ -14,6 +14,13 @@
 extends SceneTree
 
 const NAMES: Array[String] = ["fit-by-hand", "fit-capped", "fit-a-tie"]
+## The types this runner reads, checked before it reads any (T121). The
+## model's own are `ModelFile`'s to refuse, and a refusal is a failure.
+const SHAPE: Dictionary = {
+	"model": VectorShape.OBJECT, "rows": [[VectorShape.ANY]], "max_depth": VectorShape.NUMBER,
+	"min_leaf": VectorShape.NUMBER,
+	"cases": [{"situation": VectorShape.OBJECT, "path": [VectorShape.NUMBER], "counts": {"*": VectorShape.NUMBER}, "likeliest": VectorShape.TEXT}],
+}
 
 
 func _init() -> void:
@@ -29,8 +36,11 @@ func _run(directory: String) -> int:
 	var vectors: Array[Dictionary] = []
 	for name: String in NAMES:
 		var read: Variant = JSON.parse_string(FileAccess.get_file_as_string(directory.path_join(name + ".json")))
-		if not read is Dictionary or read.get("cases", []).is_empty():
-			printerr("tree_vectors_runner: %s under %s could not be read" % [name, directory])
+		var why: String = VectorShape.why_not(read, SHAPE, name)
+		if why == "" and read["cases"].is_empty():
+			why = "it claims nothing"
+		if why != "":
+			printerr("tree_vectors_runner: %s under %s could not be read -- %s" % [name, directory, why])
 			return 2
 		vectors.append(read)
 	if not planted_claims_fail(vectors[0]):

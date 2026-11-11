@@ -11,6 +11,96 @@ extends RefCounted
 ## 32-bit floats.
 const TOLERANCE: float = 1e-4
 const KINDS: Array[String] = ["positions", "influence", "commander", "confidence", "passage", "search", "roles", "tokens", "rings"]
+## The types each kind reads, beside the keys every vector has, checked
+## before anything reads them (T121): a cast that fails in a `-s` script is
+## a SCRIPT ERROR the run survives. `expect` is left to `differences`, which
+## compares any value without casting it.
+const SHAPES: Dictionary = {
+	"rings": {
+		"query": {"config": {"rings": [{"name": VectorShape.TEXT, "radius": VectorShape.NUMBER,
+				"count": VectorShape.NUMBER, "phase": VectorShape.NUMBER}], "spacing": VectorShape.NUMBER,
+				"weights": {"partial_cover": VectorShape.NUMBER, "line_of_fire": VectorShape.NUMBER,
+				"other_cover": VectorShape.NUMBER, "nearness": VectorShape.NUMBER,
+				"preferred_range": VectorShape.NUMBER, "preferred_metres": VectorShape.NUMBER,
+				"range_band": VectorShape.NUMBER, "max_travel": VectorShape.NUMBER}},
+				"target": [VectorShape.NUMBER], "view_from": [VectorShape.NUMBER],
+				"view_forward": [VectorShape.NUMBER], "blocked": [VectorShape.TEXT],
+				"script": [{"do": VectorShape.TEXT, "id?": VectorShape.NUMBER, "ring?": VectorShape.TEXT,
+				"from?": [VectorShape.NUMBER], "holds_token?": VectorShape.FLAG, "ranged?": VectorShape.FLAG,
+				"target?": [VectorShape.NUMBER]}]},
+	},
+	"tokens": {
+		"query": {"config": {"pools": {"melee": VectorShape.NUMBER, "ranged": VectorShape.NUMBER},
+				"delays": {"melee": VectorShape.NUMBER, "ranged": VectorShape.NUMBER},
+				"timeouts": {"melee": VectorShape.NUMBER, "ranged": VectorShape.NUMBER},
+				"multipliers": {"busy": {"melee": VectorShape.NUMBER, "ranged": VectorShape.NUMBER},
+				"idle": {"melee": VectorShape.NUMBER, "ranged": VectorShape.NUMBER}},
+				"patience": VectorShape.NUMBER, "tie_seed": VectorShape.NUMBER},
+				"script": [{"do": VectorShape.TEXT, "at": VectorShape.NUMBER, "id?": VectorShape.TEXT,
+				"kind?": VectorShape.TEXT, "cost?": VectorShape.NUMBER, "priority?": VectorShape.NUMBER,
+				"distance?": VectorShape.NUMBER, "state?": VectorShape.TEXT, "reason?": VectorShape.TEXT}]},
+	},
+	"confidence": {
+		"thresholds": {"attack_at": VectorShape.NUMBER, "keep_attacking_at": VectorShape.NUMBER,
+				"retreat_at": VectorShape.NUMBER, "recover_at": VectorShape.NUMBER,
+				"per_kill": VectorShape.NUMBER, "per_loss": VectorShape.NUMBER,
+				"least_enemy": VectorShape.NUMBER},
+		"query": {"facts": [{"friendly_strength": VectorShape.NUMBER, "enemy_strength": VectorShape.NUMBER,
+				"kills": VectorShape.NUMBER, "losses": VectorShape.NUMBER}], "members": [VectorShape.NUMBER],
+				"phases": [VectorShape.NUMBER]},
+	},
+	"passage": {
+		"prices": {"step_seconds": VectorShape.NUMBER, "per_enemy_seen": VectorShape.NUMBER,
+				"shooting": VectorShape.NUMBER, "reloading": VectorShape.NUMBER,
+				"covering_a_retreat": VectorShape.NUMBER},
+		"query": {"facts": [{"gap": VectorShape.NUMBER, "leaving_speed": VectorShape.NUMBER,
+				"detour_metres": VectorShape.NUMBER_OR_NULL, "speed": VectorShape.NUMBER,
+				"teammate": VectorShape.FLAG, "refused": VectorShape.FLAG, "ask_seconds": VectorShape.NUMBER,
+				"spot_loss": VectorShape.NUMBER_OR_NULL, "points_a_second": VectorShape.NUMBER}],
+				"requests": [{"saves": VectorShape.NUMBER_OR_NULL, "enemies_in_sight": VectorShape.NUMBER,
+				"shooting": VectorShape.FLAG, "reloading": VectorShape.FLAG,
+				"covering_a_retreat": VectorShape.FLAG, "driven_by_a_person": VectorShape.FLAG,
+				"room_to_step": VectorShape.FLAG}]},
+	},
+	"influence": {
+		"map": {"width": VectorShape.NUMBER, "height": VectorShape.NUMBER, "cell_size": VectorShape.NUMBER,
+				"origin": [VectorShape.NUMBER], "radius": VectorShape.NUMBER},
+		"query": {"sources": [{"place": [VectorShape.NUMBER], "strength": VectorShape.NUMBER}],
+				"asked": [[VectorShape.NUMBER]]},
+	},
+	"commander": {
+		"weights": {"take": VectorShape.NUMBER, "hold": VectorShape.NUMBER, "defend": VectorShape.NUMBER,
+				"nearest_metres": VectorShape.NUMBER},
+		"query": {"squads": [{"id": VectorShape.TEXT, "position": [VectorShape.NUMBER],
+				"size": VectorShape.NUMBER}], "objectives": [{"id": VectorShape.TEXT,
+				"position": [VectorShape.NUMBER], "held_by": VectorShape.NUMBER, "ideal": VectorShape.NUMBER,
+				"influence": VectorShape.NUMBER}]},
+	},
+	"search": {
+		"weights": {"worth": VectorShape.NUMBER, "travel": VectorShape.NUMBER},
+		"query": {"spots": [{"worth": VectorShape.NUMBER, "searched": VectorShape.FLAG}],
+				"costs": [[VectorShape.NUMBER]], "use_claims": VectorShape.FLAG, "cap": VectorShape.NUMBER,
+				"last_known": [VectorShape.NUMBER]},
+	},
+	"positions": {
+		"weights": {"partial_cover": VectorShape.NUMBER, "line_of_fire": VectorShape.NUMBER,
+				"other_cover": VectorShape.NUMBER, "nearness": VectorShape.NUMBER,
+				"preferred_range": VectorShape.NUMBER, "preferred_metres": VectorShape.NUMBER,
+				"range_band": VectorShape.NUMBER, "max_travel": VectorShape.NUMBER,
+				"cover_from_all?": VectorShape.FLAG},
+		"query": {"bot": VectorShape.NUMBER, "has_threat": VectorShape.FLAG, "use_claims": VectorShape.FLAG,
+				"candidates": [{"id": VectorShape.TEXT, "travel": VectorShape.NUMBER,
+				"threat_distance": VectorShape.NUMBER, "covered_from_main": VectorShape.FLAG,
+				"fires_on_main": VectorShape.FLAG, "covered_from_others": VectorShape.NUMBER,
+				"in_area": VectorShape.FLAG, "claimed_by": VectorShape.NUMBER,
+				"hidden_from_all": VectorShape.FLAG}]},
+	},
+	"roles": {
+		"query": {"requests": [{"role": VectorShape.TEXT, "score": VectorShape.NUMBER,
+				"can_shoot": VectorShape.FLAG}], "use_arbiter": VectorShape.FLAG,
+				"max_flankers": VectorShape.NUMBER},
+	},
+}
 
 
 ## Why `vector` is not a teamwork vector, or "" when it is one.
@@ -20,6 +110,9 @@ static func why_not_a_vector(vector: Dictionary) -> String:
 			return "it has no %s" % key
 	if not (str(vector["kind"]) in KINDS):
 		return "its kind %s is none of %s" % [vector["kind"], KINDS]
+	var types: String = VectorShape.why_not(vector, SHAPES[str(vector["kind"])])
+	if types != "":
+		return types
 	if not (vector["expect"] is Dictionary) or (vector["expect"] as Dictionary).is_empty():
 		return "it expects nothing"
 	return ""

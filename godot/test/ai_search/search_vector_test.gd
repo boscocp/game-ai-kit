@@ -110,6 +110,17 @@ func test_a_search_that_starts_on_its_goal_arrives_with_no_steps() -> void:
 	assert_int(SearchVector.check("standing", standing, _searches()).size()).is_equal(0)
 
 
+# T121: a list given as text, in a copy of a real file, was a SCRIPT ERROR
+# that skipped the check and let the runner exit 0. Now it is refused.
+func test_a_vector_of_the_wrong_types_is_refused_before_it_is_read() -> void:
+	var route: Dictionary = VectorShape.read_spec("vectors/search/optimal-path.json")
+	assert_str(SearchVector.why_not_a_vector(VectorShape.planted(route, ["from"], "x"))).contains("is not a list")
+	assert_str(SearchVector.why_not_a_vector(VectorShape.planted(route, ["costs", 0, 0], "x"))).contains("is not a number")
+	var flood: Dictionary = VectorShape.read_spec("vectors/search/flood-goes-round-a-wall.json")
+	assert_str(FloodVector.why_not_a_vector(VectorShape.planted(flood, ["costs"], "x"))).contains("is not a list")
+	assert_str(FloodVector.why_not_a_vector(VectorShape.planted(flood, ["expect", "reached", 0], "x"))).contains("is not a list")
+
+
 # A 3x3 of flat ground, corner to corner: four steps, cost four.
 func _good() -> Dictionary:
 	return {

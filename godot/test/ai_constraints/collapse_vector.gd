@@ -7,17 +7,29 @@ extends RefCounted
 
 const KEYS: Array[String] = ["attempts", "collapsed", "contradictions", "description", "height", "map", "pinned",
 		"restarts", "seed", "tiles", "width"]
+## The types this reads, checked before anything reads them (T121). A pin
+## is keyed by its cell, "x,y", and names the tiles it allows.
+const SHAPE: Dictionary = {
+	"attempts": VectorShape.NUMBER, "collapsed": [[VectorShape.TEXT]], "contradictions": [VectorShape.TEXT],
+	"height": VectorShape.NUMBER, "map": VectorShape.LIST_OR_NULL, "pinned": {"*": [VectorShape.TEXT]},
+	"restarts": VectorShape.NUMBER, "seed": VectorShape.NUMBER, "width": VectorShape.NUMBER,
+	"tiles": [{"tile": VectorShape.TEXT, "weight": VectorShape.NUMBER, "left_right": VectorShape.TEXT,
+			"up_down": VectorShape.TEXT}],
+}
 
 
 ## Why `vector` is not a usable vector, or "" when it is one -- the same
-## rules, C1 to C6, as `test_constraints_collapse.py`. C5: a map needs an
-## attempt left, and no map means every attempt failed or the build stopped
-## at the first, on a contradiction before any collapse.
+## rules, C1 to C6, as `test_constraints_collapse.py`, and C7, its types.
+## C5: a map needs an attempt left, and no map means every attempt failed or
+## the build stopped at the first, on a contradiction before any collapse.
 static func why_not_a_vector(vector: Dictionary) -> String:
 	var keys: Array = vector.keys()
 	keys.sort()
 	if keys != KEYS:
 		return "C1 its keys are %s, not %s" % [keys, KEYS]
+	var types: String = VectorShape.why_not(vector, SHAPE)
+	if types != "":
+		return "C7 " + types
 	var wrong_tiles: String = TileGrid.why_not({"tiles": vector["tiles"]})
 	if wrong_tiles != "":
 		return "C2 its tiles are not a tile set: %s" % wrong_tiles

@@ -262,3 +262,16 @@ func test_mate_events_come_only_from_the_persons_team() -> void:
 	world.note(1, "shot")
 	assert_int(world.person_events.size()).is_equal(before + 1)
 	assert_str(str(world.person_events[-1]["kind"])).is_equal(PlayerModel.MATE_HIT)
+
+
+# T121: the player model vectors runner refuses a file of the wrong types
+# before it reads one. Events or readings given as text, in a copy of a real
+# file, were a SCRIPT ERROR that skipped the check and let it exit 0.
+func test_a_player_model_vector_of_the_wrong_types_is_refused() -> void:
+	var runner: GDScript = preload("res://test/botmatch/player_model_vectors_runner.gd")
+	var vector: Dictionary = VectorShape.read_spec("vectors/player_model/a-change-of-team-starts-from-empty.json")
+	assert_str(VectorShape.why_not(vector, runner.SHAPE)).is_empty()
+	var paths: Array = [["events"], ["readings"], ["readings", 0, "counts"], ["events", 0, "step"]]
+	for path: Array in paths:
+		var why: String = VectorShape.why_not(VectorShape.planted(vector, path, "x"), runner.SHAPE)
+		assert_str(why).override_failure_message(str(path)).is_not_empty()

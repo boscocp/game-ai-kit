@@ -246,3 +246,14 @@ func _good() -> Dictionary:
 		"goal": ["c"],
 		"expect": {"solved": true, "steps": 2},
 	}
+
+
+# T121's planted case: a list given as text, in a copy of a real file, is
+# refused before anything reads it -- this rule held before T121 measured.
+func test_a_vector_of_the_wrong_types_is_refused_before_it_is_read() -> void:
+	var vector: Dictionary = VectorShape.read_spec("vectors/planning/already-won.json")
+	assert_str(PlanningVector.why_not_a_vector(vector)).is_empty()
+	var paths: Array = [["actions"], ["actions", 0, "preconditions"], ["init"], ["goal"]]
+	for path: Array in paths:
+		var why: String = PlanningVector.why_not_a_vector(VectorShape.planted(vector, path, "x"))
+		assert_str(why).override_failure_message(str(path)).is_not_empty()

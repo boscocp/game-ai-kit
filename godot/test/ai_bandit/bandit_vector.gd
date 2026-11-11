@@ -15,6 +15,12 @@ extends RefCounted
 const TOLERANCE: float = 1e-9
 const VECTOR_KEYS: Array[String] = ["arms", "chosen", "description", "epsilon", "exploration", "payoffs", "policy",
 		"pulls", "seed", "sums"]
+## The types this reads, checked before anything reads them (T121).
+const SHAPE: Dictionary = {
+	"arms": VectorShape.NUMBER, "chosen": [VectorShape.NUMBER], "epsilon": VectorShape.NUMBER,
+	"exploration": VectorShape.NUMBER, "payoffs": [[VectorShape.NUMBER]], "policy": VectorShape.TEXT,
+	"pulls": [VectorShape.NUMBER], "seed": VectorShape.NUMBER, "sums": [VectorShape.NUMBER],
+}
 
 
 ## Why this dictionary is not a usable vector, or "" when it is one. A key
@@ -22,6 +28,9 @@ const VECTOR_KEYS: Array[String] = ["arms", "chosen", "description", "epsilon", 
 static func why_not_a_vector(vector: Dictionary) -> String:
 	if _sorted_keys(vector) != VECTOR_KEYS:
 		return "V1 its keys are %s, not %s" % [_sorted_keys(vector), VECTOR_KEYS]
+	var types: String = VectorShape.why_not(vector, SHAPE)
+	if types != "":
+		return "V8 " + types
 	var settings: String = bandit_of(vector).problem()
 	if settings != "":
 		return "V2 its settings cannot work: " + settings

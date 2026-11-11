@@ -33,3 +33,15 @@ func test_a_flipped_flag_and_a_short_list_are_named() -> void:
 	PerceptionVector.differences({"reseeded": [true, false]}, {"reseeded": [true, true]}, "planted", found)
 	PerceptionVector.differences({"shares": [0.5, 0.5]}, {"shares": [1.0]}, "planted", found)
 	assert_array(found).has_size(2)
+
+
+# T121: a vector of the wrong types is refused before it is read. Each of
+# these, a list given as text in a copy of a real file, was a SCRIPT ERROR
+# that skipped the query and let the runner exit 0 or 1.
+func test_a_perception_vector_of_the_wrong_types_is_refused() -> void:
+	var vector: Dictionary = VectorShape.read_spec("vectors/perception/a-coffin-wide-near-narrow-far.json")
+	assert_str(PerceptionVector.why_not_a_vector(vector)).is_empty()
+	var paths: Array = [["shape", "zones"], ["query", "looks"], ["query", "looks", 0, "points"]]
+	for path: Array in paths:
+		var why: String = PerceptionVector.why_not_a_vector(VectorShape.planted(vector, path, "x"))
+		assert_str(why).override_failure_message(str(path)).contains(" is not ")

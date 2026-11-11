@@ -32,8 +32,9 @@ func _init() -> void:
 
 func _run(directory: String) -> int:
 	var draws: Variant = _read(directory.path_join("xorshift.json"))
-	if not (draws is Dictionary) or (draws.get("cases", []) as Array).is_empty():
-		printerr("mcts_vectors_runner: xorshift.json under %s is missing or claims nothing" % directory)
+	var unreadable: String = VectorShape.why_not(draws, MctsVector.DRAWS_SHAPE, "xorshift.json")
+	if unreadable != "" or (draws["cases"] as Array).is_empty():
+		printerr("mcts_vectors_runner: xorshift.json under %s is missing or claims nothing -- %s" % [directory, unreadable])
 		return 2
 	var failures: Array[String] = []
 	for wrong: String in MctsVector.wrong_draws(draws):

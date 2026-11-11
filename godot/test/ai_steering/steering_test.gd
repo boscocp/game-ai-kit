@@ -72,7 +72,9 @@ func test_the_weighted_sum_is_clamped_once_after_adding() -> void:
 
 
 func test_a_vector_with_a_misspelt_field_or_an_unknown_behaviour_is_refused() -> void:
-	var good: Dictionary = {"name": "x", "steps_per_second": 60, "vehicle": {}, "samples": [{}],
+	var good: Dictionary = {"name": "x", "steps_per_second": 60,
+		"vehicle": {"position": [0, 0], "velocity": [0, 0], "max_speed": 10.0, "max_force": 20.0},
+		"samples": [{"step": 0, "position": [0, 0], "velocity": [0, 0], "force": [0, 0]}],
 		"behaviours": [{"kind": "arrive", "target": [0, 0], "braking_radius": 1.0}]}
 	assert_str(SteeringVector.why_not_a_vector(good)).is_empty()
 	var misspelt: Dictionary = good.duplicate(true)
@@ -167,3 +169,16 @@ func test_a_time_under_half_a_frame_chatters_instead_of_settling() -> void:
 func test_a_time_of_zero_or_less_is_floored_not_refused() -> void:
 	assert_float(SeekBehaviour.new(Vector2.ZERO, -1.0).time_to_target).is_equal(Steering.SHORTEST_TIME)
 	assert_float(PursueBehaviour.new(Vector2.ZERO, Vector2.ZERO, 1.0, 0.0).time_to_target).is_equal(Steering.SHORTEST_TIME)
+
+
+# T121: a vector of the wrong types is refused before it is read. Each of
+# these, a list given as text in a copy of a real file, was a SCRIPT ERROR
+# that skipped the check and let the runner exit 0.
+func test_a_steering_vector_of_the_wrong_types_is_refused() -> void:
+	var vector: Dictionary = VectorShape.read_spec("vectors/steering/arrive-slows-and-stops.json")
+	assert_str(SteeringVector.why_not_a_vector(vector)).is_empty()
+	var paths: Array = [["vehicle", "position"], ["behaviours"], ["behaviours", 0, "target"], ["samples"],
+			["samples", 0, "force"]]
+	for path: Array in paths:
+		var why: String = SteeringVector.why_not_a_vector(VectorShape.planted(vector, path, "x"))
+		assert_str(why).override_failure_message(str(path)).contains(" is not ")

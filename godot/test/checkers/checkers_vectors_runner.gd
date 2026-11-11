@@ -13,8 +13,18 @@
 # this repository is arranged against.
 extends SceneTree
 
-const RULE_FIELDS: Array[String] = ["name", "rows", "to_move", "moves", "crowns", "taken", "drawn"]
-const SCORE_FIELDS: Array[String] = ["name", "rows", "player", "weights", "features", "score"]
+## The two files' cases, every field and its type, checked before anything
+## reads them (T121): a cast that fails in a `-s` script is a SCRIPT ERROR
+## the run survives, printing "0 failure(s)".
+const RULES_SHAPE: Dictionary = {"cases": [{
+	"name": VectorShape.TEXT, "rows": [VectorShape.TEXT], "to_move": VectorShape.TEXT, "moves": [VectorShape.TEXT],
+	"crowns": [VectorShape.TEXT], "taken": [[VectorShape.TEXT]], "drawn": VectorShape.FLAG,
+	"quiet_plies?": VectorShape.NUMBER,
+}]}
+const SCORES_SHAPE: Dictionary = {"cases": [{
+	"name": VectorShape.TEXT, "rows": [VectorShape.TEXT], "player": VectorShape.TEXT,
+	"weights": [VectorShape.NUMBER], "features": [VectorShape.NUMBER], "score": VectorShape.NUMBER,
+}]}
 ## How far two floating-point scores may differ and still agree: the two
 ## languages add the same products in different orders.
 const TOLERANCE: float = 1e-9
@@ -31,8 +41,8 @@ func _init() -> void:
 
 
 func _run(directory: String) -> int:
-	var rule_cases: Array = _cases_in(_read_vector(directory + "/rules.json"), RULE_FIELDS)
-	var score_cases: Array = _cases_in(_read_vector(directory + "/evaluation.json"), SCORE_FIELDS)
+	var rule_cases: Array = _cases_in(_read_vector(directory + "/rules.json"), RULES_SHAPE, "rules.json")
+	var score_cases: Array = _cases_in(_read_vector(directory + "/evaluation.json"), SCORES_SHAPE, "evaluation.json")
 	if rule_cases.is_empty() or score_cases.is_empty():
 		printerr("checkers_vectors_runner: rules.json and evaluation.json under %s must each have cases" % directory)
 		return 2
@@ -95,15 +105,13 @@ static func _board_of(rows: Array, side: int) -> CheckersBoard:
 	return CheckersBoard.from_rows(lines, side)
 
 
-# The vector's cases, or [] when it has none or one is missing a field.
-func _cases_in(vector: Dictionary, fields: Array[String]) -> Array:
-	var cases: Variant = vector.get("cases")
-	if not cases is Array:
+# The vector's cases, or [] when it has none or is not `shape`, said why.
+func _cases_in(vector: Dictionary, shape: Dictionary, name: String) -> Array:
+	var why: String = VectorShape.why_not(vector, shape, name)
+	if why != "":
+		printerr("checkers_vectors_runner: %s" % why)
 		return []
-	for case: Variant in cases:
-		if not case is Dictionary or not (case as Dictionary).has_all(fields):
-			return []
-	return cases
+	return vector["cases"]
 
 
 # `JSON.new().parse()` rather than `JSON.parse_string()`, which prints an

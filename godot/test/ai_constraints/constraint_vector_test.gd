@@ -59,3 +59,14 @@ func test_a_solver_with_lcv_backwards_fails() -> void:
 	var vector: Dictionary = _vector("least-constraining-first.json")
 	var planted := MostConstraining.new(ConstraintVector.problem_of(vector))
 	assert_array(ConstraintVector.wrong_claims(vector, ConstraintVector.solver_of(vector, planted))).is_not_empty()
+
+
+# T121: each of these, a list given as text in a copy of a real file, was
+# a SCRIPT ERROR that skipped the check and let the runner exit 0 or 1.
+func test_a_vector_of_the_wrong_types_is_refused_before_it_is_read() -> void:
+	var vector: Dictionary = _vector("a-global-checked-late.json")
+	var paths: Array = [["variables"], ["variables", 0, "values"], ["binary"], ["binary", 0, "between"], ["global"],
+			["global", 0, "over"], ["assigned"], ["assigned", 0]]
+	for path: Array in paths:
+		var why: String = ConstraintVector.why_not_a_vector(VectorShape.planted(vector, path, "x"))
+		assert_str(why).override_failure_message(str(path)).starts_with("V7")

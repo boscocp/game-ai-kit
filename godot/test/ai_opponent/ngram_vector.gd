@@ -15,6 +15,16 @@ extends RefCounted
 const TOLERANCE: float = 1e-9
 const VECTOR_KEYS: Array[String] = ["actions", "cases", "decay", "description", "order", "prior", "sequence"]
 const CASE_KEYS: Array[String] = ["context", "likeliest", "probabilities", "seen"]
+## The types this reads, checked before anything reads them (T121): the
+## file's after its keys, each case's after its own.
+const SHAPE: Dictionary = {
+	"actions": [VectorShape.TEXT], "cases": [VectorShape.OBJECT], "decay": VectorShape.NUMBER,
+	"order": VectorShape.NUMBER, "prior": VectorShape.NUMBER, "sequence": [VectorShape.TEXT],
+}
+const CASE_SHAPE: Dictionary = {
+	"context": VectorShape.TEXT, "likeliest": VectorShape.TEXT, "probabilities": {"*": VectorShape.NUMBER},
+	"seen": VectorShape.NUMBER,
+}
 
 
 ## Why this dictionary is not a usable vector, or "" when it is one. A key
@@ -22,6 +32,9 @@ const CASE_KEYS: Array[String] = ["context", "likeliest", "probabilities", "seen
 static func why_not_a_vector(vector: Dictionary) -> String:
 	if _sorted_keys(vector) != VECTOR_KEYS:
 		return "V1 its keys are %s, not %s" % [_sorted_keys(vector), VECTOR_KEYS]
+	var types: String = VectorShape.why_not(vector, SHAPE)
+	if types != "":
+		return "V10 " + types
 	if (vector["cases"] as Array).is_empty():
 		return "V2 it claims nothing"
 	if predictor_of(vector).problem() != "":
@@ -43,6 +56,9 @@ static func why_not_a_vector(vector: Dictionary) -> String:
 static func _why_a_case_is_wrong(case: Dictionary, vector: Dictionary) -> String:
 	if _sorted_keys(case) != CASE_KEYS:
 		return "V3 a case's keys are %s, not %s" % [_sorted_keys(case), CASE_KEYS]
+	var types: String = VectorShape.why_not(case, CASE_SHAPE, "a case")
+	if types != "":
+		return "V10 " + types
 	var named: Array = (case["probabilities"] as Dictionary).keys()
 	named.sort()
 	var actions: Array = (vector["actions"] as Array).duplicate()

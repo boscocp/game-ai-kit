@@ -21,6 +21,13 @@ extends RefCounted
 
 const CHEAPEST: String = "cheapest_cost"
 const FEWEST: String = "fewest_steps"
+## The types this reads, checked before anything reads them (T121).
+const SHAPE: Dictionary = {
+	"costs": [[VectorShape.NUMBER]],
+	"from": [VectorShape.NUMBER],
+	"to": [VectorShape.NUMBER],
+	"expect": {"reached": VectorShape.FLAG, "cheapest_cost?": VectorShape.NUMBER, "fewest_steps?": VectorShape.NUMBER},
+}
 
 
 ## Why this dictionary is not a usable vector, or "" when it is one.
@@ -76,6 +83,9 @@ static func _why_shape_is_wrong(data: Dictionary) -> String:
 	for field: String in ["costs", "from", "to", "expect"]:
 		if not data.has(field):
 			return "no `%s` field" % field
+	var types: String = VectorShape.why_not(data, SHAPE)
+	if types != "":
+		return types
 	if not (data["costs"] is Array) or (data["costs"] as Array).is_empty():
 		return "`costs` is not a non-empty array of rows"
 	var rows: Array = data["costs"]

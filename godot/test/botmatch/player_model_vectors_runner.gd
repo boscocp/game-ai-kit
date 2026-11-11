@@ -18,7 +18,17 @@
 # is arranged against.
 extends SceneTree
 
-const FIELDS: Array[String] = ["description", "last_step", "events", "readings"]
+## Every field read from a vector and its type, checked before any is read
+## (T121): a cast that fails in a `-s` script is a SCRIPT ERROR the run
+## survives, printing "0 failure(s)".
+const SHAPE: Dictionary = {
+	"description": VectorShape.TEXT, "last_step": VectorShape.NUMBER,
+	"events": [{"step": VectorShape.NUMBER, "kind": VectorShape.TEXT, "points?": VectorShape.NUMBER,
+			"team?": VectorShape.NUMBER}],
+	"readings": [{"step": VectorShape.NUMBER, "counts": {"*": VectorShape.NUMBER}, "share": VectorShape.NUMBER,
+			"hit_rate": VectorShape.NUMBER, "row": VectorShape.NUMBER, "aim_error_degrees": VectorShape.NUMBER,
+			"held": VectorShape.FLAG}],
+}
 
 
 func _init() -> void:
@@ -40,8 +50,9 @@ func _run(directory: String) -> int:
 	var readings: int = 0
 	for name: String in vectors:
 		var vector: Dictionary = vectors[name]
-		if not vector.has_all(FIELDS) or (vector["readings"] as Array).is_empty():
-			printerr("player_model_vectors_runner: %s is missing one of %s, or has no reading" % [name, FIELDS])
+		var why: String = VectorShape.why_not(vector, SHAPE, name)
+		if why != "" or (vector["readings"] as Array).is_empty():
+			printerr("player_model_vectors_runner: %s" % (why if why != "" else name + " has no reading"))
 			return 2
 		readings += (vector["readings"] as Array).size()
 		failures += ModelConformance.check_vector(name, vector, rules)

@@ -57,8 +57,9 @@ func test_a_weight_of_zero_switches_a_rule_off() -> void:
 
 
 func test_a_flock_vector_with_a_misspelt_field_or_an_unknown_shape_is_refused() -> void:
-	var good: Dictionary = {"name": "x", "shape": "forces", "boid": {}, "neighbours": [], "separation_radius": 4.0,
-		"expected": {}}
+	var good: Dictionary = {"name": "x", "shape": "forces", "neighbours": [], "separation_radius": 4.0,
+		"boid": {"position": [0, 0], "velocity": [0, 0], "max_speed": 10.0, "max_force": 20.0},
+		"expected": {"separation": [0, 0], "alignment": [0, 0], "cohesion": [0, 0], "flock": [0, 0]}}
 	assert_str(FlockVector.why_not_a_vector(good)).is_empty()
 	var misspelt: Dictionary = good.duplicate(true)
 	misspelt["separation_raduis"] = 4.0
@@ -80,3 +81,15 @@ func test_a_planted_wrong_force_is_caught() -> void:
 	assert_array(FlockVector.check("by hand", vector)).is_empty()
 	vector["expected"]["alignment"][1] += 10 * SteeringVector.TOLERANCE
 	assert_array(FlockVector.check("by hand", vector)).has_size(1)
+
+
+# T121: a vector of the wrong types is refused before it is read. Each of
+# these, a list given as text in a copy of a real file, was a SCRIPT ERROR
+# that skipped the check and let the runner exit 0.
+func test_a_flock_vector_of_the_wrong_types_is_refused() -> void:
+	var vector: Dictionary = VectorShape.read_spec("vectors/steering/flock/far-neighbours-only-pull.json")
+	assert_str(FlockVector.why_not_a_vector(vector)).is_empty()
+	var paths: Array = [["boid", "position"], ["neighbours"], ["neighbours", 0, "velocity"], ["expected", "flock"]]
+	for path: Array in paths:
+		var why: String = FlockVector.why_not_a_vector(VectorShape.planted(vector, path, "x"))
+		assert_str(why).override_failure_message(str(path)).contains(" is not ")

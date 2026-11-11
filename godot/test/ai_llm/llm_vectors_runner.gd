@@ -12,6 +12,17 @@
 # read -- which includes finding none at all, and a game the validator refuses.
 extends SceneTree
 
+## The types this runner reads, checked before it reads any (T121): a cast
+## that fails in a `-s` script is a SCRIPT ERROR the run would survive.
+## `format_controls` is Python's alone, and still held to its types.
+const SHAPE: Dictionary = {
+	"declaration": {"intents": {"*": [VectorShape.TEXT]}, "fallback_speech": VectorShape.TEXT,
+			"secrets?": [VectorShape.TEXT]},
+	"cases": [{"raw": VectorShape.TEXT, "why": VectorShape.TEXT, "refused?": VectorShape.TEXT,
+			"accepted?": {"speech": VectorShape.TEXT, "intent": VectorShape.TEXT, "argument": VectorShape.TEXT}}],
+	"format_controls?": {"runs": [[VectorShape.TEXT]], "unicode": VectorShape.TEXT, "why": VectorShape.TEXT},
+}
+
 
 func _init() -> void:
 	var arguments: PackedStringArray = OS.get_cmdline_user_args()
@@ -31,8 +42,9 @@ func _run(directory: String) -> int:
 	var cases: int = 0
 	for name: String in files:
 		var vector: Dictionary = _read_vector(directory.path_join(name))
-		if not (vector.get("cases") is Array) or not (vector.get("declaration") is Dictionary):
-			printerr("llm_vectors_runner: %s has no declaration and cases" % name)
+		var why: String = VectorShape.why_not(vector, SHAPE, name)
+		if why != "":
+			printerr("llm_vectors_runner: %s" % why)
 			return 2
 		var validator: LlmValidator = validator_of(vector["declaration"])
 		var unusable: String = validator.problem()
