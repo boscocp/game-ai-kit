@@ -1,0 +1,15 @@
+{
+  "module": "bossfight",
+  "kind": "example",
+  "about": "The boss fight (T156-T158): a boss whose phases are the top of a behaviour tree, whose next attack is a utility choice, and whose every attack runs a telegraph, an active window and a recovery, striking with the target's attack tokens.",
+  "owns": [
+    "godot/game3d/bossfight/",
+    "godot/test/bossfight/"
+  ],
+  "depends_on": [
+    "ai_behaviour",
+    "ai_teamwork",
+    "ai_utility"
+  ],
+  "gates": []
+}
