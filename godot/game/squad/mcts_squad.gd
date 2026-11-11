@@ -7,11 +7,11 @@
 ## Decide: `iterations` iterations of UCT on the board its side believes in
 ## (`rules.json`'s `search`), the most visited answer played. In the scene
 ## they are spread over frames, each searching until `frame_share_ms` of it
-## is spent (T117); the count is the decision's, the clock only how soon. The tree is
-## the piece's whole question -- hold, walk to each cell, or shoot each
-## target -- and below it the rest of the turn, the other side's, and
-## playouts scored on health. No evaluation to write: a playout's end is
-## scored on health alone.
+## is spent (T117); the count is the decision's, the clock only how soon.
+## The tree is the piece's whole question -- hold, walk to each cell, or
+## shoot each target -- and below it the rest of the turn, the other side's,
+## and playouts scored on health. No evaluation to write: a playout's end
+## is scored on health alone.
 ##
 ## What it shows (invariant 13): every root answer's visits, mean and UCB1
 ## bound, on the board (`weighed`) and as bars in the status
@@ -113,9 +113,15 @@ func _work_per_frame() -> int:
 
 
 # The rules' `frame_share_ms` (T117): in the scene, after the first frame,
-# iterations run until this much of the frame is spent.
+# iterations run until this much of the frame is spent. Missing or not above
+# zero is refused by name, and the scene then counts its frames instead --
+# loudly, since an engine error fails every gate that runs it.
 func _frame_share_usec() -> int:
-	return roundi(float(search_rules()["frame_share_ms"]) * 1000.0)
+	var share: float = float(search_rules().get("frame_share_ms", 0.0))
+	if share <= 0.0:
+		push_error("rules.json: search.frame_share_ms must be a number of milliseconds above 0")
+		return 0
+	return roundi(share * 1000.0)
 
 
 func _start_search(root: SquadSearchGame.Position) -> void:

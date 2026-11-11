@@ -176,9 +176,11 @@ Every simplification, so nobody reads the mode as more of XCOM than it is:
   search growing a frame at a time, stopped by space. Since T117, a frame
   on its share of the clock: the scene's searcher takes the rules' share,
   a frame stops by it (at least the share, and short of a decision's whole
-  budget), stops at once when the budget is spent and never past it, plays
-  the same answer with the same visits as all at once, and the seeded game, each decision thought
-  to its end a share at a time, replays the counted game's digest.
+  budget), stops at once when the budget is spent and never past it, runs
+  one iteration at least and reads the clock after every one, plays the
+  same answer with the same visits as all at once, and the seeded game,
+  each decision thought to its end a share at a time, replays the counted
+  game's digest.
 - T88: `expecti_squad_test.gd` -- the 30 positions of `spec/squad/duel.json`,
   every answer's expected value at depth 2 the file's within 1e-9, equal in
   Python (`test_squad_duel.py`); a planted game that sees no dice missing
@@ -487,12 +489,12 @@ so with the redraw it stays near 11 ms, inside the frame. The searching
 itself costs no more: 0.77 to 0.81 s a decision against 0.79 to 0.95 s
 before, so reading the clock between iterations is lost in the noise.
 
-The worst frame, 15.6 to 21.6 ms in the scene and 22 ms in the quieter run, is
-the one where space plays a decision and the next one starts: the board is
-looked at, the guess made, the piece's routes found and the first four
-iterations run, then all of it is drawn. That is about one dropped frame
-a decision, in a turn-based game; the 122 and 202 ms in the table are that
-frame under the load above. 5,000 was measured at 20 matches a seat, not
+The worst frame, 15.6 to 21.6 ms in the scene and 22 ms in the quieter
+run, is the one where space plays a decision and the next one starts: the
+board is looked at, the guess made, the piece's routes found and the first
+four iterations run, then all of it is drawn. That is about one dropped
+frame a decision, in a turn-based game; the 122 and 202 ms in the table
+are that frame under the load above. 5,000 was measured at 20 matches a seat, not
 100: at 6 s of searching a decision and some fifty decisions a match,
 2 x 100 matches would have taken most of a day of one core's time.
 

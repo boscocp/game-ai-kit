@@ -9,10 +9,10 @@
 # T117, and each timed. A frame is one of those calls; a decision is all of
 # them together. The worst frame is most often the first, which also plays
 # the last decision and looks at the board; the worst of the later frames,
-# the share's own, is printed beside it. Who wins does not depend on the share: a decision is its
-# iterations whatever the frames, so the wins are a counted run's. The times are this machine's,
-# under whatever else it is doing, which is why this is a measurement and
-# not a gate: `docs/godot/squad.md` keeps what it printed, with the date.
+# the share's own, is printed beside it. Who wins does not depend on the
+# share: a decision is its iterations whatever the frames, so the wins are
+# a counted run's. The times are this machine's, under whatever else it is
+# doing, which is why this is a measurement and not a gate: `docs/godot/squad.md` keeps what it printed, with the date.
 #
 # Match `n` of a seat is played on dice seed `n`, the searcher seeded
 # `1000 + n`, as `make test-squad-match` seats its own.

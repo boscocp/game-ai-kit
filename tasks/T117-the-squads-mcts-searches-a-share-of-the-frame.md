@@ -28,6 +28,24 @@ _The owner ratified only the item quoted above. The decisions below are this ses
   frame changes, so what is played does not depend on the machine's
   speed, only how soon.
 
+## What wave 186 decided
+
+The first and third decisions confirmed. The second confirmed for the
+matches, the duel, the vectors and every test but those of the share --
+and changed for `make measure-squad-mcts`: it now searches as the scene
+does, on the share, because step 4 asks it for the frames a person sees,
+and a counted measure would time frames the scene no longer runs. What it
+plays is unchanged: a decision is still its iterations, so its wins are a
+counted run's, and the measurement before and after won the same games by
+the same number of decisions.
+
+Two more, not in the proposal: the frame a decision is asked keeps its 4
+counted iterations, being already the heavy one (it plays the last
+decision, looks, guesses and finds the routes); and a frame on the share
+runs one iteration at least, reading the clock after every one, so it
+overruns its share by one iteration at most. `ExpectiSquad` keeps its
+count: the share is in `SearchingSquad`, but only `MctsSquad` names one.
+
 ## Steps
 
 1. Read `FrameBudget` and how the RTS scene uses it.

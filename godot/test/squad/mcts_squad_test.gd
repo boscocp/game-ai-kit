@@ -63,6 +63,16 @@ class BelievesUnseenHealth extends MctsSquad:
 		return believed
 
 
+## A searcher that writes down how much work each step between two looks
+## at the clock asked for (wave 186's review).
+class CountsItsSteps extends MctsSquad:
+	var asked: Array[int] = []
+
+	func _search_more(count: int) -> void:
+		asked.append(count)
+		super(count)
+
+
 var _rules := SquadRuleset.new()
 var _check: SquadUnseenCheck
 
@@ -163,6 +173,28 @@ func test_the_scene_way_searches_a_frame_by_the_rules_share() -> void:
 	assert_int(spread.frame_share_usec).is_equal(roundi(float(MctsSquad.search_rules()["frame_share_ms"]) * 1000.0))
 	assert_int(spread.frame_share_usec).is_greater(0)
 	assert_int(MctsSquad.new(3).frame_share_usec).is_equal(0)  # built for a match: counted
+
+
+func test_a_frame_on_its_share_searches_once_even_when_the_share_is_already_spent() -> void:
+	var spread := MctsSquad.new(3, 40)
+	spread.spread_over_frames()
+	spread.decide_move(_rules.start(), 1)
+	var before: int = spread.work_done()
+	spread._search_for(0)
+	assert_int(spread.work_done()).is_equal(before + 1)
+
+
+func test_a_frame_on_its_share_reads_the_clock_after_every_iteration() -> void:
+	# One iteration between two looks at the clock is what bounds a frame's
+	# overrun to one iteration, which the page and the measure claim.
+	var spread := CountsItsSteps.new(3, 5_000)
+	spread.spread_over_frames()
+	spread.decide_move(_rules.start(), 1)
+	spread.asked.clear()
+	spread._search_for(TEST_SHARE_USEC)
+	assert_int(spread.asked.size()).is_greater(1)
+	for count: int in spread.asked:
+		assert_int(count).is_equal(1)
 
 
 func test_a_frame_on_its_share_stops_by_the_clock() -> void:
