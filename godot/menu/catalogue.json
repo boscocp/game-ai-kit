@@ -55,7 +55,9 @@
     "constraints": {"name": "constraint satisfaction: AC-3 and backtracking place the level", "evidence": ["ConstraintSolver"]},
     "bayes": {"name": "a Bayesian network: is anyone there at all, from the signs, by enumeration", "evidence": ["BayesNetwork"]},
     "wave-function-collapse": {"name": "wave function collapse: the cell of least entropy collapsed first, a map built from a table of tiles", "evidence": ["WaveCollapse"]},
-    "discourse-acts": {"name": "a language model reads the player's words as one declared act, behind a validator", "evidence": ["LlmValidator", "LlmConversation"]}
+    "discourse-acts": {"name": "a language model reads the player's words as one declared act, behind a validator", "evidence": ["LlmValidator", "LlmConversation"]},
+    "attack-tokens": {"name": "attack tokens: one or two of a group strike at a time", "evidence": ["AttackTokens"]},
+    "engagement-rings": {"name": "engagement rings: where the rest stand while one strikes", "evidence": ["EngagementRings"]}
   },
   "examples": [
     {
@@ -331,6 +333,23 @@
       "controls": "1-9 say a recorded line; V the reasoning; R again; Tab types to a live local model (one already running, or one the game starts and stops), Enter says it",
       "watch": "Three dots over Bram mean the model is answering while the game keeps drawing. With V, each line shows the act the model read and its argument, or why the validator refused it, then the rule that fired and how the green trust bar and the red suspicion bar moved against their white marks. Words that say the door opens open nothing: only the act counts.",
       "docs": "docs/godot/talk.md"
+    },
+    {
+      "target": "demo-bossfight",
+      "title": "The boss fight: a group, and one strikes at a time (3D)",
+      "scene": "res://game3d/bossfight/bossfight.tscn",
+      "decides": "Who may strike you now, where the others stand meanwhile, when the ranged minion may shoot, and which blow the boss throws next in its phase.",
+      "techniques": [
+        {"technique": "attack-tokens", "part": "a yellow ring at the feet of each one holding a melee token, cyan for ranged; the panel names the holders, the queue in serving order, and the time to the next grant with its multiplier"},
+        {"technique": "engagement-rings", "part": "the three rings round you and a green line from each minion to the point it claimed: the inner ring to strike, the waiting ring, the ranged band"},
+        {"technique": "perception", "part": "a faded ring point is one a pillar hides you from: a ranged minion does not stand there to shoot"},
+        {"technique": "arrive", "part": "each minion walks to its point and stops on it, kept apart from the others"},
+        {"technique": "behaviour-tree", "part": "the boss's phase, the top of its tree, in the panel on the right and over its head"},
+        {"technique": "weighed-actions", "part": "every attack of the phase scored in the panel on the right: the highest is thrown, never three times in a row"}
+      ],
+      "controls": "WASD walk, the mouse turns the camera; click or J a light attack, Shift dodges, Q locks on; H hides the reasoning, N fights again, P pauses, Space one decision while paused",
+      "watch": "Watch the yellow rings: never more than two at once, and none on a minion while the boss's heavy blow winds up. Let a melee minion reach you while the ranged one aims: its line vanishes, its token was taken back. Read the panel's timer: once a melee minion is on you, no ranged minion asks for a token for three times the ranged delay.",
+      "docs": "docs/godot/bossfight.md"
     }
   ]
 }

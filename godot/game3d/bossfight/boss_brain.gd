@@ -39,12 +39,12 @@ extends RefCounted
 ## The id the boss queues under in the token pool.
 const ID: String = "boss"
 ## What it is doing, as the overlay names it.
-const CLOSING: String = "closing"
-const WAITING: String = "waiting"
-const TELEGRAPH: String = "telegraph"
-const ACTIVE: String = "active"
-const RECOVERY: String = "recovery"
-const DEFEATED: String = "defeated"
+const CLOSING: String = "closing"  # shown through tr()
+const WAITING: String = "waiting"  # shown through tr()
+const TELEGRAPH: String = "telegraph"  # shown through tr()
+const ACTIVE: String = "active"  # shown through tr()
+const RECOVERY: String = "recovery"  # shown through tr()
+const DEFEATED: String = "defeated"  # shown through tr()
 const WINDOW_STATES: Array[String] = [TELEGRAPH, ACTIVE, RECOVERY]
 ## An attack used this many times in a row scores zero: never three.
 const MOST_IN_A_ROW: int = 2
@@ -161,7 +161,7 @@ func _why_not_fight() -> String:
 		return _table.refusal
 	for attack_data: BossTable.Blow in _table.attacks.values():
 		if pool_size(attack_data.kind) < 1:
-			return "attack %s's kind, %s, has no token pool" % [attack_data.name, attack_data.kind]
+			return "attack %s's kind, %s, has no token pool" % [attack_data.name, attack_data.kind]  # not shown: a refusal for whoever edits the data, in its keys' English
 	return ""
 
 
@@ -187,13 +187,13 @@ func _not_a_third_time(attack_name: String) -> Dictionary:
 
 func _build_tree() -> BehaviourTree:
 	var branches: Array[BehaviourTree.TreeNode] = [
-		_branch("defeated", "no health left", _is_defeated, "fall", _fall),
-		_branch("mid-attack", "attack underway", _is_attacking, "carry on", _carry_on),
+		_branch("defeated", "no health left", _is_defeated, "fall", _fall),  # not shown: the tree's labels, the overlay's data
+		_branch("mid-attack", "attack underway", _is_attacking, "carry on", _carry_on),  # not shown: the tree's labels, the overlay's data
 	]
 	for index: int in range(_table.phases.size() - 1, -1, -1):
 		var phase_name: String = _table.phases[index].name
-		var opens: String = "%s opens" % phase_name
-		var choose: String = "choose in %s" % phase_name
+		var opens: String = "%s opens" % phase_name  # not shown: the tree's labels, the overlay's data
+		var choose: String = "choose in %s" % phase_name  # not shown: the tree's labels, the overlay's data
 		branches.append(_branch(phase_name, opens, _phase_opens.bind(index), choose, _choose_in.bind(index)))
 	return BehaviourTree.new(BehaviourTree.Selector.new("boss", branches))
 

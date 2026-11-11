@@ -239,6 +239,20 @@
         "en": "V the reasoning: the act the model read, the rule that fired, trust and suspicion; Tab types to a live local model",
         "pt-BR": "V o raciocínio: o ato que o modelo leu, a regra que disparou, confiança e suspeita; Tab escreve para um modelo local ao vivo"
       }
+    },
+    "demo-bossfight": {
+      "game": {
+        "en": "The boss fight",
+        "pt-BR": "A luta contra o chefe"
+      },
+      "like": {
+        "en": "Marvel's Spider-Man or a soulslike: a group round you, one strikes at a time",
+        "pt-BR": "Marvel's Spider-Man ou um soulslike: um grupo em volta, um golpeia de cada vez"
+      },
+      "keys": {
+        "en": "H hides the reasoning: who holds a token, the queue, the timer, the rings and their claims, the boss's phase and telegraph; Q locks on",
+        "pt-BR": "H esconde o raciocínio: quem segura um *token*, a fila, o cronômetro, os anéis e as reservas, a fase do chefe e o seu *telegraph*; Q trava a mira"
+      }
     }
   },
   "algorithms": {
@@ -461,6 +475,14 @@
     "bayes": {
       "en": "a Bayesian network, exact inference by enumeration",
       "pt-BR": "uma rede bayesiana, inferência exata por enumeração"
+    },
+    "attack-tokens": {
+      "en": "attack tokens, lent one kind at a time",
+      "pt-BR": "*tokens* de ataque, emprestados por tipo"
+    },
+    "engagement-rings": {
+      "en": "engagement rings round the target",
+      "pt-BR": "anéis de combate em volta do alvo"
     }
   }
 }

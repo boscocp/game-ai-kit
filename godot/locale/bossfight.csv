@@ -1,0 +1,43 @@
+en,pt_BR
+The boss cannot fight: {why},O chefe não pode lutar: {why}
+Phase: {phase} - {state} {attack},Fase: {phase} - {state} {attack}
+a melee token: this one may strike you now,um token melee: este pode golpear você agora
+"a ranged token, and a ranged minion's aim","um token ranged, e a mira de um capanga ranged"
+"the rings: inner to strike, waiting, the ranged band","os anéis: interno para golpear, espera, faixa ranged"
+the ring point each minion claimed,o ponto do anel que cada capanga reservou
+"the boss's reach, filling as it winds up","o alcance do chefe, enchendo enquanto ele prepara o golpe"
+the blow lands now: dodge,o golpe acerta agora: esquive
+cross: your lock-on,cruz: a sua mira travada
+{ring}: {claims},{ring}: {claims}
+#{place} in the queue,{place}º na fila
+{phase}: {state},{phase}: {state}
+{phase}: {state} {attack},{phase}: {state} {attack}
+you {you}%   boss {boss}%,você {you}%   chefe {boss}%
+The boss is down. N fights again.,O chefe caiu. N luta de novo.
+You fell. N fights again.,Você caiu. N luta de novo.
+"pressed: a melee minion is on you, so the ranged lose their tokens and hold fire","pressionado: um capanga melee está em cima de você, então os ranged perdem os tokens e seguram o fogo"
+"holding fire: the ranged ask again in {left} s, after melee was on you","segurando o fogo: os ranged pedem de novo em {left} s, depois que o melee esteve em cima de você"
+"free: no melee minion is striking, so the ranged may shoot","livre: nenhum capanga melee está golpeando, então os ranged podem atirar"
+{kind} tokens {free} of {pool} free; held by {holders}; queue {queue},tokens {kind}: {free} de {pool} livres; com {holders}; fila {queue}
+"   next in {left} s: delay {delay} s x {factor}, set while {state}","   próximo em {left} s: espera {delay} s x {factor}, marcada com o jogador {state}"
+none,nenhum
+inner ring,anel interno
+waiting ring,anel de espera
+ranged band,faixa ranged
+circling,rondando
+closing,aproximando-se
+winding,preparando
+striking,golpeando
+aiming,mirando
+recovering,recuperando-se
+staggered,atordoado
+fallen,caído
+telegraph,aviso
+active,golpe
+recovery,recuperação
+waiting,esperando
+defeated,derrotado
+melee,melee
+ranged,ranged
+pressed,pressionado
+free,livre
