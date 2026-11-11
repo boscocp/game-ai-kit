@@ -1,6 +1,6 @@
 # T167 — No addon names itself as a value
 
-Size: S · Prereqs: T162 · Files: `scripts/check_self_naming.py` (new), `Makefile`, `modules/`, `docs/godot/exit-leaks.md`
+Size: S · Prereqs: T162 · Files: `scripts/check_self_naming.py` (new), `Makefile`, `docs/godot/exit-leaks.md`
 
 ## Goal
 
@@ -37,6 +37,32 @@ _Proposed in the review of wave 176; the owner chose a follow-up task on
   page says how to avoid it.
 - **Fast, no engine.** It runs in `make check` as a lint, a module of its
   own, like the other `lint-*` gates.
+
+**What wave 183 confirmed, and what it changed.**
+
+- **Confirmed: the spellings, and that types stay allowed.** But the lint
+  does not list the bad spellings. It lists the type positions (`-> Name`,
+  `var`/`const`/`for x: Name`, an argument typed `Name` in a `func`, a
+  lambda or a `signal`, and `Array[...]`/`Dictionary[...]` inside one of
+  those) and refuses every other use of the name. So `extends Name` in an
+  inner class, `is not Name`, `is Array[Name]` and the bare name passed
+  as a value are refused too, and a spelling nobody listed is not missed.
+- **Changed: no `modules/` manifest.** A `lint-*` target in
+  `check-no-engine` already runs on every wave
+  (`check_modules.always_run`), and `scripts/` is a global path, so a
+  manifest would own nothing. It is wired as `lint-godot-checked` is: its
+  own three lines in the Makefile, and its self-test found by name by
+  `run_selftests.py`.
+- **Confirmed: game code, tests and demos are not read.** Only
+  `godot/addons/ai_*/`; gdUnit4 beside them is not ours.
+- **Added: nothing checked is a finding.** No `ai_*` script, or none with a
+  `class_name`, exits 1, so an empty or moved `addons/` does not pass.
+- **Measured.** On the tree before T162 (`84becd0b~1`) it names 33 lines in
+  exactly the 16 files T162 changed; on main, none of 117 scripts.
+- **Not covered, said in its docstring.** A script that `preload`s its own
+  path also holds itself; nobody does it here, and the lint does not look.
+  A known false positive: an argument typed `Name` after a default nested
+  two parentheses deep is refused.
 
 ## Acceptance
 

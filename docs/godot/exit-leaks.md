@@ -260,8 +260,26 @@ reproduce the table above inside `ai_core`. `check_published.py`'s
 self-test also passes it with its exact counts recorded, and refuses it
 with one count off. It also refuses a clean zip whose record still claims
 a leak. If a later engine stops leaking on the plant, the self-tests fail,
-and this page is out of date. A static lint that refuses the pattern in
-any load order is T167.
+and this page is out of date.
+
+**The lint (T167, wave 183).** The loader checks see the pattern only in
+the orders they load in: a new self-naming script loaded last leaks
+nothing there. `make lint-self-naming` (`scripts/check_self_naming.py`)
+reads every `.gd` under `godot/addons/ai_*/` with no engine. Inside the
+file that declares `class_name Name`, comments and strings stripped, it
+allows `Name` only where the table above measured it harmless, as a type:
+`-> Name`, `var`, `const` or `for x: Name`, an argument typed `Name` (in a
+`func`, a lambda or a `signal`), and `Array[Name]` or `Dictionary[...,
+Name]` inside one of those. Every other use is a finding, whatever its
+spelling, with the line and what to write instead. On the tree before
+T162 it names 33 lines in exactly the 16 files T162 changed. It does not
+read games, demos or tests, and it does not look for a script that
+`preload`s its own path, which would hold itself the same way. One false
+positive is known: an argument typed `Name` after a default nested two
+parentheses deep, `a: Vector2 = Vector2(maxf(1.0, 2.0), 0.0)`, is refused.
+Its self-test plants each spelling in a file of its own, a script that names
+itself only in types, which must pass, and an empty `addons/`, which must
+not.
 
 ## The gate
 

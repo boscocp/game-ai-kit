@@ -224,6 +224,13 @@ lint-godot-checked: ## T141: every Godot -s line runs through godot_checked.py, 
 	@# the script's ALLOWED; its self-test runs in lint-selftests.
 	@$(PYTHON) scripts/check_godot_checked.py
 
+.PHONY: lint-self-naming
+check-no-engine: lint-self-naming
+lint-self-naming: ## T167: no addon script names its own class as a value, which can leave it alive at exit
+	@# Static, so it sees the pattern in any load order; the loader checks
+	@# see it only in theirs. Its self-test runs in lint-selftests.
+	@$(PYTHON) scripts/check_self_naming.py
+
 .PHONY: lint-no-assets
 lint-no-assets: ## ADR 0018: nothing from a 3D pack is tracked, and every manifest row has a sha256
 	@$(PYTHON) scripts/check_no_assets.py
