@@ -1,0 +1,9 @@
+{
+ "kind": "refused",
+ "description": "A header with version 2: this game reads version 1, and refuses rather than misreads.",
+ "lines": [
+  "{\"version\": 2}",
+  "{\"day\": 1, \"verb\": \"plant\", \"place\": \"field\"}"
+ ],
+ "names": "version 2"
+}

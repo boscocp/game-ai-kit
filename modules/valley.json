@@ -1,0 +1,17 @@
+{
+  "module": "valley",
+  "kind": "example",
+  "about": "The valley that remembers (T164, ADR 0025): the player's deeds on places kept as a record appended to and never edited, the one save the kit keeps between sessions; the world of each day rebuilt from it by authored rules, place to place, and the player's standing summed from authored weights; with their Python twin.",
+  "owns": [
+    "godot/game/valley/",
+    "godot/test/valley/",
+    "spec/vectors/valley/",
+    "python/gameaikit/valley/",
+    "python/tests/test_valley.py",
+    "python/tests/test_valley_vectors.py"
+  ],
+  "depends_on": [],
+  "gates": [
+    "test-valley-vectors"
+  ]
+}
