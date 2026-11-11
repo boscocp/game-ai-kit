@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-11-06
+verified_on: 2026-11-11
 tier: 1
 source: https://ufopaedia.org/Gameplay_Mechanics_(EU2012) ; https://ufopaedia.org/index.php/Cover_(EU2012) ; book:Steve Rabin (ed.), "Game AI Pro 3", CRC Press, 2017 -- ch. 28 (Roelofs, MCTS for strategy and tactical games) ; https://github.com/mxgmn/WaveFunctionCollapse
 invalidated_if: spec/squad/rules.json or spec/squad/tiles.json changes, the tactical map changes, or a rule below stops being the code's
@@ -173,7 +173,14 @@ Every simplification, so nobody reads the mode as more of XCOM than it is:
   destroyed; the most visited played; a frame at a time to the same answer
   as all at once; and a seeded game against the weighed enemy pinned to its
   digest. `squad_scene_test.gd` -- C reaches it, and the scene draws its
-  search growing a frame at a time, stopped by space.
+  search growing a frame at a time, stopped by space. Since T117, a frame
+  on its share of the clock: the scene's searcher takes the rules' share,
+  a frame stops by it (at least the share, and short of a decision's whole
+  budget), stops at once when the budget is spent and never past it, runs
+  one iteration at least and reads the clock after every one, plays the
+  same answer with the same visits as all at once, and the seeded game,
+  each decision thought to its end a share at a time, replays the counted
+  game's digest.
 - T88: `expecti_squad_test.gd` -- the 30 positions of `spec/squad/duel.json`,
   every answer's expected value at depth 2 the file's within 1e-9, equal in
   Python (`test_squad_duel.py`); a planted game that sees no dice missing
@@ -395,11 +402,30 @@ winner; `squad_game_over_test.gd` replays one of those turns, and T88's
 duel fails a match where a searcher held on a game it believed over.
 
 **The budget, a frame at a time.** In the scene it searches
-`iterations_per_frame` iterations each frame (`keep_thinking`, which the
-scene's `_process` asks of any controller; every other one answers no),
-and the decision drawn is rewritten in place each frame, so the board keeps
-drawing while it thinks. Space plays what it believes now: anytime. Built
-anywhere else -- a match, a test -- it runs the whole budget at once.
+`iterations_per_frame` iterations the frame a decision is asked, then each
+frame (`keep_thinking`, which the scene's `_process` asks of any
+controller; every other one answers no) iterations one at a time until
+`frame_share_ms` of the frame are spent (T117) -- at least one, and never
+past the budget. The decision drawn is rewritten in place each frame, so
+the board keeps drawing while it thinks. Space plays what it believes now:
+anytime. Built anywhere else -- a match, a test, `make test-squad-duel` --
+it runs the whole budget at once, by count.
+
+The clock decides only how many of the 1,000 iterations run in a frame,
+never how many a decision gets, and the search is the same however its
+iterations are cut into frames: the same seed, the same draws, in the same
+order. So the share changes how soon a decision is made, and nothing that
+is played -- `mcts_squad_test.gd` replays the seeded game a share at a
+time and gets the counted game's digest. Only space, pressed before the
+budget is spent, plays a decision the machine's speed shaped, as it did
+before.
+
+Why 8 ms: the RTS gives its AI 8 of the 16.7 ms in all (`FrameBudget`),
+and the review of wave 125 proposed the same here; the redraw adds about
+1.1 ms, and the rest is left to the engine. Why the first frame keeps its
+count: that frame already plays the last decision, looks at the board,
+makes the guess and finds the piece's routes -- the worst frame below --
+and a share on top of it would make it worse.
 
 **What it shows** (invariant 13). For the piece about to act, every answer
 at the root on the board: its mean above, a shot's hit chance below, the
@@ -440,17 +466,35 @@ matches running at once on a 12-core machine and other work beside them.
 Two matches a seat at 1,000 iterations on a quieter machine (load about 5):
 0.8 s of searching a decision on average, 1.1 s at most.
 
-What a person waits is longer. In the scene the search runs 4 iterations a
-frame, so 1,000 iterations is 250 frames: about 4.2 s at 60 frames a
-second before the decision has its whole budget (space plays it sooner).
-A steady frame costs about 5 ms -- 4.2 ms of search and 1.1 ms of redraw,
-measured in the scene by the review -- inside the 16.7 ms a frame has. The
-worst frame, 15.6 to 21.6 ms in the scene and 22 ms in the quieter run, is
-the one where space plays a decision and the next one starts: the board is
-looked at, the guess made, the piece's routes found and the first four
-iterations run, then all of it is drawn. That is about one dropped frame
-a decision, in a turn-based game; the 122 and 202 ms in the table are that
-frame under the load above. 5,000 was measured at 20 matches a seat, not
+What a person waits is longer. Until T117 the scene ran 4 iterations a
+frame, so 1,000 iterations was 250 frames: about 4.2 s at 60 frames a
+second before the decision had its whole budget (space plays it sooner),
+and a steady frame cost about 5 ms -- 4.2 ms of search and 1.1 ms of
+redraw, measured in the scene by the review -- leaving some 11 ms of the
+16.7 unused.
+
+On a share of 8 ms (wave 186, `make measure-squad-mcts GAMES=4`, the same
+four matches a seat before and after, load about 2 to 4):
+
+| a frame | won as red | won as blue | frames a decision | worst later frame | worst frame |
+|---|---|---|---|---|---|
+| 4 iterations (before) | 4 of 4 | 1 of 4 | 208 | not measured | 21-41 ms |
+| 8 ms of the clock | 4 of 4 | 1 of 4 | 90-94 | 9.5 ms | 20-21 ms |
+
+The same matches were won, by the same number of decisions each, game by
+game: the share changed nothing that was played. A decision now takes
+about 90 frames, 1.5 s at 60 frames a second, not 3.5 s. A later frame
+searches 8 ms and overruns by one iteration at most -- 9.5 ms at worst --
+so with the redraw it stays near 11 ms, inside the frame. The searching
+itself costs no more: 0.77 to 0.81 s a decision against 0.79 to 0.95 s
+before, so reading the clock between iterations is lost in the noise.
+
+The worst frame, 15.6 to 21.6 ms in the scene and 22 ms in the quieter
+run, is the one where space plays a decision and the next one starts: the
+board is looked at, the guess made, the piece's routes found and the first
+four iterations run, then all of it is drawn. That is about one dropped
+frame a decision, in a turn-based game; the 122 and 202 ms in the table
+are that frame under the load above. 5,000 was measured at 20 matches a seat, not
 100: at 6 s of searching a decision and some fifty decisions a match,
 2 x 100 matches would have taken most of a day of one core's time.
 
@@ -651,6 +695,11 @@ thinks, do the bars grow on the piece's options, and is the one it plays
 the one with the most visits? Press space early: is there still a move,
 and is it a worse one? Does the expected line read as a plan you can
 follow on the board, or as noise?
+
+T117: with MCTS (C) and V on, does a decision take visibly less time than
+the 4 s it took at 4 iterations a frame -- about 1.5 s -- and does the
+window still feel smooth while it thinks? Do the bars still grow slowly
+enough to be read, or is the search now over before you can follow it?
 
 T88: give the enemy to expecti (C). While it thinks, does the depth in the
 status grow, and does the board's framed option change only when a depth

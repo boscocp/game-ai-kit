@@ -2,7 +2,8 @@
 # modes as the menu opens it, M between them, the fog, the dash, the hit
 # chance before a shot with its reasons, T's chance under the cursor, and
 # the enemy's weighing drawn before it acts (V hides it) -- and, since T87,
-# the enemy that searches drawn growing a frame at a time, stopped by space.
+# the enemy that searches drawn growing a frame at a time, stopped by space,
+# each frame of it a share of the wall clock since T117.
 extends GdUnitTestSuite
 
 const RED: int = TacticalScenario.RED
@@ -63,7 +64,9 @@ func test_the_search_is_drawn_growing_a_frame_at_a_time_and_space_plays_it_early
 	assert_str(scene._status.text).contains("searched %d of" % per_frame)
 	for _frame: int in range(3):
 		scene._process(1.0 / 60.0)
-	assert_str(scene._status.text).contains("searched %d of" % (4 * per_frame))
+	# Each frame is a share of the clock, at least one iteration: how many
+	# is the machine's (T117).
+	assert_int(_searched(scene)).is_greater_equal(per_frame + 3)
 	assert_str(scene._status.text).contains("█")
 	assert_bool(scene._intent._weighed.is_empty()).is_false()
 	var overlay: Dictionary = scene.decision_overlay()
@@ -73,6 +76,26 @@ func test_the_search_is_drawn_growing_a_frame_at_a_time_and_space_plays_it_early
 	scene._press(KEY_SPACE)  # stopped early: what it believes now is played
 	assert_bool(about_to in scene._computer_turn.played or about_to in scene._computer_turn.refused).is_true()
 	assert_object(about_to.target).is_equal(target)
+
+
+func test_a_frame_of_the_search_stops_by_its_share_of_the_frame() -> void:
+	var scene: TacticalGame = _opened(1)
+	scene._press(KEY_C)  # the enemy that searches (T87)
+	scene._press(KEY_S)
+	var searcher: MctsSquad = scene.computer as MctsSquad
+	var share: int = roundi(float(MctsSquad.search_rules()["frame_share_ms"]) * 1000.0)
+	assert_int(searcher.frame_share_usec).is_equal(share)
+	var before: int = _searched(scene)
+	var started: int = Time.get_ticks_usec()
+	searcher.keep_thinking()
+	var spent: int = Time.get_ticks_usec() - started
+	assert_int(spent).is_greater_equal(share)
+	# Past its share by one iteration at most, about a millisecond; the rest
+	# is room for a loaded machine. One that ignored the clock would search
+	# the rest of the decision's 1,000 iterations, about a second.
+	assert_int(spent).is_less(share + 250_000)
+	scene._refresh()
+	assert_int(_searched(scene)).is_greater(before)
 
 
 func test_the_board_shows_only_what_the_persons_side_sees() -> void:
@@ -332,3 +355,10 @@ func _board(pieces: Array) -> BoardState:
 	var state := BoardState.new(start.graph, units, RED)
 	state.movement_graphs = start.movement_graphs
 	return state
+
+
+# How many iterations the status says the search has run.
+func _searched(scene: TacticalGame) -> int:
+	var found: RegExMatch = RegEx.create_from_string("searched (\\d+) of").search(scene._status.text)
+	assert_object(found).is_not_null()
+	return int(found.get_string(1)) if found != null else -1

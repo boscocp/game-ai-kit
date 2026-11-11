@@ -19,11 +19,13 @@
 ## Decide: the piece's whole question -- hold, walk to each cell, or shoot
 ## each target -- is the root of a `SquadSearchGame` position on that
 ## board, and the subclass searches it. Anytime both ways: built for the
-## scene (`spread_over_frames`), one frame's share of work when asked and
-## the rest a frame at a time (`keep_thinking`); built for T88's duel
-## (`think_for`), a fixed time on the wall clock; built anywhere else, its
-## whole budget at once. The decision the scene draws is rewritten in place
-## after each share: space plays what it believes now.
+## scene (`spread_over_frames`), one frame's count of work when asked and
+## the rest a frame at a time (`keep_thinking`) -- each frame a share of
+## the wall clock when the subclass names one (T117), its count otherwise;
+## built for T88's duel (`think_for`), a fixed time on the wall clock;
+## built anywhere else, its whole budget at once. The decision the scene
+## draws is rewritten in place after each frame: space plays what it
+## believes now.
 ##
 ## When not to use it: a controller that does not search one piece's
 ## question. `WeighedSquad` perceives the same way and weighs one action.
@@ -38,6 +40,12 @@ const CLOCK_SHARE: int = 1
 const UNLIMITED: int = 1 << 30
 
 static var _starting: Array[Unit] = []
+
+## The wall clock each `keep_thinking` frame may search, in microseconds,
+## once `spread_over_frames` set it; 0 counts work a frame instead. Only
+## how many frames a decision takes depends on it, never what is decided:
+## the budget in work is the same either way.
+var frame_share_usec: int = 0
 
 var _seed_number: int
 # Work a frame once `spread_over_frames` is called; 0 runs it all at once.
@@ -63,10 +71,12 @@ func _init(seed_number: int = 0) -> void:
 	_seed_number = seed_number
 
 
-## The scene's way of running it: one frame's share of work when a decision
-## is asked, the rest by `keep_thinking`, frame after frame.
+## The scene's way of running it: one frame's count of work when a
+## decision is asked, the rest by `keep_thinking`, frame after frame, each a
+## share of the wall clock when the subclass names one.
 func spread_over_frames() -> void:
 	_per_frame = _work_per_frame()
+	frame_share_usec = _frame_share_usec()
 
 
 ## T88's duel's way of running it: every decision searched for
@@ -118,7 +128,10 @@ func decide_attack(state: BoardState, unit_id: int) -> TacticalDecision:
 func keep_thinking() -> bool:
 	if not _has_work_left():
 		return false
-	_search_more(_per_frame)
+	if frame_share_usec > 0:
+		_search_for(frame_share_usec)
+	else:
+		_search_more(_per_frame)
 	_show()
 	return true
 
@@ -211,6 +224,12 @@ func believe(state: BoardState) -> BoardState:
 @abstract func _work_per_frame() -> int
 
 
+# The wall clock a `keep_thinking` frame may search, in microseconds; 0, a
+# count of work a frame instead, unless the subclass names a share.
+func _frame_share_usec() -> int:
+	return 0
+
+
 # A new search from `root`, for the decision `_pending` holds. Searches
 # nothing yet.
 @abstract func _start_search(root: SquadSearchGame.Position) -> void
@@ -276,12 +295,21 @@ func _begin(believed: BoardState, unit_id: int, phase: int) -> void:
 	_routes = TacticalReach.walks_for(believed, believed.unit_by_id(unit_id)) if phase == SquadSearchGame.WALK else {}
 	_start_search(SquadSearchGame.Position.new(believed, unit_id, phase, after))
 	if _clock_msec > 0:
-		var deadline: int = Time.get_ticks_usec() + _clock_msec * 1000
-		while Time.get_ticks_usec() < deadline and _has_work_left():
-			_search_more(CLOCK_SHARE)
+		_search_for(_clock_msec * 1000)
 	else:
 		_search_more(_per_frame if _per_frame > 0 else UNLIMITED)
 	_show()
+
+
+# Work, `CLOCK_SHARE` at a time, until `microseconds` of the wall clock are
+# spent or the budget is -- and at least once, so that a frame always moves
+# the search on. Past the deadline by one unit at most: the clock is read
+# between units, never inside one.
+func _search_for(microseconds: int) -> void:
+	var deadline: int = Time.get_ticks_usec() + microseconds
+	_search_more(CLOCK_SHARE)
+	while Time.get_ticks_usec() < deadline and _has_work_left():
+		_search_more(CLOCK_SHARE)
 
 
 # `_pending` made to say what the search would play now: its walk, its
