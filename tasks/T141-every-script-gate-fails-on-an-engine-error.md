@@ -61,7 +61,7 @@ measurements, recordings and exports too (`measure-*`, `rts-measure`,
 `crop.gd`, `measure-llm-requests`' probe). A recording or a table built
 by a script that stopped half-way is the same silent wrong answer as a
 gate's. The ones whose size a person sets (`GAMES`, `SEEDS`, a model)
-carry `--timeout 86400`, as `measure-squad-duel` already did.
+carry `--timeout 86400`, as `measure-squad-duel` already did (review 180 added `test-squad-match` and `measure-bandit`).
 
 **Left starting Godot itself, named in `check_godot_checked.py`'s
 `ALLOWED`, one target and one script each:**

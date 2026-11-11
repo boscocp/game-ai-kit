@@ -40,17 +40,19 @@ Headless, like every gate, unless the line says otherwise:
 An error printed on purpose
 ---------------------------
 `--expect-error TEXT` names one engine error the gate prints on purpose (a
-planted script it must see fail): an error line holding TEXT is forgiven.
-It is given once per error, on the line that needs it, never as a switch
-that forgives everything; and an expected error that is NOT printed fails
-the run, because then the plant did not happen.
+planted script it must see fail): every error line holding TEXT is
+forgiven, however many times it is printed -- they are not counted. It is
+given once per error, on the line that needs it, never as a switch that
+forgives everything; and an expected error that is NOT printed at all
+fails the run, because then the plant did not happen.
 
 Exit codes
 ----------
 0   the gate exited 0 and printed no engine error it was not told to expect
 1   the gate exited 1, printed an unexpected engine error whatever it
     exited, or did not print one it was told to expect
-2   wrong usage, or the gate exited 2, or it outlived `--timeout`
+2   wrong usage, Godot could not be started, the gate exited 2, or it
+    outlived `--timeout`
 
 Usage
 -----
@@ -62,7 +64,9 @@ Usage
 from __future__ import annotations
 
 import argparse
+import contextlib
 import dataclasses
+import io
 import pathlib
 import subprocess
 import sys
@@ -188,7 +192,11 @@ def run(script: str, gate_arguments: list[str], timeout: float,
     with tempfile.TemporaryDirectory() as folder:
         log = pathlib.Path(folder) / "gate.log"
         command = command_for(script, log, gate_arguments, engine)
-        returncode, output = run_to_file(command, pathlib.Path(folder), timeout, print_now)
+        try:
+            returncode, output = run_to_file(command, pathlib.Path(folder), timeout, print_now)
+        except OSError as error:
+            print(f"godot_checked: could not start Godot ({error}); run make bootstrap", file=sys.stderr)
+            return 2
     for line in unexpected_errors(output, expected):
         print(f"godot_checked: an engine error, so the run fails: {line}")
     for text in missing_errors(output, expected):
@@ -227,6 +235,30 @@ def _the_output_is_shown_before_the_end() -> bool:
     with tempfile.TemporaryDirectory() as folder:
         run_to_file(stub, pathlib.Path(folder), 10.0, note)
     return bool(seen_after) and seen_after[0] < 2.5
+
+
+def _the_last_output_is_shown() -> bool:
+    """True when what a stub printed just before it ended reaches the echo.
+
+    Planted for an echo that stops when the process does: the summary a
+    gate prints last, the line a person reads, would be the one not shown.
+    """
+    stub = [sys.executable, "-c", "print('the summary')"]
+    shown: list[str] = []
+    with tempfile.TemporaryDirectory() as folder:
+        run_to_file(stub, pathlib.Path(folder), 10.0, shown.append)
+    return "the summary" in "".join(shown)
+
+
+def _a_missing_godot_is_wrong_usage() -> int:
+    """The exit code of a run whose engine cannot be started at all."""
+    original = command_for
+    globals()["command_for"] = lambda *arguments: ["/nonexistent/godot-for-the-self-test"]
+    try:
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            return run("res://x.gd", [], 5.0)
+    finally:
+        globals()["command_for"] = original
 
 
 def _a_hung_gate_is_killed() -> int | None:
@@ -298,6 +330,8 @@ def self_test() -> int:
         ("a crash's exit code", verdict(139, clean), 1),
         ("a process printing past a pipe's 64 KiB", _a_long_output_is_read_whole(), True),
         ("the output shown while the gate runs", _the_output_is_shown_before_the_end(), True),
+        ("the last output shown after the gate ends", _the_last_output_is_shown(), True),
+        ("a Godot that cannot be started", _a_missing_godot_is_wrong_usage(), 2),
         ("a gate past its deadline", _a_hung_gate_is_killed(), None),
         ("the engine's flags in the command", _the_engine_flags_reach_godot(), []),
         ("--project on a folder with no project.godot", _a_folder_with_no_project_is_refused(), 2),
@@ -312,7 +346,8 @@ def self_test() -> int:
 
 def parse(argv: list[str]) -> tuple[argparse.ArgumentParser, argparse.Namespace]:
     """The parser, and what it read from `argv` once the gate's own arguments are taken out."""
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    # No abbreviations: `--expect` must not quietly become `--expect-error`.
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0], allow_abbrev=False)
     parser.add_argument("script", nargs="?")
     parser.add_argument("--timeout", type=float, default=TIMEOUT)
     # Resolved here, so the folder stays the same one should the wrapper

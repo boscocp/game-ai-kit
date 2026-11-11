@@ -612,7 +612,7 @@ measure-director: import ## T90: the director over seeded runs -- seconds in eac
 
 .PHONY: test-squad-match
 test-squad-match: import ## The XCOM mode's first enemy against a random mover: at least 80 of 100 seeded matches from each seat (T85, ~30 s)
-	@$(PYTHON) scripts/godot_checked.py res://test/squad/squad_match_runner.gd -- $(or $(GAMES),100) $(or $(WINS),80)
+	@$(PYTHON) scripts/godot_checked.py --timeout 86400 res://test/squad/squad_match_runner.gd -- $(or $(GAMES),100) $(or $(WINS),80)
 
 .PHONY: test-squad-vectors
 test-vectors: test-squad-vectors
@@ -1133,7 +1133,7 @@ measure-level-constraints: import ## Generate and test against the constraint so
 
 .PHONY: measure-bandit
 measure-bandit: import ## Measure the bandit opponent against the stand-ins and the owner's ghost (a table, not a gate)
-	@$(PYTHON) scripts/godot_checked.py res://test/fighting/bandit_measure.gd -- $(EXPLORATION)
+	@$(PYTHON) scripts/godot_checked.py --timeout 86400 res://test/fighting/bandit_measure.gd -- $(EXPLORATION)
 
 .PHONY: record-stand-ins
 record-stand-ins: import ## Record the scripted stand-in players' fights again (deterministic)
