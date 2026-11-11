@@ -11,7 +11,9 @@
 ## - **one branch per phase, the last first**: a phase opens when health is
 ##   at or below its threshold *and* the phase before it has been entered,
 ##   so a big hit that skips a threshold still enters every phase, in order,
-##   once. Below the phase's condition sits its attack choice.
+##   once, on consecutive decisions: a phase whose next threshold is already
+##   met is passed through without choosing an attack. Below the phase's
+##   condition sits its attack choice.
 ##
 ## The attack choice is `ActionChoice` over the phase's own moveset. Each
 ## attack's considerations are data -- the distance, which way the player
@@ -70,7 +72,6 @@ var refusal: String = ""
 
 var _table: BossTable
 var _tokens: AttackTokens
-var _pools: Dictionary[String, int]
 var _movesets: Array = []
 var _window_started: float = 0.0
 var _window_ends: float = 0.0
@@ -79,13 +80,11 @@ var _streak_attack: String = ""
 var _streak: int = 0
 
 
-## A boss reading `table`, striking `tokens`' target, whose pool sizes are
-## `pools` (the same numbers the pool was built from: a heavy attack costs
-## its kind's whole pool).
-func _init(table: BossTable, tokens: AttackTokens, pools: Dictionary[String, int]) -> void:
+## A boss reading `table`, striking `tokens`' target. A heavy attack costs
+## its kind's whole pool, read from `tokens` itself so the two cannot drift.
+func _init(table: BossTable, tokens: AttackTokens) -> void:
 	_table = table
 	_tokens = tokens
-	_pools = pools
 	refusal = _why_not_fight()
 	if refusal != "":
 		return
@@ -127,23 +126,41 @@ func telegraph_progress(now: float) -> float:
 
 ## What the overlay shows at `now`: the phase, what the boss does, the
 ## telegraph bar, every attack's score and the answers behind it, and the
-## tree's trail.
+## tree's trail. A boss that cannot fight shows only why, in `refusal`.
 func shown(now: float) -> Dictionary:
+	var seen: Dictionary = {"phase": "", "state": "", "attack": "", "telegraph": 0.0, "reasons": [], "trail": []}
+	seen["refusal"] = refusal
+	if refusal != "":
+		return seen
+	seen["phase"] = _table.phases[phase].name if phase >= 0 else ""
+	seen.merge({"state": state, "attack": attack, "telegraph": telegraph_progress(now)}, true)
+	seen.merge({"reasons": _reasons(), "trail": tree.trail.duplicate()}, true)
+	return seen
+
+
+# Every attack the last choice scored: its score, and each consideration's
+# answer by percept.
+func _reasons() -> Array[Dictionary]:
 	var reasons: Array[Dictionary] = []
 	for index: int in range(last_actions.size()):
 		var answers: Dictionary = {}
 		for which: int in range(last_actions[index].considerations.size()):
 			answers[last_actions[index].considerations[which].percept] = last_choice.answers[index][which]
 		reasons.append({"attack": last_actions[index].name, "score": last_choice.scores[index], "answers": answers})
-	return {"phase": _table.phases[phase].name if phase >= 0 else "", "state": state, "attack": attack,
-			"telegraph": telegraph_progress(now), "reasons": reasons, "trail": tree.trail.duplicate()}
+	return reasons
+
+
+## The whole pool of `kind` at the target, held plus free: T154 keeps the
+## two summing to the pool, so this is the pool the tokens were built with.
+func pool_size(kind: String) -> int:
+	return _tokens.free_tokens(kind) + _tokens.held(kind)
 
 
 func _why_not_fight() -> String:
 	if _table.refusal != "":
 		return _table.refusal
 	for attack_data: BossTable.Blow in _table.attacks.values():
-		if not _pools.has(attack_data.kind):
+		if pool_size(attack_data.kind) < 1:
 			return "attack %s's kind, %s, has no token pool" % [attack_data.name, attack_data.kind]
 	return ""
 
@@ -249,6 +266,8 @@ func _phase_opens(_facts: Dictionary, index: int) -> bool:
 func _choose_in(facts: Dictionary, index: int) -> BehaviourTree.Status:
 	if phase != index:
 		_enter(index, facts["now"])
+	if _next_phase_open(index):
+		return BehaviourTree.Status.RUNNING
 	last_actions.assign(_movesets[index])
 	last_choice = ActionChoice.choose(last_actions, _percepts(facts))
 	if last_choice.chosen < 0:
@@ -257,7 +276,7 @@ func _choose_in(facts: Dictionary, index: int) -> BehaviourTree.Status:
 		return BehaviourTree.Status.RUNNING
 	attack = last_actions[last_choice.chosen].name
 	var attack_data: BossTable.Blow = _table.attacks[attack]
-	var cost: int = _pools[attack_data.kind] if attack_data.heavy else 1
+	var cost: int = pool_size(attack_data.kind) if attack_data.heavy else 1
 	var answer: String = _tokens.request(ID, attack_data.kind, cost, _table.priority, facts["distance"], facts["now"])
 	state = WAITING
 	if answer == AttackTokens.HOLDING:
@@ -265,11 +284,18 @@ func _choose_in(facts: Dictionary, index: int) -> BehaviourTree.Status:
 	return BehaviourTree.Status.RUNNING
 
 
-# A new phase: what was asked for in the old one is dropped, and the event
-# says whether minions come with it.
+# A big hit that already met the next phase's threshold: this phase is
+# passed through, with no attack chosen, and the next decision enters it.
+func _next_phase_open(index: int) -> bool:
+	return index + 1 < _table.phases.size() and health <= _table.phases[index + 1].health_at_most
+
+
+# A new phase: a request still queued from the old phase is dropped, or
+# the token could arrive and start an old-phase attack here. (A held token
+# never reaches this: the mid-attack branch is asked first.) The event says
+# whether minions come with it.
 func _enter(index: int, now: float) -> void:
 	_tokens.withdraw(ID, now)
-	_tokens.release(ID, AttackTokens.INTERRUPTED, now)
 	_stop()
 	phase = index
 	events.append({"at": now, "what": "phase", "phase": _table.phases[index].name,
@@ -302,7 +328,7 @@ func _stop() -> void:
 
 
 func _holds_token() -> bool:
-	for kind: String in _pools:
-		if ID in _tokens.holders(kind):
+	for attack_data: BossTable.Blow in _table.attacks.values():
+		if ID in _tokens.holders(attack_data.kind):
 			return true
 	return false

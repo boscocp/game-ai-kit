@@ -155,7 +155,9 @@ claim about any shipped game.
   selector asks "defeated?", then "mid-attack?", then each phase from the
   last to the first. A phase opens when health is at or below its
   threshold *and* the phase before it was entered. So a hit that skips two
-  thresholds still enters every phase, in order, once. A phase brings its
+  thresholds still enters every phase, in order, once: an attack already
+  under way finishes, and then the skipped phase is passed through on
+  consecutive decisions, choosing no attack. A phase brings its
   own moveset and faster tells, and its entry is an event the minions'
   director (T158) reads. The boss spawns nothing itself.
 - **The next attack is a utility choice** (`ActionChoice`) over the
@@ -165,7 +167,9 @@ claim about any shipped game.
   a hard filter instead: the brain adds to every attack a step that scores
   zero on a third use in a row, so no table can forget it.
 - **The boss strikes with the target's tokens.** A heavy attack costs its
-  kind's whole pool, so no minion strikes during it. The boss's priority
+  kind's whole pool, read from the pool itself (held plus free), so no
+  minion strikes during it and a difficulty table cannot make the two
+  disagree. The boss's priority
   puts it before the minions already waiting, unless one has been passed
   over `patience` times (T154's serving order). It keeps the token through
   recovery, so the opening belongs to the player.

@@ -32,6 +32,11 @@ func _init() -> void:
 
 ## Show `seen`, one `BossBrain.shown()`.
 func show_boss(seen: Dictionary) -> void:
+	if seen.get("refusal", "") != "":
+		heading.text = tr("The boss cannot fight: {why}").format({"why": seen["refusal"]})
+		telegraph_bar.value = 0.0
+		reasons.text = ""
+		return
 	heading.text = tr("Phase: {phase} - {state} {attack}").format(
 			{"phase": seen["phase"], "state": tr(seen["state"]), "attack": seen["attack"]})
 	telegraph_bar.value = seen["telegraph"]
