@@ -10,6 +10,19 @@
 class_name ModelVectorFiles
 extends RefCounted
 
+## Every field the runner and the suite read from a vector, and its type,
+## checked before any is read (T121): a cast that fails in a `-s` script is
+## a SCRIPT ERROR the run survives, printing "0 failure(s)". Here, beside
+## the reading, so the suite plants a wrong type without loading a file.
+const SHAPE: Dictionary = {
+	"description": VectorShape.TEXT, "last_step": VectorShape.NUMBER,
+	"events": [{"step": VectorShape.NUMBER, "kind": VectorShape.TEXT, "points?": VectorShape.NUMBER,
+			"team?": VectorShape.NUMBER}],
+	"readings": [{"step": VectorShape.NUMBER, "counts": {"*": VectorShape.NUMBER}, "share": VectorShape.NUMBER,
+			"hit_rate": VectorShape.NUMBER, "row": VectorShape.NUMBER, "aim_error_degrees": VectorShape.NUMBER,
+			"held": VectorShape.FLAG}],
+}
+
 
 ## Where the vectors are, from the Godot project: `spec/` beside it.
 static func directory() -> String:
