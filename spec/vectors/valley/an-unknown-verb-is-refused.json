@@ -1,0 +1,10 @@
+{
+ "kind": "refused",
+ "description": "A verb the rules do not know, after a good deed: refused by its name.",
+ "lines": [
+  "{\"version\": 1}",
+  "{\"day\": 1, \"verb\": \"plant\", \"place\": \"field\"}",
+  "{\"day\": 2, \"verb\": \"kick\", \"place\": \"barn\"}"
+ ],
+ "names": "kick"
+}

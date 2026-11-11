@@ -1,0 +1,105 @@
+{
+ "kind": "rebuilt",
+ "description": "The field is sown and a well dug on day 1: watered on day 2, a harvest on day 3, and the mill still turns.",
+ "deeds": [
+  {
+   "day": 1,
+   "verb": "plant",
+   "place": "field"
+  },
+  {
+   "day": 1,
+   "verb": "dig_well",
+   "place": "square"
+  }
+ ],
+ "days": 4,
+ "worlds": [
+  {
+   "barn.standing": true,
+   "mill.standing": true,
+   "mill.turning": true,
+   "market.bread": true,
+   "market.travellers": true,
+   "bridge.standing": true,
+   "ford.footbridge": false,
+   "river.diverted": false,
+   "field.planted": true,
+   "field.watered": false,
+   "field.harvest": false,
+   "orchard.standing": true,
+   "orchard.fruit": true,
+   "square.well": true,
+   "gate.open": false
+  },
+  {
+   "barn.standing": true,
+   "mill.standing": true,
+   "mill.turning": true,
+   "market.bread": true,
+   "market.travellers": true,
+   "bridge.standing": true,
+   "ford.footbridge": false,
+   "river.diverted": false,
+   "field.planted": true,
+   "field.watered": true,
+   "field.harvest": false,
+   "orchard.standing": true,
+   "orchard.fruit": true,
+   "square.well": true,
+   "gate.open": false
+  },
+  {
+   "barn.standing": true,
+   "mill.standing": true,
+   "mill.turning": true,
+   "market.bread": true,
+   "market.travellers": true,
+   "bridge.standing": true,
+   "ford.footbridge": false,
+   "river.diverted": false,
+   "field.planted": true,
+   "field.watered": true,
+   "field.harvest": true,
+   "orchard.standing": true,
+   "orchard.fruit": true,
+   "square.well": true,
+   "gate.open": false
+  },
+  {
+   "barn.standing": true,
+   "mill.standing": true,
+   "mill.turning": true,
+   "market.bread": true,
+   "market.travellers": true,
+   "bridge.standing": true,
+   "ford.footbridge": false,
+   "river.diverted": false,
+   "field.planted": true,
+   "field.watered": true,
+   "field.harvest": true,
+   "orchard.standing": true,
+   "orchard.fruit": true,
+   "square.well": true,
+   "gate.open": false
+  }
+ ],
+ "standing": [
+  {
+   "care": 4,
+   "fear": 0
+  },
+  {
+   "care": 4,
+   "fear": 0
+  },
+  {
+   "care": 4,
+   "fear": 0
+  },
+  {
+   "care": 4,
+   "fear": 0
+  }
+ ]
+}

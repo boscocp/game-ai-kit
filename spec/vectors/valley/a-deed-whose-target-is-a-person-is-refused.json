@@ -1,0 +1,9 @@
+{
+ "kind": "refused",
+ "description": "A planted deed naming a villager as its target: the schema has no such key, and the refusal names it.",
+ "lines": [
+  "{\"version\": 1}",
+  "{\"day\": 1, \"verb\": \"burn\", \"target\": \"villager_3\"}"
+ ],
+ "names": "target"
+}

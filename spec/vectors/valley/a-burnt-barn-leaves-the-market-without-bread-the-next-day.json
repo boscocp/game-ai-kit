@@ -1,0 +1,100 @@
+{
+ "kind": "rebuilt",
+ "description": "The barn burns on day 2. It is down that day, and the market still has bread; the next day it has none.",
+ "deeds": [
+  {
+   "day": 2,
+   "verb": "burn",
+   "place": "barn"
+  }
+ ],
+ "days": 4,
+ "worlds": [
+  {
+   "barn.standing": true,
+   "mill.standing": true,
+   "mill.turning": true,
+   "market.bread": true,
+   "market.travellers": true,
+   "bridge.standing": true,
+   "ford.footbridge": false,
+   "river.diverted": false,
+   "field.planted": false,
+   "field.watered": false,
+   "field.harvest": false,
+   "orchard.standing": true,
+   "orchard.fruit": true,
+   "square.well": false,
+   "gate.open": false
+  },
+  {
+   "barn.standing": false,
+   "mill.standing": true,
+   "mill.turning": true,
+   "market.bread": true,
+   "market.travellers": true,
+   "bridge.standing": true,
+   "ford.footbridge": false,
+   "river.diverted": false,
+   "field.planted": false,
+   "field.watered": false,
+   "field.harvest": false,
+   "orchard.standing": true,
+   "orchard.fruit": true,
+   "square.well": false,
+   "gate.open": false
+  },
+  {
+   "barn.standing": false,
+   "mill.standing": true,
+   "mill.turning": true,
+   "market.bread": false,
+   "market.travellers": true,
+   "bridge.standing": true,
+   "ford.footbridge": false,
+   "river.diverted": false,
+   "field.planted": false,
+   "field.watered": false,
+   "field.harvest": false,
+   "orchard.standing": true,
+   "orchard.fruit": true,
+   "square.well": false,
+   "gate.open": false
+  },
+  {
+   "barn.standing": false,
+   "mill.standing": true,
+   "mill.turning": true,
+   "market.bread": false,
+   "market.travellers": true,
+   "bridge.standing": true,
+   "ford.footbridge": false,
+   "river.diverted": false,
+   "field.planted": false,
+   "field.watered": false,
+   "field.harvest": false,
+   "orchard.standing": true,
+   "orchard.fruit": true,
+   "square.well": false,
+   "gate.open": false
+  }
+ ],
+ "standing": [
+  {
+   "care": 0,
+   "fear": 0
+  },
+  {
+   "care": -3,
+   "fear": 3
+  },
+  {
+   "care": -3,
+   "fear": 3
+  },
+  {
+   "care": -3,
+   "fear": 3
+  }
+ ]
+}

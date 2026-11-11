@@ -1,0 +1,9 @@
+{
+ "kind": "refused",
+ "description": "A deed whose place is a villager: not a place in the valley, refused by its name.",
+ "lines": [
+  "{\"version\": 1}",
+  "{\"day\": 1, \"verb\": \"burn\", \"place\": \"villager_3\"}"
+ ],
+ "names": "villager_3"
+}

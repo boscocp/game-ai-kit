@@ -1,0 +1,104 @@
+{
+ "about": "The valley's rules (T164, ADR 0025): what each deed does to its place at once, and what one place does to another overnight. A fact is `place.fact`, true or false. `start` is the first day's valley. A deed is {day, verb, place}; `verbs` says which places each verb acts on and the facts of that place it sets, with why. Each night every rule whose `when` holds in the day that ended writes its `then` into the next one, all of them read from the same day, so the order of the rules changes nothing and a consequence that passes through two places takes two nights. No two rules can both hold and disagree. The world of day n is: the start; then, for each day from 1 to n, one night of the rules and the deeds of that day in the record's order.",
+ "places": {
+  "barn": "the farm's barn, where the valley's grain is kept",
+  "mill": "the water mill on the race, where the grain is ground",
+  "market": "the market in the village, where the bread is sold and travellers come",
+  "bridge": "the stone bridge on the road into the valley",
+  "ford": "the shallow crossing below the bridge",
+  "river": "the river, which runs past the mill",
+  "field": "the low field by the river",
+  "orchard": "the orchard above the village",
+  "square": "the village square",
+  "gate": "the gate between the common and the orchard, where the goats graze"
+ },
+ "start": {
+  "barn.standing": true,
+  "mill.standing": true,
+  "mill.turning": true,
+  "market.bread": true,
+  "market.travellers": true,
+  "bridge.standing": true,
+  "ford.footbridge": false,
+  "river.diverted": false,
+  "field.planted": false,
+  "field.watered": false,
+  "field.harvest": false,
+  "orchard.standing": true,
+  "orchard.fruit": true,
+  "square.well": false,
+  "gate.open": false
+ },
+ "verbs": {
+  "burn": {
+   "barn": {"sets": {"standing": false}, "why": "The barn burns down with the grain inside it."},
+   "mill": {"sets": {"standing": false}, "why": "The mill burns down, wheel and stones."},
+   "orchard": {"sets": {"standing": false}, "why": "The trees burn to the stumps."}
+  },
+  "repair": {
+   "barn": {"sets": {"standing": true}, "why": "The barn is rebuilt and can hold grain again."},
+   "mill": {"sets": {"standing": true}, "why": "The mill is rebuilt, and its wheel can turn if the water reaches it."},
+   "bridge": {"sets": {"standing": true}, "why": "The bridge is built up again across the river."}
+  },
+  "pull_down": {
+   "bridge": {"sets": {"standing": false}, "why": "The bridge is pulled down into the river."}
+  },
+  "build_footbridge": {
+   "ford": {"sets": {"footbridge": true}, "why": "Planks across the ford make a crossing on foot."}
+  },
+  "divert_water": {
+   "river": {"sets": {"diverted": true}, "why": "A channel turns the river away from the mill race and onto the low field."}
+  },
+  "plant": {
+   "field": {"sets": {"planted": true}, "why": "The field is sown."},
+   "orchard": {"sets": {"standing": true}, "why": "Young trees are planted where the orchard was."}
+  },
+  "dig_well": {
+   "square": {"sets": {"well": true}, "why": "A well is dug in the square."}
+  },
+  "open_gate": {
+   "gate": {"sets": {"open": true}, "why": "The gate to the orchard is left open."}
+  },
+  "close_gate": {
+   "gate": {"sets": {"open": false}, "why": "The gate to the orchard is shut."}
+  }
+ },
+ "rules": [
+  {"when": {"mill.standing": true, "river.diverted": false}, "then": {"mill.turning": true},
+   "why": "Water in the race turns a standing mill's wheel."},
+  {"when": {"mill.standing": false}, "then": {"mill.turning": false},
+   "why": "A burnt mill has no wheel to turn."},
+  {"when": {"river.diverted": true}, "then": {"mill.turning": false},
+   "why": "The diverted water no longer runs past the mill, and its wheel stops."},
+  {"when": {"barn.standing": true, "mill.turning": true}, "then": {"market.bread": true},
+   "why": "Grain from the barn, ground at the mill, is bread at the market the next day."},
+  {"when": {"barn.standing": false}, "then": {"market.bread": false},
+   "why": "A burnt barn leaves the market without bread the next day: the grain burnt with it."},
+  {"when": {"mill.turning": false}, "then": {"market.bread": false},
+   "why": "Grain nobody can grind is not bread: with the wheel still, the bakers have no flour."},
+  {"when": {"river.diverted": true}, "then": {"field.watered": true},
+   "why": "The diverted water runs onto the low field."},
+  {"when": {"square.well": true}, "then": {"field.watered": true},
+   "why": "With a well in the square, the field is watered by the bucket."},
+  {"when": {"river.diverted": false, "square.well": false}, "then": {"field.watered": false},
+   "why": "With the river in its bed and no well, the low field stays dry."},
+  {"when": {"field.planted": true, "field.watered": true}, "then": {"field.harvest": true},
+   "why": "A sown field that is watered grows a harvest."},
+  {"when": {"field.watered": false}, "then": {"field.harvest": false},
+   "why": "A dry field grows nothing, sown or not."},
+  {"when": {"field.planted": false}, "then": {"field.harvest": false},
+   "why": "A field nobody sowed grows nothing."},
+  {"when": {"bridge.standing": true}, "then": {"market.travellers": true},
+   "why": "Travellers cross the bridge and come to the market."},
+  {"when": {"ford.footbridge": true}, "then": {"market.travellers": true},
+   "why": "A footbridge at the ford lets travellers across, bridge or no bridge."},
+  {"when": {"bridge.standing": false, "ford.footbridge": false}, "then": {"market.travellers": false},
+   "why": "With the bridge down and no footbridge, nobody crosses to the market."},
+  {"when": {"orchard.standing": false}, "then": {"orchard.fruit": false},
+   "why": "A burnt orchard bears nothing."},
+  {"when": {"orchard.standing": true, "gate.open": false}, "then": {"orchard.fruit": true},
+   "why": "The shut gate keeps the goats from the trees, and they fruit."},
+  {"when": {"gate.open": true}, "then": {"orchard.fruit": false},
+   "why": "Through the open gate the goats come in and strip the trees."}
+ ]
+}

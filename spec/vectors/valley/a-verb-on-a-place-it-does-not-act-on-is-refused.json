@@ -1,0 +1,9 @@
+{
+ "kind": "refused",
+ "description": "Burning the river: a known verb and a known place, but burn does not act on it.",
+ "lines": [
+  "{\"version\": 1}",
+  "{\"day\": 1, \"verb\": \"burn\", \"place\": \"river\"}"
+ ],
+ "names": "river"
+}
