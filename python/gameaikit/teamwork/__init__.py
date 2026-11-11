@@ -15,12 +15,13 @@ answers.
     search.py       spots divided among searchers, and a cap on the last known position
     roles.py        shooter or flanker once a fight starts, one flanker at most
     tokens.py       attack tokens: who may strike a target now, and when they give it back
+    rings.py        engagement rings: where the others stand while one attacks
 
 What one bot does now, the errands it leaves its post for (T101) and where
 on a body it aims (T64) are the Python half of `ai_utility`: nothing in them
 is about a team.
 """
 
-from . import commander, confidence, influence, passage, positions, roles, search, tokens
+from . import commander, confidence, influence, passage, positions, rings, roles, search, tokens
 
-__all__ = ["commander", "confidence", "influence", "passage", "positions", "roles", "search", "tokens"]
+__all__ = ["commander", "confidence", "influence", "passage", "positions", "rings", "roles", "search", "tokens"]

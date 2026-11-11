@@ -3,8 +3,9 @@
 The vectors in `spec/vectors/teamwork/` fix each technique's answer on a
 stated query: which candidate a bot takes and why the others were dropped,
 a team's influence at stated points, where a commander sends each squad,
-a squad's states and waves over a run of facts, and who holds an attack
-token after each event of a script. Both languages answer
+a squad's states and waves over a run of facts, who holds an attack
+token after each event of a script, and the ring point each enemy
+claims. Both languages answer
 them and check every value against the file, never against each other. The
 answers came from neither: `derive.py` beside them is a third copy of the
 rules, importing nothing from this repository.
@@ -15,7 +16,7 @@ import math
 import pathlib
 import unittest
 
-from gameaikit.teamwork import commander, confidence, influence, passage, positions, roles, search, tokens
+from gameaikit.teamwork import commander, confidence, influence, passage, positions, rings, roles, search, tokens
 
 VECTORS = pathlib.Path(__file__).resolve().parents[2] / "spec" / "vectors" / "teamwork"
 
@@ -26,7 +27,7 @@ FEWEST_VECTORS = 10
 #: GDScript side's 32-bit `Vector2`.
 TOLERANCE = 1e-4
 
-KINDS = ("positions", "influence", "commander", "confidence", "passage", "search", "roles", "tokens")
+KINDS = ("positions", "influence", "commander", "confidence", "passage", "search", "roles", "tokens", "rings")
 
 
 def answer_positions(vector: dict) -> dict:
@@ -129,9 +130,36 @@ def answer_tokens(vector: dict) -> dict:
     return {"answers": answers, "events": events}
 
 
+def rings_config(fields: dict) -> rings.Config:
+    return rings.Config(rings=[rings.Ring(**each) for each in fields["rings"]], spacing=fields["spacing"],
+                        weights=positions.Weights(**fields["weights"]))
+
+
+def play_rings(field: rings.EngagementRings, query: dict, event: dict):
+    """One scripted event against `field`, and what it answers."""
+    if event["do"] == "place":
+        field.place(tuple(event["target"]))
+        return None
+    if event["do"] == "release":
+        return field.release(event["id"])
+    chosen = field.choose(event["id"], event["ring"], tuple(event["from"]), tuple(query["view_from"]),
+                          tuple(query["view_forward"]))
+    return {"point": field.points[chosen].id if chosen != -1 else "", "statuses": field.last_choice.statuses}
+
+
+def answer_rings(vector: dict) -> dict:
+    query = vector["query"]
+    field = rings.EngagementRings(rings_config(query["config"]), tuple(query["target"]))
+    for point in field.points:
+        point.line_of_sight = point.id not in query["blocked"]
+    answers = [play_rings(field, query, event) for event in query["script"]]
+    claims = {point.id: point.claimed_by for point in field.points if point.claimed_by != -1}
+    return {"points": [list(point.position) for point in field.points], "answers": answers, "claims": claims}
+
+
 ANSWER = {"passage": answer_passage, "positions": answer_positions, "influence": answer_influence,
           "commander": answer_commander, "confidence": answer_confidence, "search": answer_search, "roles": answer_roles,
-          "tokens": answer_tokens}
+          "tokens": answer_tokens, "rings": answer_rings}
 
 
 def misses(expected, found, where: str = "") -> list[str]:

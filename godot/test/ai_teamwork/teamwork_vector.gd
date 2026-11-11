@@ -10,7 +10,7 @@ extends RefCounted
 ## Shared with `python/tests/test_teamwork_vectors.py`; sized for `Vector2`'s
 ## 32-bit floats.
 const TOLERANCE: float = 1e-4
-const KINDS: Array[String] = ["positions", "influence", "commander", "confidence", "passage", "search", "roles", "tokens"]
+const KINDS: Array[String] = ["positions", "influence", "commander", "confidence", "passage", "search", "roles", "tokens", "rings"]
 
 
 ## Why `vector` is not a teamwork vector, or "" when it is one.
@@ -50,6 +50,8 @@ static func answer_to(vector: Dictionary) -> Dictionary:
 			return _roles(vector)
 		"tokens":
 			return _tokens(vector)
+		"rings":
+			return _rings(vector)
 	return _confidence(vector)
 
 
@@ -273,6 +275,50 @@ static func _play_tokens(pool: AttackTokens, config: AttackTokens.Config, event:
 		free[kind] = pool.free_tokens(kind)
 		holders[kind] = Array(pool.holders(kind))
 	return {"granted": Array(granted), "free": free, "holders": holders}
+
+
+## An `EngagementRings.Config` from a vector's `config`.
+static func rings_config(fields: Dictionary) -> EngagementRings.Config:
+	var config := EngagementRings.Config.new()
+	for ring_fields: Dictionary in fields["rings"]:
+		var ring := EngagementRings.Ring.new()
+		ring.name = str(ring_fields["name"])
+		ring.radius = float(ring_fields["radius"])
+		ring.count = int(ring_fields["count"])
+		ring.phase = float(ring_fields["phase"])
+		config.rings.append(ring)
+	config.spacing = float(fields["spacing"])
+	for key: String in fields["weights"]:
+		config.weights.set(key, float(fields["weights"][key]))
+	return config
+
+
+static func _rings(vector: Dictionary) -> Dictionary:
+	var query: Dictionary = vector["query"]
+	var field := EngagementRings.new(rings_config(query["config"]), _vector2(query["target"]))
+	for point: EngagementRings.Point in field.points:
+		point.line_of_sight = not (point.id in query["blocked"])
+	var answers: Array = []
+	for event: Dictionary in query["script"]:
+		answers.append(_play_rings(field, query, event))
+	var points: Array = []
+	var claims: Dictionary = {}
+	for point: EngagementRings.Point in field.points:
+		points.append([point.position.x, point.position.y])
+		if point.claimed_by != -1:
+			claims[point.id] = point.claimed_by
+	return {"points": points, "answers": answers, "claims": claims}
+
+
+static func _play_rings(field: EngagementRings, query: Dictionary, event: Dictionary) -> Variant:
+	if event["do"] == "place":
+		field.place(_vector2(event["target"]))
+		return null
+	if event["do"] == "release":
+		return field.release(int(event["id"]))
+	var chosen: int = field.choose(int(event["id"]), str(event["ring"]), _vector2(event["from"]),
+			_vector2(query["view_from"]), _vector2(query["view_forward"]))
+	return {"point": field.points[chosen].id if chosen != -1 else "", "statuses": field.last_choice.statuses}
 
 
 static func _states(values: Array, thresholds: SquadConfidence.Thresholds, may_retreat: bool) -> Array:

@@ -2,10 +2,10 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-11-10
+verified_on: 2026-11-11
 tier: 2
 source: https://www.gameaipro.com/
-invalidated_if: the kit's RoleArbiter, TeamCommander, TacticalPositions, SquadConfidence, SearchCoordinator or AttackTokens signatures change, or the demos that use them are renamed
+invalidated_if: the kit's RoleArbiter, TeamCommander, TacticalPositions, SquadConfidence, SearchCoordinator, AttackTokens or EngagementRings signatures change, or the demos that use them are renamed
 teaches: shooter-ai
 -->
 
@@ -21,7 +21,8 @@ bot flank while the others shoot, `SearchCoordinator` splits the places to
 search, `SquadConfidence` says when to attack, hold or retreat, and
 `PassageChoice` weighs how to get past a body in the way -- wait, go round, ask a teammate to step aside, or take
 another spot. And `AttackTokens` lets one or two of a group strike a target
-at a time while the rest wait their turn (T154). Each keeps its numbers, so a view can show why. What one bot does
+at a time while the rest wait their turn (T154), and
+`EngagementRings` says where the rest stand meanwhile (T155). Each keeps its numbers, so a view can show why. What one bot does
 now, the errands it leaves its post for and where it aims are not here:
 since T101 and T64 they are [`ai_utility`](ai_utility.md), for nothing in them is about a team. The
 sources: the *Game AI Pro* chapters each class names.
@@ -46,8 +47,8 @@ at all.
 - `make demo-infiltration` -- the guards search with `SearchCoordinator`
   and fight under `RoleArbiter`; **2** and **3** switch the coordinator and
   the arbiter, **Tab** watches the next guard.
-- `AttackTokens` has no demo yet: T157's boss fight is the one that will
-  show who holds a token. Until then its vectors and its suite run it.
+- `AttackTokens` and `EngagementRings` have no demo yet: T157's boss
+  fight is the one that will show who holds a token and the rings. Until then its vectors and its suite run it.
 - Which demo uses which technique, both ways: the
   [catalogue](catalogue.md).
 
@@ -65,6 +66,7 @@ The infiltration guards share their search through
 | the commander | `TeamCommander.assign(squads, objectives, weights)` | which objective each squad is sent to, and how many fill one |
 | retreat | `SquadConfidence.Thresholds` | when a squad attacks, holds or falls back, and the gap that stops it flickering |
 | attack tokens | `AttackTokens.Config` | how many may strike at once per kind, how long between grants, how much longer when the player is busy |
+| rings | `EngagementRings.Config` | each ring's radius and number of points, and the spacing no two claims come closer than |
 
 ## In your own project {#your-project}
 
@@ -174,6 +176,49 @@ pool.release("troll", AttackTokens.ENDED, now)
 `events` logs every grant and return with its reason, for a view to draw.
 Where this sits beside rings and telegraphs, and when not to use any of
 them: [concepts/action-combat-ai.md](../concepts/action-combat-ai.md).
+
+## Engagement rings: where the others wait {#engagement-rings}
+
+A token says *who* attacks; it does not say where the others stand. Left
+alone, the waiting enemies bunch up, stand behind the player where they
+cannot be seen, or block the ranged attacker's line. Reckoning split the
+circle round the player into an attack circle and an approach circle, so
+the player can tell who is an immediate threat [Dawe 2013, 28.3.1].
+`EngagementRings` keeps three:
+
+- **`INNER`** for an enemy holding a melee token, **`WAITING`** for the
+  rest of the melee, and **`RANGED`**, a band farther out, for the ranged,
+  whether they hold a token or not. `ring_for(holds_token, ranged)` says
+  which; so holding a token moves an enemy in and giving it back sends it
+  out again. The rings never grant an attack: `AttackTokens` does.
+- **The rings only place points**, a count per ring at its radius. Which
+  point an enemy takes is `TacticalPositions`' query, not a second one:
+  a point on another ring is `OUTSIDE_AREA`; a point within `spacing` of
+  another enemy's claim -- on any ring -- reads as `CLAIMED` by that one;
+  a point with no line of sight is `EXPOSED`; nearness ranks the rest.
+- **In front of the camera first.** A point behind the player's view is
+  outside the area while a point in front is free, and taken only when
+  none is. A point exactly level with the camera counts as behind.
+- **It casts no rays.** Each point's `line_of_sight` is yours to fill in,
+  cast with your physics, as `TacticalPositions`' facts are; so the
+  addon and its Python twin need no physics.
+- **The rings move with the target**: `place(at)` moves every point and
+  keeps each claim, and `choose` gives up the enemy's old claim before it
+  asks, so asking again at each decision keeps up with the target, the
+  token and the view. Circling is steering, yours: arrive at the claimed
+  point, with separation.
+
+```gdscript
+var field := EngagementRings.new(config, player_xz)
+for point: EngagementRings.Point in field.points:
+	point.line_of_sight = _can_see(point.position, player_xz)  # your raycast
+var holds: bool = name in tokens.holders("melee")  # tokens: the AttackTokens pool
+var ring: String = EngagementRings.ring_for(holds, is_ranged)
+var index: int = field.choose(enemy_id, ring, enemy_xz, camera_xz, camera_forward_xz)
+```
+
+`last_choice` keeps every point's status and score from the last query,
+for a view to draw why each point was not taken.
 
 ## Deeper {#deeper}
 

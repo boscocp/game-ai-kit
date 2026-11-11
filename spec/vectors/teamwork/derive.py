@@ -578,9 +578,120 @@ def token_vectors():
                      [want(order[0], 0.0), want(order[1], 0.0), tick(0.0)],
                      dict(TOKENS, pools={"melee": 1, "ranged": 1}, tie_seed=seed))
 
+# --- engagement rings (T155) -------------------------------------------------
+
+RINGS = {"rings": [{"name": "inner", "radius": 2.0, "count": 4, "phase": 0.0},
+                   {"name": "waiting", "radius": 4.5, "count": 8, "phase": math.pi / 8},
+                   {"name": "ranged", "radius": 9.0, "count": 6, "phase": 0.0}],
+         "spacing": 1.5, "weights": dict(WEIGHTS, max_travel=30.0)}
+
+def ring_points(config, at):
+    found = []
+    for ring in config["rings"]:
+        for i in range(ring["count"]):
+            angle = ring["phase"] + 2 * math.pi * i / ring["count"]
+            found.append({"id": f"{ring['name']}-{i}", "ring": ring["name"],
+                          "at": (at[0] + math.cos(angle) * ring["radius"], at[1] + math.sin(angle) * ring["radius"])})
+    return found
+
+def crowding(points, claims, enemy, point, spacing):
+    for other in points:
+        holder = claims.get(other["id"], -1)
+        if holder in (-1, enemy): continue
+        if other is point or math.dist(other["at"], point["at"]) < spacing: return holder
+    return -1
+
+def ring_choice(config, points, claims, blocked, target, enemy, ring, start, view_from, forward, front_only):
+    cands = []
+    for p in points:
+        ahead = (p["at"][0] - view_from[0]) * forward[0] + (p["at"][1] - view_from[1]) * forward[1] > 0
+        cands.append(candidate(p["id"], math.dist(start, p["at"]), threat=math.dist(target, p["at"]),
+                               covered=False, fires=p["id"] not in blocked,
+                               area=p["ring"] == ring and (ahead or not front_only),
+                               claimed=crowding(points, claims, enemy, p, config["spacing"])))
+    w = config["weights"]
+    statuses = [status(enemy, c, w, True, True) for c in cands]
+    kept = [i for i, s in enumerate(statuses) if s == "kept"]
+    chosen = max(kept, key=lambda i: (score(cands[i], w, True), -i)) if kept else -1
+    return statuses, chosen
+
+def run_rings(config, target, view_from, forward, blocked, script):
+    points, claims, answers = ring_points(config, target), {}, []
+    for event in script:
+        if event["do"] == "place":
+            target = tuple(event["target"])
+            points = ring_points(config, target)
+            answers.append(None)
+            continue
+        enemy = event["id"]
+        mine = [k for k, v in claims.items() if v == enemy]
+        for k in mine: del claims[k]
+        if event["do"] == "release":
+            answers.append(bool(mine))
+            continue
+        args = (config, points, claims, blocked, target, enemy, event["ring"], tuple(event["from"]), view_from, forward)
+        statuses, chosen = ring_choice(*args, True)
+        if chosen == -1: statuses, chosen = ring_choice(*args, False)
+        if chosen != -1: claims[points[chosen]["id"]] = enemy
+        answers.append({"point": points[chosen]["id"] if chosen != -1 else "", "statuses": statuses})
+    return points, claims, answers
+
+def rings(name, why, script, blocked=(), target=(0.0, 0.0), view_from=(0.0, -3.0), forward=(0.0, 1.0), config=RINGS):
+    points, claims, answers = run_rings(config, target, view_from, forward, set(blocked), script)
+    return {"name": name, "why": why, "kind": "rings",
+            "query": {"config": config, "target": list(target), "view_from": list(view_from),
+                      "view_forward": list(forward), "blocked": list(blocked), "script": script},
+            "expect": {"points": [list(p["at"]) for p in points], "answers": answers,
+                       "claims": {k: claims[k] for k in sorted(claims)}}}
+
+def stand(id, ring, x, y):
+    return {"do": "choose", "id": id, "ring": ring, "from": [x, y]}
+
+def ring_vectors():
+    yield rings("the-nearest-free-point-in-front",
+                "A waiting enemy behind the player's camera: the waiting point nearest it is behind the view, so it "
+                "is outside the area, and the nearest point in front is taken. A second enemy close by does not "
+                "take the first one's point.",
+                [stand(1, "waiting", 0.7, -6.0), stand(2, "waiting", 0.9, -6.2)])
+    yield rings("behind-only-when-the-front-is-full",
+                "Six waiting enemies take every waiting point in front of the view; the seventh is sent behind, "
+                "where the only free points are left.",
+                [stand(i, "waiting", 0.3 + i, 7.0 - 0.4 * i) for i in range(1, 8)])
+    yield rings("a-claim-crowds-its-neighbours",
+                "With a spacing wider than two neighbours on the waiting ring, a claim leaves its neighbours "
+                "claimed by it: the second enemy, closest to the first's neighbour, takes the point after.",
+                [stand(1, "waiting", 4.4, 1.6), stand(2, "waiting", 3.4, 3.0)],
+                config=dict(RINGS, spacing=3.5))
+    yield rings("the-ranged-band-needs-a-line-of-sight",
+                "Two of the four ranged points in front of the view are behind cover: they are exposed, and the "
+                "first ranged enemy takes the nearest it can shoot from, the second the other. The third finds "
+                "nothing free in front and is sent behind, to a point with a line of sight.",
+                [stand(7, "ranged", 7.2, 6.4), stand(8, "ranged", -6.0, 2.5), stand(9, "ranged", 8.0, -2.0)],
+                blocked=["ranged-1", "ranged-0"])
+    yield rings("a-ranged-enemy-with-no-line-has-no-point",
+                "Every point of the ranged band is behind cover: no point is left, and the answer is none.",
+                [stand(7, "ranged", 7.2, 6.4)], blocked=[f"ranged-{i}" for i in range(6)])
+    yield rings("a-token-holder-steps-in-and-back-out",
+                "A melee enemy waits, is granted a token and steps into the inner ring -- its waiting point is free "
+                "again for another -- then gives the token back and goes out.",
+                [stand(1, "waiting", 1.0, 5.5), stand(1, "inner", 1.6, 4.0), stand(2, "waiting", 1.2, 5.6),
+                 stand(1, "waiting", 0.4, 2.2)])
+    yield rings("level-with-the-camera-is-behind",
+                "The camera stands on the target, looking along +y: inner-0, at (2, 0), is exactly level with it, "
+                "so it counts as behind. The token holder beside it takes inner-1, in front, not inner-0 nor "
+                "inner-3, the nearer of the other two.",
+                [stand(1, "inner", 2.5, -0.5)], view_from=(0.0, 0.0))
+    yield rings("the-rings-follow-the-target",
+                "The target moves: every point moves with it and the claims stay. A second enemy then avoids the "
+                "first one's point where it is now; a released point is free.",
+                [stand(1, "waiting", 4.2, 1.5), {"do": "place", "target": [3.0, 1.0]},
+                 stand(2, "waiting", 7.4, 3.0), {"do": "release", "id": 1}, {"do": "release", "id": 1},
+                 stand(3, "waiting", 7.4, 3.0)])
+
 def main(directory):
     folder = pathlib.Path(directory)
-    for vector in list(vectors()) + list(passage_vectors()) + list(coordination_vectors()) + list(token_vectors()):
+    for vector in list(vectors()) + list(passage_vectors()) + list(coordination_vectors()) + list(token_vectors())\
+            + list(ring_vectors()):
         (folder / f"{vector['name']}.json").write_text(json.dumps(vector, indent=1) + "\n", encoding="utf-8")
 
 if __name__ == "__main__":
