@@ -17,8 +17,18 @@
 # arranged against.
 extends SceneTree
 
-const REBUILT_FIELDS: Array[String] = ["description", "deeds", "days", "worlds", "standing"]
-const REFUSED_FIELDS: Array[String] = ["description", "lines", "names"]
+## Every field each kind reads and its type, checked before any is read
+## (T121): a cast that fails in a `-s` script is a SCRIPT ERROR the run
+## survives. A world is a fact's name and whether it holds; a standing, a
+## virtue's name and its sum.
+const SHAPES: Dictionary = {
+	"rebuilt": {
+		"description": VectorShape.TEXT, "days": VectorShape.NUMBER,
+		"deeds": [{"day": VectorShape.NUMBER, "verb": VectorShape.TEXT, "place": VectorShape.TEXT}],
+		"worlds": [{"*": VectorShape.FLAG}], "standing": [{"*": VectorShape.NUMBER}],
+	},
+	"refused": {"description": VectorShape.TEXT, "lines": [VectorShape.TEXT], "names": VectorShape.TEXT},
+}
 
 
 func _init() -> void:
@@ -42,9 +52,11 @@ func _run(directory: String) -> int:
 	for name: String in files:
 		var vector: Dictionary = _read_vector(directory + "/" + name)
 		var kind: String = str(vector.get("kind", ""))
-		var fields: Array[String] = REBUILT_FIELDS if kind == "rebuilt" else REFUSED_FIELDS
-		if not counted.has(kind) or not vector.has_all(fields) or not _names_something(vector):
-			printerr("valley_vectors_runner: %s has no known kind, is missing one of %s, or names nothing" % [name, fields])
+		var why: String = VectorShape.why_not(vector, SHAPES[kind], name) if SHAPES.has(kind) else name + " has no known kind"
+		if why == "" and not _names_something(vector):
+			why = name + " names nothing"
+		if why != "":
+			printerr("valley_vectors_runner: %s" % why)
 			return 2
 		counted[kind] += 1
 		if kind == "rebuilt":

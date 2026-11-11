@@ -235,3 +235,20 @@ func _write_text(text: String) -> void:
 	var file: FileAccess = FileAccess.open(SCRATCH, FileAccess.WRITE)
 	file.store_string(text)
 	file.close()
+
+
+# T121: the valley vectors runner refuses a file of the wrong types before
+# it reads one. Deeds, worlds or lines given as text, in a copy of a real
+# file, would be a SCRIPT ERROR that skipped the check.
+func test_a_valley_vector_of_the_wrong_types_is_refused() -> void:
+	var runner: GDScript = preload("res://test/valley/valley_vectors_runner.gd")
+	var rebuilt: Dictionary = VectorShape.read_spec("vectors/valley/a-burnt-barn-leaves-the-market-without-bread-the-next-day.json")
+	assert_str(VectorShape.why_not(rebuilt, runner.SHAPES["rebuilt"])).is_empty()
+	var paths: Array = [["deeds"], ["deeds", 0, "day"], ["worlds"], ["worlds", 0], ["standing"]]
+	for path: Array in paths:
+		var why: String = VectorShape.why_not(VectorShape.planted(rebuilt, path, "x"), runner.SHAPES["rebuilt"])
+		assert_str(why).override_failure_message(str(path)).is_not_empty()
+	var refused: Dictionary = VectorShape.read_spec("vectors/valley/a-deed-out-of-order-is-refused.json")
+	assert_str(VectorShape.why_not(refused, runner.SHAPES["refused"])).is_empty()
+	var why_lines: String = VectorShape.why_not(VectorShape.planted(refused, ["lines"], "x"), runner.SHAPES["refused"])
+	assert_str(why_lines).is_not_empty()
