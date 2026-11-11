@@ -12,7 +12,8 @@
 ## point on another ring is outside the area, a point within `spacing` of
 ## another enemy's claim is claimed, a point with no line of sight is
 ## exposed, and nearness ranks the rest. A point behind the player's view
-## is taken only when no point in front is free.
+## is taken only when no point in front is free, and a token holder has the
+## right of way into the inner ring.
 ## O(points^2) per choice: each point is checked against every claim.
 ##
 ## It casts no rays. The caller fills in each point's line of sight, as it
@@ -48,8 +49,9 @@ class Config:
 	var rings: Array[Ring] = []
 	## No two claims closer than this, in metres, on any ring.
 	var spacing: float = 1.5
-	## `TacticalPositions`' weights: `max_travel` drops a point too far to
-	## walk to, and nearness ranks the rest.
+	## `TacticalPositions`' weights; nearness ranks the points of a ring.
+	## `max_travel` never drops a ring point: each query raises it to the
+	## farthest point, so an enemy far off still goes to the front.
 	var weights: TacticalPositions.Weights = TacticalPositions.Weights.new()
 
 
@@ -72,8 +74,14 @@ var points: Array[Point] = []
 ## Where the target is: the centre of every ring.
 var target: Vector2 = Vector2.ZERO
 ## The last query's answer -- every point's status and score -- for a view
-## to draw: why each point was not taken.
+## to draw why each point was not taken.
 var last_choice: TacticalPositions.Choice = TacticalPositions.Choice.new()
+## Per point, whether it was behind the view at the last choice: the camera
+## rule's half of an OUTSIDE_AREA, which a point on another ring also is.
+var last_behind: Array[bool] = []
+## The enemies whose claims the last choice gave up, for a token holder
+## stepping in beside them: each must choose again.
+var last_bumped: Array[int] = []
 
 
 func _init(rings_config: Config, at: Vector2 = Vector2.ZERO) -> void:
@@ -116,16 +124,22 @@ static func ring_for(holds_token: bool, ranged: bool) -> String:
 ## given up first, so asking again at each decision is how an enemy keeps
 ## up with the target, its token and the view. `view_from` and
 ## `view_forward` are the player's camera on the ground plane: a point
-## behind it is taken only when no point in front is free.
+## behind it is taken only when no point in front is free. A token holder
+## has the right of way: a claim on another ring does not crowd it out of
+## the inner ring, and is given up instead (`last_bumped`).
 func choose(enemy_id: int, ring: String, from: Vector2, view_from: Vector2, view_forward: Vector2) -> int:
 	release(enemy_id)
-	var in_front: Array[TacticalPositions.Candidate] = candidates(enemy_id, ring, from, view_from, view_forward, true)
-	last_choice = TacticalPositions.choose(enemy_id, in_front, config.weights, true, true)
+	last_bumped = []
+	last_behind = []
+	for point: Point in points:
+		last_behind.append(not _faces(point.position, view_from, view_forward))
+	var weights: TacticalPositions.Weights = _weights_reaching(from)
+	last_choice = TacticalPositions.choose(enemy_id, _candidates(enemy_id, ring, from, true), weights, true, true)
 	if last_choice.chosen == -1:
-		var anywhere: Array[TacticalPositions.Candidate] = candidates(enemy_id, ring, from, view_from, view_forward, false)
-		last_choice = TacticalPositions.choose(enemy_id, anywhere, config.weights, true, true)
+		last_choice = TacticalPositions.choose(enemy_id, _candidates(enemy_id, ring, from, false), weights, true, true)
 	if last_choice.chosen != -1:
 		points[last_choice.chosen].claimed_by = enemy_id
+		_bump_beside(points[last_choice.chosen])
 	return last_choice.chosen
 
 
@@ -147,20 +161,21 @@ func claim_of(enemy_id: int) -> int:
 	return -1
 
 
-## Every point as the facts `TacticalPositions` weighs for `enemy_id`. A
-## point on another ring -- or, with `front_only`, behind the view -- is
-## outside the area; a point another's claim crowds reads as claimed by that
-## one; the line of sight is the line of fire, and a ring point is open
-## ground, never covered, so a point with no sight is exposed.
-func candidates(enemy_id: int, ring: String, from: Vector2, view_from: Vector2, view_forward: Vector2,
-		front_only: bool) -> Array[TacticalPositions.Candidate]:
+# Every point as the facts `TacticalPositions` weighs for `enemy_id`. A
+# point on another ring -- or, with `front_only`, behind the view at the
+# last choice -- is outside the area; a point another's claim crowds reads
+# as claimed by that one; the line of sight is the line of fire, and a
+# ring point is open ground, never covered, so a point with no sight is
+# exposed.
+func _candidates(enemy_id: int, ring: String, from: Vector2, front_only: bool) -> Array[TacticalPositions.Candidate]:
 	var found: Array[TacticalPositions.Candidate] = []
-	for point: Point in points:
+	for index: int in range(points.size()):
+		var point: Point = points[index]
 		var candidate := TacticalPositions.Candidate.new()
 		candidate.id = point.id
 		candidate.travel = from.distance_to(point.position)
 		candidate.threat_distance = target.distance_to(point.position)
-		candidate.in_area = point.ring == ring and (not front_only or _faces(point.position, view_from, view_forward))
+		candidate.in_area = point.ring == ring and not (front_only and last_behind[index])
 		candidate.claimed_by = _crowding(enemy_id, point)
 		candidate.fires_on_main = _sight(point)
 		candidate.covered_from_main = false
@@ -168,17 +183,48 @@ func candidates(enemy_id: int, ring: String, from: Vector2, view_from: Vector2, 
 	return found
 
 
+# The config's weights, with `max_travel` raised to reach the farthest
+# point from `from`: walking far is ranked by nearness, never dropped, so
+# the camera rule cannot be broken by a front point being too far.
+func _weights_reaching(from: Vector2) -> TacticalPositions.Weights:
+	var weights := TacticalPositions.Weights.new()
+	for property: Dictionary in weights.get_property_list():
+		if property["usage"] & PROPERTY_USAGE_SCRIPT_VARIABLE:
+			weights.set(property["name"], config.weights.get(property["name"]))
+	for point: Point in points:
+		weights.max_travel = maxf(weights.max_travel, from.distance_to(point.position))
+	return weights
+
+
 # The enemy whose claim leaves `point` too close for `enemy_id`, or -1: the
 # point itself claimed by another, or another's claim nearer than
-# `spacing`, on any ring. The suite's planted generator overrides it to see
-# no one.
+# `spacing`, on any ring -- except a claim that gives way to it. The
+# suite's planted generator overrides it to see no one.
 func _crowding(enemy_id: int, point: Point) -> int:
 	for other: Point in points:
-		if other.claimed_by == -1 or other.claimed_by == enemy_id:
+		if other.claimed_by == -1 or other.claimed_by == enemy_id or _gives_way(other, point):
 			continue
 		if other == point or other.position.distance_to(point.position) < config.spacing:
 			return other.claimed_by
 	return -1
+
+
+# Whether `claim` steps aside for whoever asks for `point`: a claim off the
+# inner ring never keeps a token holder out of it. The suite plants a
+# generator where nothing gives way.
+func _gives_way(claim: Point, point: Point) -> bool:
+	return point.ring == INNER and claim.ring != INNER
+
+
+# Give up every claim within the spacing that gave way to the new claim on
+# `taken`, and note whose.
+func _bump_beside(taken: Point) -> void:
+	for other: Point in points:
+		if other == taken or other.claimed_by == -1 or not _gives_way(other, taken):
+			continue
+		if other.position.distance_to(taken.position) < config.spacing:
+			last_bumped.append(other.claimed_by)
+			other.claimed_by = -1
 
 
 # Whether `position` is in front of the view: strictly, so a point level

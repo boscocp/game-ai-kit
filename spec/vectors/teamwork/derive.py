@@ -585,6 +585,13 @@ RINGS = {"rings": [{"name": "inner", "radius": 2.0, "count": 4, "phase": 0.0},
                    {"name": "ranged", "radius": 9.0, "count": 6, "phase": 0.0}],
          "spacing": 1.5, "weights": dict(WEIGHTS, max_travel=30.0)}
 
+DEFAULT_RINGS = dict(RINGS, weights=WEIGHTS)
+
+AXIS_RINGS = {"rings": [{"name": "inner", "radius": 2.0, "count": 4, "phase": 0.0},
+                        {"name": "waiting", "radius": 4.5, "count": 8, "phase": 0.0},
+                        {"name": "ranged", "radius": 9.0, "count": 6, "phase": 0.0}],
+              "spacing": 2.5, "weights": dict(WEIGHTS, max_travel=30.0)}
+
 def ring_points(config, at):
     found = []
     for ring in config["rings"]:
@@ -594,26 +601,49 @@ def ring_points(config, at):
                           "at": (at[0] + math.cos(angle) * ring["radius"], at[1] + math.sin(angle) * ring["radius"])})
     return found
 
+def gives_way(claim_point, point):
+    return point["ring"] == "inner" and claim_point["ring"] != "inner"
+
 def crowding(points, claims, enemy, point, spacing):
     for other in points:
         holder = claims.get(other["id"], -1)
-        if holder in (-1, enemy): continue
+        if holder in (-1, enemy) or gives_way(other, point): continue
         if other is point or math.dist(other["at"], point["at"]) < spacing: return holder
     return -1
 
-def ring_choice(config, points, claims, blocked, target, enemy, ring, start, view_from, forward, front_only):
+def ring_choice(config, points, claims, blocked, target, enemy, ring, start, behind, front_only):
     cands = []
-    for p in points:
-        ahead = (p["at"][0] - view_from[0]) * forward[0] + (p["at"][1] - view_from[1]) * forward[1] > 0
+    for p, back in zip(points, behind):
         cands.append(candidate(p["id"], math.dist(start, p["at"]), threat=math.dist(target, p["at"]),
                                covered=False, fires=p["id"] not in blocked,
-                               area=p["ring"] == ring and (ahead or not front_only),
+                               area=p["ring"] == ring and not (front_only and back),
                                claimed=crowding(points, claims, enemy, p, config["spacing"])))
-    w = config["weights"]
+    w = dict(config["weights"])
+    w["max_travel"] = max([w["max_travel"]] + [math.dist(start, p["at"]) for p in points])
     statuses = [status(enemy, c, w, True, True) for c in cands]
     kept = [i for i, s in enumerate(statuses) if s == "kept"]
     chosen = max(kept, key=lambda i: (score(cands[i], w, True), -i)) if kept else -1
     return statuses, chosen
+
+def ring_choose(config, points, claims, blocked, target, view_from, forward, event):
+    enemy, start = event["id"], tuple(event["from"])
+    behind = [(p["at"][0] - view_from[0]) * forward[0] + (p["at"][1] - view_from[1]) * forward[1] <= 0
+              for p in points]
+    args = (config, points, claims, blocked, target, enemy, event["ring"], start, behind)
+    statuses, chosen = ring_choice(*args, True)
+    if chosen == -1: statuses, chosen = ring_choice(*args, False)
+    bumped = []
+    if chosen != -1:
+        taken = points[chosen]
+        claims[taken["id"]] = enemy
+        for other in points:
+            holder = claims.get(other["id"], -1)
+            if other is taken or holder == -1 or not gives_way(other, taken): continue
+            if math.dist(other["at"], taken["at"]) < config["spacing"]:
+                bumped.append(holder)
+                del claims[other["id"]]
+    return {"point": points[chosen]["id"] if chosen != -1 else "", "statuses": statuses,
+            "behind": behind, "bumped": bumped}
 
 def run_rings(config, target, view_from, forward, blocked, script):
     points, claims, answers = ring_points(config, target), {}, []
@@ -623,17 +653,17 @@ def run_rings(config, target, view_from, forward, blocked, script):
             points = ring_points(config, target)
             answers.append(None)
             continue
+        if event["do"] == "ring_for":
+            ranged, holds = event["ranged"], event["holds_token"]
+            answers.append("ranged" if ranged else ("inner" if holds else "waiting"))
+            continue
         enemy = event["id"]
         mine = [k for k, v in claims.items() if v == enemy]
         for k in mine: del claims[k]
         if event["do"] == "release":
             answers.append(bool(mine))
             continue
-        args = (config, points, claims, blocked, target, enemy, event["ring"], tuple(event["from"]), view_from, forward)
-        statuses, chosen = ring_choice(*args, True)
-        if chosen == -1: statuses, chosen = ring_choice(*args, False)
-        if chosen != -1: claims[points[chosen]["id"]] = enemy
-        answers.append({"point": points[chosen]["id"] if chosen != -1 else "", "statuses": statuses})
+        answers.append(ring_choose(config, points, claims, blocked, target, view_from, forward, event))
     return points, claims, answers
 
 def rings(name, why, script, blocked=(), target=(0.0, 0.0), view_from=(0.0, -3.0), forward=(0.0, 1.0), config=RINGS):
@@ -681,6 +711,35 @@ def ring_vectors():
                 "so it counts as behind. The token holder beside it takes inner-1, in front, not inner-0 nor "
                 "inner-3, the nearer of the other two.",
                 [stand(1, "inner", 2.5, -0.5)], view_from=(0.0, 0.0))
+    yield rings("far-behind-the-camera-still-goes-in-front",
+                "TacticalPositions' default weights, whose max_travel is 20 m. A waiting enemy 22 m behind the "
+                "camera: every point in front is farther than 20 m, yet none is dropped as too far -- the query "
+                "reaches the farthest point -- so it walks round to the front rather than taking the nearer point "
+                "behind. A ranged enemy 30 m away still gets a point.",
+                [stand(1, "waiting", 0.4, -22.0), stand(7, "ranged", 0.4, 30.0)], config=DEFAULT_RINGS)
+    yield rings("a-point-at-the-spacing-is-not-crowded",
+                "A token holder claims inner-0 at (2, 0); waiting-0 at (4.5, 0) is exactly the spacing, 2.5 m, away: "
+                "not closer, so not crowded across the rings, and the waiter beside it takes it.",
+                [stand(1, "inner", 2.2, 0.3), stand(2, "waiting", 4.7, 0.3)], config=AXIS_RINGS)
+    yield rings("an-inner-claim-crowds-the-waiting-ring",
+                "The same, with a spacing of 2.6 m: the holder's claim on inner-0 crowds waiting-0 across the rings, "
+                "so it reads as claimed by the holder and the waiter takes the next point.",
+                [stand(1, "inner", 2.2, 0.3), stand(2, "waiting", 4.7, 0.3)], config=dict(AXIS_RINGS, spacing=2.6))
+    yield rings("a-token-holder-has-the-right-of-way",
+                "The waiter claims waiting-0 first; then a token holder asks for inner-0, 2.5 m away with a spacing "
+                "of 2.6 m. The waiting claim gives way: the holder takes inner-0, and the waiter's claim is given up "
+                "and named, to choose again.",
+                [stand(2, "waiting", 4.7, 0.3), stand(1, "inner", 2.2, 0.3), stand(2, "waiting", 4.7, 0.3)],
+                config=dict(AXIS_RINGS, spacing=2.6))
+    yield rings("spacing-zero-still-one-per-point",
+                "A spacing of 0: neighbours never crowd, but a claimed point is still claimed. Two enemies at the "
+                "same place take two points.",
+                [stand(1, "waiting", 4.2, 1.5), stand(2, "waiting", 4.2, 1.5)], config=dict(RINGS, spacing=0.0))
+    yield rings("ring-for-holder-waiter-and-ranged",
+                "The ring an enemy belongs on: a melee token holder in, the other melee out, and the ranged in their "
+                "band whether they hold a token or not.",
+                [{"do": "ring_for", "holds_token": h, "ranged": r} for h, r in
+                 ((True, False), (False, False), (True, True), (False, True))])
     yield rings("the-rings-follow-the-target",
                 "The target moves: every point moves with it and the claims stay. A second enemy then avoids the "
                 "first one's point where it is now; a released point is free.",

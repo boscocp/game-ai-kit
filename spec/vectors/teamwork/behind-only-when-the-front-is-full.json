@@ -212,7 +212,28 @@
      "outside_area",
      "outside_area",
      "outside_area"
-    ]
+    ],
+    "behind": [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true
+    ],
+    "bumped": []
    },
    {
     "point": "waiting-2",
@@ -235,7 +256,28 @@
      "outside_area",
      "outside_area",
      "outside_area"
-    ]
+    ],
+    "behind": [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true
+    ],
+    "bumped": []
    },
    {
     "point": "waiting-0",
@@ -258,7 +300,28 @@
      "outside_area",
      "outside_area",
      "outside_area"
-    ]
+    ],
+    "behind": [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true
+    ],
+    "bumped": []
    },
    {
     "point": "waiting-7",
@@ -281,7 +344,28 @@
      "outside_area",
      "outside_area",
      "outside_area"
-    ]
+    ],
+    "behind": [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true
+    ],
+    "bumped": []
    },
    {
     "point": "waiting-3",
@@ -304,7 +388,28 @@
      "outside_area",
      "outside_area",
      "outside_area"
-    ]
+    ],
+    "behind": [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true
+    ],
+    "bumped": []
    },
    {
     "point": "waiting-4",
@@ -327,7 +432,28 @@
      "outside_area",
      "outside_area",
      "outside_area"
-    ]
+    ],
+    "behind": [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true
+    ],
+    "bumped": []
    },
    {
     "point": "waiting-6",
@@ -350,7 +476,28 @@
      "outside_area",
      "outside_area",
      "outside_area"
-    ]
+    ],
+    "behind": [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true
+    ],
+    "bumped": []
    }
   ],
   "claims": {

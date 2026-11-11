@@ -196,6 +196,12 @@ the player can tell who is an immediate threat [Dawe 2013, 28.3.1].
   a point on another ring is `OUTSIDE_AREA`; a point within `spacing` of
   another enemy's claim -- on any ring -- reads as `CLAIMED` by that one;
   a point with no line of sight is `EXPOSED`; nearness ranks the rest.
+  Walking far never drops a ring point: each query raises `max_travel` to
+  the farthest point, so an enemy far off still reaches the front.
+- **A token holder has the right of way.** A claim on another ring never
+  keeps a holder out of the inner ring: the holder takes the point, and
+  each claim it now crowds is given up and listed in `last_bumped`, for
+  that enemy to choose again.
 - **In front of the camera first.** A point behind the player's view is
   outside the area while a point in front is free, and taken only when
   none is. A point exactly level with the camera counts as behind.
@@ -212,13 +218,20 @@ the player can tell who is an immediate threat [Dawe 2013, 28.3.1].
 var field := EngagementRings.new(config, player_xz)
 for point: EngagementRings.Point in field.points:
 	point.line_of_sight = _can_see(point.position, player_xz)  # your raycast
-var holds: bool = name in tokens.holders("melee")  # tokens: the AttackTokens pool
+var enemy_id: int = minion.get_instance_id()  # the rings' id: an int
+var holds: bool = str(enemy_id) in tokens.holders("melee")  # the tokens' id: a String
 var ring: String = EngagementRings.ring_for(holds, is_ranged)
 var index: int = field.choose(enemy_id, ring, enemy_xz, camera_xz, camera_forward_xz)
 ```
 
-`last_choice` keeps every point's status and score from the last query,
-for a view to draw why each point was not taken.
+Two ids for one enemy: `AttackTokens` names a requester by `String`, and
+`EngagementRings`, like `TacticalPositions`, by `int`. One `int` per enemy,
+its `str()` given to the tokens, keeps them the same enemy.
+
+For a view: `last_choice` keeps every point's status and score from the
+last query, and `last_behind` says per point whether it was behind the
+camera then -- the camera rule's share of `OUTSIDE_AREA`, which a point on
+another ring is too.
 
 ## Deeper {#deeper}
 

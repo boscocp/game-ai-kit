@@ -191,7 +191,28 @@
      "outside_area",
      "outside_area",
      "outside_area"
-    ]
+    ],
+    "behind": [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true
+    ],
+    "bumped": []
    },
    null,
    {
@@ -215,7 +236,28 @@
      "outside_area",
      "outside_area",
      "outside_area"
-    ]
+    ],
+    "behind": [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true
+    ],
+    "bumped": []
    },
    true,
    false,
@@ -240,7 +282,28 @@
      "outside_area",
      "outside_area",
      "outside_area"
-    ]
+    ],
+    "behind": [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true
+    ],
+    "bumped": []
    }
   ],
   "claims": {

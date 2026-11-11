@@ -43,9 +43,16 @@ T155's engagement rings were asked nine in the Python twin and three in
 GDScript -- the view always or never in front, the view's `>` for `>=`,
 the line of sight ignored, the claims ignored, only the claimed point
 itself crowded, no first pass in front, the old claim kept while
-choosing, the ring's phase ignored -- and each fails a vector; the suites
-plant a generator that ignores the claims, the view or the sight, over
-random scenes with cover, and reject each.
+choosing, the ring's phase ignored -- and each fails a vector. After
+wave 173's review, eight more in the Python twin and two in GDScript: the
+spacing's `<` for `<=`, the claimed point itself no longer crowded, a
+claim crowding only its own ring, nothing giving way to a token holder,
+the config's `max_travel` kept, `ring_for` sending a holder to wait or a
+ranged holder in -- and each fails a vector. The suites plant generators
+that ignore the claims, the view or the sight, where nothing gives way to
+a holder, and that drop a far point, over random scenes with cover and
+enemies up to 30 m off, and reject each; every -1 they see must have had
+no free point.
 
 `ActionChoice` and `ErrandChoice` were vectors here until T101 moved them,
 unchanged, to `ai_utility`: they are in
@@ -79,10 +86,10 @@ that must agree bit for bit would need rounded costs.
 | `passage` | a blocked bot's facts, and requests to a teammate with its prices | each way's cost in seconds (null: impossible) and the way taken; each request's cost to the teammate and whether it is granted |
 | `search` | spots (worth, searched), each searcher's walk to each, whether claims are on; the walks to the last known position and a cap (T70) | the spot each searcher is given (-1: none); who goes to the last known position |
 | `roles` | requests (role, score, can shoot), whether the arbiter is on, the most flankers (T70) | the role each request is granted |
-| `rings` | rings (name, radius, count, phase), the spacing and `TacticalPositions`' weights; the target, the camera's place and facing, the points with no line of sight, and a script of choices, releases and moves of the target (T155) | every point's place; what each event answers -- a choice's point and every point's status, a release's true or false, a move's null -- and the claims at the end |
+| `rings` | rings (name, radius, count, phase), the spacing and `TacticalPositions`' weights; the target, the camera's place and facing, the points with no line of sight, and a script of choices, releases, moves of the target and `ring_for` questions (T155) | every point's place; what each event answers -- a choice's point, every point's status, which points were behind the camera and whose claims gave way; a release's true or false; a move's null; a ring's name -- and the claims at the end |
 | `tokens` | a pool's config (pools, delays, timeouts, multipliers, patience, tie seed) and a script of requests, withdrawals, releases, revokes and steps (T154) | what each event answers -- a request's status, a withdrawal's or a release's true or false, the ids revoked, a step's grants, free tokens and holders -- and the log of grants, returns and withdrawals |
 
-## The fifty-three
+## The fifty-nine
 
 | file | what it pins |
 |---|---|
@@ -135,6 +142,12 @@ that must agree bit for bit would need rounded costs.
 | `the-ranged-band-needs-a-line-of-sight` | a point with no line of sight is exposed; the third ranged enemy, nothing free in front, goes behind to a point it can shoot from |
 | `a-ranged-enemy-with-no-line-has-no-point` | every ranged point blocked: no point, and the answer is none |
 | `a-token-holder-steps-in-and-back-out` | a token sends a waiting enemy to the inner ring and frees its waiting point; giving it back sends it out |
+| `far-behind-the-camera-still-goes-in-front` | default weights, `max_travel` 20 m: an enemy 22 m behind the camera still goes to the front, and a ranged one 30 m off gets a point |
+| `a-point-at-the-spacing-is-not-crowded` | a waiting point exactly the spacing from an inner claim is free |
+| `an-inner-claim-crowds-the-waiting-ring` | a little wider, and the inner claim crowds the waiting point across the rings |
+| `a-token-holder-has-the-right-of-way` | a waiting claim gives way to a holder stepping in beside it, and is named as bumped |
+| `spacing-zero-still-one-per-point` | a spacing of 0: a claimed point is still claimed |
+| `ring-for-holder-waiter-and-ranged` | the ring for a holder, a waiter, and the ranged with and without a token |
 | `the-rings-follow-the-target` | the target moves, the points move with it and the claims stay; a released point is free |
 | `equal-facts-go-by-the-seed-7-left-first`, `-7-right-first`, `-8-left-first` | equal requests: the seeded hash decides, the same either way round; another seed, the other one |
 

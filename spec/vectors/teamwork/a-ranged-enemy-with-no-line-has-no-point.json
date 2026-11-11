@@ -165,7 +165,28 @@
      "exposed",
      "exposed",
      "exposed"
-    ]
+    ],
+    "behind": [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true
+    ],
+    "bumped": []
    }
   ],
   "claims": {}

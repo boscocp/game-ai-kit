@@ -167,7 +167,28 @@
      "outside_area",
      "outside_area",
      "outside_area"
-    ]
+    ],
+    "behind": [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true
+    ],
+    "bumped": []
    },
    {
     "point": "waiting-2",
@@ -190,7 +211,28 @@
      "outside_area",
      "outside_area",
      "outside_area"
-    ]
+    ],
+    "behind": [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true,
+     false,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true
+    ],
+    "bumped": []
    }
   ],
   "claims": {

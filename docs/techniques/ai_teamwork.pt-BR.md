@@ -7,7 +7,7 @@ tier: 2
 source: https://www.gameaipro.com/
 invalidated_if: the kit's RoleArbiter, TeamCommander, TacticalPositions, SquadConfidence, SearchCoordinator, AttackTokens or EngagementRings signatures change, or the demos that use them are renamed
 teaches: shooter-ai
-translation_of: 3badb75d1a0c8b9f35518d434da3f37efb7f5cae59ebec0a930da1d96408d531
+translation_of: 9a4e71937b41f603adc5106df514e5a029241a9a9a1bb85e63cef36a756a0531
 -->
 
 > English: [ai_teamwork.md](ai_teamwork.md). Os termos que ficam em inglês
@@ -212,7 +212,13 @@ mantém três:
   ponto de outro anel fica `OUTSIDE_AREA`; um ponto a menos de `spacing` da
   reivindicação de outro inimigo -- em qualquer anel -- aparece como
   `CLAIMED` por ele; um ponto sem linha de visão fica `EXPOSED`; a
-  proximidade ordena o resto.
+  proximidade ordena o resto. Andar longe nunca descarta um ponto do anel:
+  cada consulta sobe o `max_travel` até o ponto mais distante, então um
+  inimigo longe ainda chega à frente.
+- **Quem segura um *token* tem a preferência.** Uma reivindicação de outro
+  anel nunca impede quem segura um *token* de entrar no anel de dentro: ele
+  toma o ponto, e cada reivindicação que agora fica perto demais é largada
+  e listada em `last_bumped`, para aquele inimigo escolher de novo.
 - **Primeiro na frente da câmera.** Um ponto atrás da vista do jogador fica
   fora da área enquanto houver um livre na frente, e só é tomado quando não
   houver nenhum. Um ponto exatamente na altura da câmera conta como atrás.
@@ -230,13 +236,21 @@ mantém três:
 var field := EngagementRings.new(config, player_xz)
 for point: EngagementRings.Point in field.points:
 	point.line_of_sight = _can_see(point.position, player_xz)  # your raycast
-var holds: bool = name in tokens.holders("melee")  # tokens: the AttackTokens pool
+var enemy_id: int = minion.get_instance_id()  # the rings' id: an int
+var holds: bool = str(enemy_id) in tokens.holders("melee")  # the tokens' id: a String
 var ring: String = EngagementRings.ring_for(holds, is_ranged)
 var index: int = field.choose(enemy_id, ring, enemy_xz, camera_xz, camera_forward_xz)
 ```
 
-O `last_choice` guarda o estado e a nota de cada ponto da última consulta,
-para uma tela desenhar por que cada ponto não foi tomado.
+Dois ids para um inimigo: o `AttackTokens` chama quem pede por uma
+`String`, e o `EngagementRings`, como o `TacticalPositions`, por um `int`.
+Um `int` por inimigo, com o `str()` dele dado aos *tokens*, mantém os dois
+o mesmo inimigo.
+
+Para uma tela: o `last_choice` guarda o estado e a nota de cada ponto da
+última consulta, e o `last_behind` diz, por ponto, se ele estava atrás da
+câmera -- a parte da regra da câmera no `OUTSIDE_AREA`, que um ponto de
+outro anel também é.
 
 ## Para ir mais fundo {#deeper}
 

@@ -316,9 +316,12 @@ static func _play_rings(field: EngagementRings, query: Dictionary, event: Dictio
 		return null
 	if event["do"] == "release":
 		return field.release(int(event["id"]))
+	if event["do"] == "ring_for":
+		return EngagementRings.ring_for(bool(event["holds_token"]), bool(event["ranged"]))
 	var chosen: int = field.choose(int(event["id"]), str(event["ring"]), _vector2(event["from"]),
 			_vector2(query["view_from"]), _vector2(query["view_forward"]))
-	return {"point": field.points[chosen].id if chosen != -1 else "", "statuses": field.last_choice.statuses}
+	return {"point": field.points[chosen].id if chosen != -1 else "", "statuses": field.last_choice.statuses,
+			"behind": field.last_behind.duplicate(), "bumped": field.last_bumped.duplicate()}
 
 
 static func _states(values: Array, thresholds: SquadConfidence.Thresholds, may_retreat: bool) -> Array:

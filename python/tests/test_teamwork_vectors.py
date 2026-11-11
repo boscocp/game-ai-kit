@@ -142,9 +142,12 @@ def play_rings(field: rings.EngagementRings, query: dict, event: dict):
         return None
     if event["do"] == "release":
         return field.release(event["id"])
+    if event["do"] == "ring_for":
+        return rings.ring_for(event["holds_token"], event["ranged"])
     chosen = field.choose(event["id"], event["ring"], tuple(event["from"]), tuple(query["view_from"]),
                           tuple(query["view_forward"]))
-    return {"point": field.points[chosen].id if chosen != -1 else "", "statuses": field.last_choice.statuses}
+    return {"point": field.points[chosen].id if chosen != -1 else "", "statuses": field.last_choice.statuses,
+            "behind": field.last_behind, "bumped": field.last_bumped}
 
 
 def answer_rings(vector: dict) -> dict:

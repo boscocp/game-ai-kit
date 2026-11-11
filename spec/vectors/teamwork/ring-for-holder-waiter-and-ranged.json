@@ -1,0 +1,158 @@
+{
+ "name": "ring-for-holder-waiter-and-ranged",
+ "why": "The ring an enemy belongs on: a melee token holder in, the other melee out, and the ranged in their band whether they hold a token or not.",
+ "kind": "rings",
+ "query": {
+  "config": {
+   "rings": [
+    {
+     "name": "inner",
+     "radius": 2.0,
+     "count": 4,
+     "phase": 0.0
+    },
+    {
+     "name": "waiting",
+     "radius": 4.5,
+     "count": 8,
+     "phase": 0.39269908169872414
+    },
+    {
+     "name": "ranged",
+     "radius": 9.0,
+     "count": 6,
+     "phase": 0.0
+    }
+   ],
+   "spacing": 1.5,
+   "weights": {
+    "partial_cover": 40.0,
+    "line_of_fire": 20.0,
+    "other_cover": 20.0,
+    "nearness": 20.0,
+    "preferred_range": 10.0,
+    "preferred_metres": 15.0,
+    "range_band": 10.0,
+    "max_travel": 30.0
+   }
+  },
+  "target": [
+   0.0,
+   0.0
+  ],
+  "view_from": [
+   0.0,
+   -3.0
+  ],
+  "view_forward": [
+   0.0,
+   1.0
+  ],
+  "blocked": [],
+  "script": [
+   {
+    "do": "ring_for",
+    "holds_token": true,
+    "ranged": false
+   },
+   {
+    "do": "ring_for",
+    "holds_token": false,
+    "ranged": false
+   },
+   {
+    "do": "ring_for",
+    "holds_token": true,
+    "ranged": true
+   },
+   {
+    "do": "ring_for",
+    "holds_token": false,
+    "ranged": true
+   }
+  ]
+ },
+ "expect": {
+  "points": [
+   [
+    2.0,
+    0.0
+   ],
+   [
+    1.2246467991473532e-16,
+    2.0
+   ],
+   [
+    -2.0,
+    2.4492935982947064e-16
+   ],
+   [
+    -3.6739403974420594e-16,
+    -2.0
+   ],
+   [
+    4.15745789630079,
+    1.722075445642904
+   ],
+   [
+    1.7220754456429042,
+    4.15745789630079
+   ],
+   [
+    -1.7220754456429037,
+    4.15745789630079
+   ],
+   [
+    -4.15745789630079,
+    1.7220754456429046
+   ],
+   [
+    -4.157457896300791,
+    -1.7220754456429035
+   ],
+   [
+    -1.7220754456429066,
+    -4.157457896300789
+   ],
+   [
+    1.722075445642905,
+    -4.15745789630079
+   ],
+   [
+    4.157457896300789,
+    -1.7220754456429068
+   ],
+   [
+    9.0,
+    0.0
+   ],
+   [
+    4.500000000000001,
+    7.794228634059947
+   ],
+   [
+    -4.499999999999998,
+    7.794228634059948
+   ],
+   [
+    -9.0,
+    1.102182119232618e-15
+   ],
+   [
+    -4.5000000000000036,
+    -7.794228634059945
+   ],
+   [
+    4.500000000000001,
+    -7.794228634059947
+   ]
+  ],
+  "answers": [
+   "inner",
+   "waiting",
+   "ranged",
+   "ranged"
+  ],
+  "claims": {}
+ }
+}

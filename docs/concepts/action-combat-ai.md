@@ -211,8 +211,9 @@ claim about any shipped game.
   outside the area, a point near another's claim is claimed, a point with
   no line of sight is exposed, the nearest of the rest wins. What it adds:
   a point behind the player's camera only when none in front is free, so
-  the player sees who waits -- the task's own design, not a claim about a
-  shipped game. What it leaves: stealing a better-placed slot, and the
+  the player sees who waits, and a token holder's right of way into the
+  inner ring -- the task's own design and its review's, not a claim about
+  a shipped game. What it leaves: stealing a better-placed slot, and the
   grid capacity -- how many may close in is the number of points.
 - **T156, telegraphs**: the warning before a blow, and an enemy that reads
   the player's.
