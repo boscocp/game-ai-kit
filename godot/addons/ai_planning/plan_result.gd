@@ -74,6 +74,7 @@ static func impossible(states_visited: int) -> PlanResult:
 ## The planner stopped at its budget. A weaker answer than `impossible`, and
 ## deliberately a different one.
 static func ran_out(states_visited: int) -> PlanResult:
+	# `new()`, not its own class name: naming it would make the script hold itself (T162, docs/godot/exit-leaks.md).
 	return new([] as Array[StripsAction], false, states_visited, true)
 
 
@@ -81,6 +82,7 @@ static func ran_out(states_visited: int) -> PlanResult:
 ## that looked nearest the goal. An empty `so_far` -- nothing looked nearer
 ## than the start -- is a plain `ran_out`, not a partial plan of no steps.
 static func partial_plan(so_far: Array[StripsAction], states_visited: int) -> PlanResult:
+	# `new()`, not its own class name: naming it would make the script hold itself (T162, docs/godot/exit-leaks.md).
 	var result: PlanResult = new(so_far, false, states_visited, true)
 	result.partial = not so_far.is_empty()
 	return result

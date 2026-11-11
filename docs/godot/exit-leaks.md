@@ -198,9 +198,13 @@ to the oldest. While it walks, it holds only the script it is on, and reads
 the next one before letting go of it. A script that holds itself and
 `extends` a base loaded before it sits just before that base on the walk.
 When the walk lets it go, it is freed, and the base is freed with it, and
-`SelfList::remove` sets the freed base's `next` to null. The walk reads
-that null and stops. Every older script that holds itself is never reached,
-and is still in use at exit. `behaviour_tree.gd` ends the walk the same
+`SelfList::remove` sets the freed base's `next` to null. The next turn of
+the walk then runs `s->self()` on that freed node, makes a reference to
+the freed script and clears it, and only then reads the null `next`. That
+is a use-after-free of the script as well as of the node, so what happens
+is undefined, not a guaranteed stop. On 4.7.2 it stopped every time it was
+measured. Every older script that holds itself is never reached, and is
+still in use at exit. `behaviour_tree.gd` ends the walk the same
 way, through its inner classes.
 
 Whether this also explains T138's and T146's leaks was not measured. They
@@ -211,25 +215,53 @@ after it was freed is an engine bug, and it was not reported upstream in
 this wave.
 
 **The fix, in the addons.** Inside its own file, a class does not name
-itself as a value. `new(...)` builds one in a static or an instance
-function, and an inner class reads a constant of its outer class:
+itself as a value. In a **static** function, `new(...)` builds the class
+it is written in. An inner class reads a constant of its outer class:
 `BehaviourTree.SAID`, which `said()` also reads. Sixteen scripts changed,
 and nothing a game calls was renamed. Such a script no longer holds
-itself, so it can neither leak nor end the walk. Measured after the
-change: the kit zip loaded in the loader's order, in reverse, and in three
-shuffled orders, closed clean every time. Before it, those orders leaked
-26 to 33 resources.
+itself, so it can neither leak nor end the walk. Each bare `new()` carries
+a one-line comment saying why.
+
+**Not in an instance function.** There, a bare `new()` builds the
+instance's own script, not the class it is written in. The review of wave
+176 measured it: a game's `extends GakGridGraph` got its own subclass back
+from `duplicate_graph()`, or `null` and a `SCRIPT ERROR` when its `_init`
+took other arguments. So the two instance functions that make a copy,
+`GakGridGraph.duplicate_graph` and `WorldState.after`, call a static
+factory in the same file, `_sized` and `_empty`, and that factory calls
+`new()`. `test/ai_core/grid_graph_test.gd` and
+`test/ai_planning/planning_test.gd` each subclass the class and check
+that the copy is still the addon's class. With a bare `new()` back in the
+instance function, both fail.
+
+Measured after the change: the kit zip loaded in the loader's order, in
+reverse, and in three shuffled orders, closed clean every time. Before
+it, the loader's order leaked 10 resources, and the other four orders
+leaked 26 to 33.
 
 A game's own scripts can still do it. The pattern to avoid in a class you
-publish is `MyClass.new()` inside `my_class.gd`: write `new()`.
+publish is `MyClass.new()` inside `my_class.gd`. In a static function,
+write `new()`. In an instance function, call a static function that does.
 
 **The checks.** `check_published.py`'s install, and `library-check`'s
 `kit` step on the kit zip, read the loader's output for the two exit
-lines and fail on either one. `godot_shards.FORGIVEN` still forgives the
-line for every other gate. Both self-tests plant `check_published.LEAKING`:
-three scripts that reproduce the table above inside `ai_core`. If a later
-engine stops leaking on them, the self-tests fail, and this page is out of
-date.
+lines. `godot_shards.FORGIVEN` still forgives the line for every other
+gate. The `kit` step fails on either line. It also fails when the loader
+loaded a number of scripts other than the `.gd` files in `my_kit/addons/`,
+or none at all. `check_published.py` fails on either line too, except in
+an upload whose record has `known_at_exit`. The 0.1.0 upload can never
+change, and its record stays, so its entry in `tools/store/published.json`
+names the leak: `still_in_use` 7, `leaked` 14, and `why`. That upload
+passes only while the engine prints exactly those counts. Any leak in
+another upload, or a count that changed, is a finding.
+
+Both self-tests plant `check_published.LEAKING`, three scripts that
+reproduce the table above inside `ai_core`. `check_published.py`'s
+self-test also passes it with its exact counts recorded, and refuses it
+with one count off. It also refuses a clean zip whose record still claims
+a leak. If a later engine stops leaking on the plant, the self-tests fail,
+and this page is out of date. A static lint that refuses the pattern in
+any load order is T167.
 
 ## The gate
 

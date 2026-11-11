@@ -52,6 +52,7 @@ static func move(ids: Array[int], destination: Vector2i) -> RtsCommand:
 
 ## Send `ids` after the unit `target`, to fight it until it falls.
 static func attack(ids: Array[int], target: int) -> RtsCommand:
+	# `new()`, not its own class name: naming it would make the script hold itself (T162, docs/godot/exit-leaks.md).
 	var command: RtsCommand = new(ATTACK, ids)
 	command.target_id = target
 	return command
@@ -59,6 +60,7 @@ static func attack(ids: Array[int], target: int) -> RtsCommand:
 
 ## Set workers `ids` carrying from `deposit` to the nearest base, over and over.
 static func gather(ids: Array[int], deposit: int) -> RtsCommand:
+	# `new()`, not its own class name: naming it would make the script hold itself (T162, docs/godot/exit-leaks.md).
 	var command: RtsCommand = new(GATHER, ids)
 	command.target_id = deposit
 	return command
@@ -66,6 +68,7 @@ static func gather(ids: Array[int], deposit: int) -> RtsCommand:
 
 ## Send workers `ids` to mend the side's own `building`, free, until whole.
 static func repair(ids: Array[int], building: int) -> RtsCommand:
+	# `new()`, not its own class name: naming it would make the script hold itself (T162, docs/godot/exit-leaks.md).
 	var command: RtsCommand = new(REPAIR, ids)
 	command.target_id = building
 	return command
@@ -73,6 +76,7 @@ static func repair(ids: Array[int], building: int) -> RtsCommand:
 
 ## Have `worker` raise a `building` at `where`, paid for now.
 static func build(worker: int, building: String, where: Vector2i) -> RtsCommand:
+	# `new()`, not its own class name: naming it would make the script hold itself (T162, docs/godot/exit-leaks.md).
 	var command: RtsCommand = new(BUILD, [worker] as Array[int])
 	command.what = building
 	command.cell = where
@@ -81,6 +85,7 @@ static func build(worker: int, building: String, where: Vector2i) -> RtsCommand:
 
 ## Queue one `unit_kind` at the building `producer`, paid for now.
 static func train(producer: int, unit_kind: String) -> RtsCommand:
+	# `new()`, not its own class name: naming it would make the script hold itself (T162, docs/godot/exit-leaks.md).
 	var command: RtsCommand = new(TRAIN, [producer] as Array[int])
 	command.what = unit_kind
 	return command
@@ -101,6 +106,7 @@ static func from_dict(values: Dictionary) -> RtsCommand:
 	var ids: Array[int] = []
 	for id: Variant in values["units"]:
 		ids.append(int(id))
+	# `new()`, not its own class name: naming it would make the script hold itself (T162, docs/godot/exit-leaks.md).
 	var command: RtsCommand = new(values["kind"], ids)
 	command.cell = Vector2i(int(values["cell"][0]), int(values["cell"][1]))
 	command.target_id = int(values.get("target", 0))

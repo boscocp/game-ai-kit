@@ -39,11 +39,13 @@ static func from_file(path: String) -> RecordedRuntime:
 		return new()
 	var reader := JSON.new()
 	if reader.parse(file.get_as_text()) != OK or not (reader.data is Dictionary):
+		# `new()`, not its own class name: naming it would make the script hold itself (T162, docs/godot/exit-leaks.md).
 		return new()
 	var texts := PackedStringArray()
 	for turn: Variant in (reader.data as Dictionary).get("turns", []):
 		if turn is Dictionary and (turn as Dictionary).get("raw") is String:
 			texts.append(turn["raw"])
+	# `new()`, not its own class name: naming it would make the script hold itself (T162, docs/godot/exit-leaks.md).
 	return new(texts)
 
 

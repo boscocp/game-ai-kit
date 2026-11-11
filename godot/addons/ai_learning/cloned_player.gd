@@ -117,6 +117,7 @@ static func _all_numbers(list: Variant) -> bool:
 
 
 static func _refused(reason: String) -> ClonedPlayer:
+	# `new()`, not its own class name: naming it would make the script hold itself (T162, docs/godot/exit-leaks.md).
 	var refused: ClonedPlayer = new()
 	refused.error = reason
 	return refused
