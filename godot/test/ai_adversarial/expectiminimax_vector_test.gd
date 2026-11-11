@@ -57,3 +57,13 @@ func _with(dictionary: Dictionary, key: String, value: Variant) -> Dictionary:
 	var changed: Dictionary = dictionary.duplicate()
 	changed[key] = value
 	return changed
+
+
+# T121: each of these, a list given as text in a copy of a real file, was
+# a SCRIPT ERROR that skipped the check and let the runner exit 0.
+func test_a_vector_of_the_wrong_types_is_refused_before_it_is_read() -> void:
+	var vector: Dictionary = VectorShape.read_spec("vectors/adversarial/expectiminimax-dice-race.json")
+	var paths: Array = [["cases"], ["cases", 0, "values"], ["cases", 0, "state", "squares"]]
+	for path: Array in paths:
+		var why: String = ExpectiminimaxVector.why_not_a_vector(VectorShape.planted(vector, path, "x"))
+		assert_str(why).override_failure_message(str(path)).starts_with("E6")

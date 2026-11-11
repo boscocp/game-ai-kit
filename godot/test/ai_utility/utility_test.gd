@@ -5,7 +5,7 @@ extends GdUnitTestSuite
 
 
 func test_the_checker_refuses_a_vector_missing_a_part_or_of_an_unknown_kind() -> void:
-	var whole: Dictionary = {"name": "n", "why": "w", "kind": "action", "query": {}, "expect": {"chosen": [0]}}
+	var whole: Dictionary = VectorShape.read_spec("vectors/utility/an-absent-percept-is-nothing.json")
 	assert_str(UtilityVector.why_not_a_vector(whole)).is_equal("")
 	for key: String in ["name", "why", "kind", "query", "expect"]:
 		var broken: Dictionary = whole.duplicate(true)
@@ -42,3 +42,15 @@ func test_actions_with_an_unknown_key_or_curve_are_refused() -> void:
 	]
 	for data: Array in planted:
 		assert_str(ActionChoice.why_not_actions(data)).override_failure_message(str(data)).is_not_empty()
+
+
+# T121: a vector of the wrong types is refused before it is read. Each of
+# these, a list given as text in a copy of a real file, was a SCRIPT ERROR
+# that skipped the query and let the runner exit 0 or 1.
+func test_a_utility_vector_of_the_wrong_types_is_refused() -> void:
+	var vector: Dictionary = VectorShape.read_spec("vectors/utility/a-line-is-clamped-at-both-ends.json")
+	assert_str(UtilityVector.why_not_a_vector(vector)).is_empty()
+	var paths: Array = [["query", "actions"], ["query", "actions", 0, "considerations"], ["query", "percepts"]]
+	for path: Array in paths:
+		var why: String = UtilityVector.why_not_a_vector(VectorShape.planted(vector, path, "x"))
+		assert_str(why).override_failure_message(str(path)).contains(" is not ")

@@ -9,6 +9,19 @@
 extends SceneTree
 
 const TOLERANCE: float = 1e-12
+## The types each file is read as, checked before anything reads them
+## (T121): a cast that fails here is a SCRIPT ERROR the run would survive.
+const SOFTMAX_SHAPE: Dictionary = {
+	"model": {"classes": [VectorShape.TEXT], "columns": [VectorShape.TEXT], "weights": [[VectorShape.NUMBER]],
+			"bias": [VectorShape.NUMBER]},
+	"cases": [{"situation": {"*": VectorShape.TEXT}, "probabilities": {"*": VectorShape.NUMBER},
+			"likeliest": VectorShape.TEXT}],
+}
+const GHOST_SHAPE: Dictionary = {
+	"features": [VectorShape.TEXT], "table": {"*": {"*": VectorShape.NUMBER}},
+	"cases": [{"situation": {"*": VectorShape.TEXT}, "exact": {"*": VectorShape.NUMBER}, "distance": VectorShape.NUMBER,
+			"nearest": {"*": VectorShape.NUMBER}}],
+}
 
 
 func _init() -> void:
@@ -23,8 +36,13 @@ func _init() -> void:
 func _run(directory: String) -> int:
 	var softmax: Variant = JSON.parse_string(FileAccess.get_file_as_string(directory.path_join("softmax-by-hand.json")))
 	var ghost: Variant = JSON.parse_string(FileAccess.get_file_as_string(directory.path_join("ghost-by-hand.json")))
-	if not softmax is Dictionary or not ghost is Dictionary or softmax["cases"].is_empty() or ghost["cases"].is_empty():
-		printerr("cloning_vectors_runner: the two vectors under %s could not be read" % directory)
+	var why: String = VectorShape.why_not(softmax, SOFTMAX_SHAPE, "softmax-by-hand.json")
+	if why == "":
+		why = VectorShape.why_not(ghost, GHOST_SHAPE, "ghost-by-hand.json")
+	if why == "" and (softmax["cases"].is_empty() or ghost["cases"].is_empty()):
+		why = "one claims nothing"
+	if why != "":
+		printerr("cloning_vectors_runner: the two vectors under %s could not be read -- %s" % [directory, why])
 		return 2
 	if not planted_vectors_fail(softmax, ghost):
 		return 1

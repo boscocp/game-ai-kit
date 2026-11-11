@@ -17,6 +17,14 @@ extends RefCounted
 const TOLERANCE: float = 1e-9
 const VECTOR_KEYS: Array[String] = ["cases", "description", "game"]
 const CASE_KEYS: Array[String] = ["action", "depth", "name", "positions", "state", "values"]
+## The types this reads, checked before anything reads them (T121): the
+## file's after its keys, each case's after its own.
+const SHAPE: Dictionary = {"game": VectorShape.TEXT, "cases": [VectorShape.OBJECT]}
+const CASE_SHAPE: Dictionary = {
+	"action": VectorShape.TEXT, "depth": VectorShape.NUMBER, "name": VectorShape.TEXT,
+	"positions": VectorShape.NUMBER, "values": [VectorShape.NUMBER],
+	"state": {"player": VectorShape.NUMBER, "squares": [VectorShape.NUMBER]},
+}
 
 
 ## Why this dictionary is not a usable expectiminimax vector, or "" when it
@@ -25,6 +33,9 @@ const CASE_KEYS: Array[String] = ["action", "depth", "name", "positions", "state
 static func why_not_a_vector(vector: Dictionary) -> String:
 	if _sorted_keys(vector) != VECTOR_KEYS:
 		return "E1 its keys are %s, not %s" % [_sorted_keys(vector), VECTOR_KEYS]
+	var types: String = VectorShape.why_not(vector, SHAPE)
+	if types != "":
+		return "E6 " + types
 	if vector["game"] != "dice_race":
 		return "E2 it names a game other than the dice race: %s" % vector["game"]
 	if (vector["cases"] as Array).is_empty():
@@ -32,6 +43,9 @@ static func why_not_a_vector(vector: Dictionary) -> String:
 	for case: Dictionary in vector["cases"]:
 		if _sorted_keys(case) != CASE_KEYS:
 			return "E4 a case's keys are %s, not %s" % [_sorted_keys(case), CASE_KEYS]
+		types = VectorShape.why_not(case, CASE_SHAPE, "a case")
+		if types != "":
+			return "E6 " + types
 		if int(case["depth"]) < 1:
 			return "E5 %s: a depth below one searches nothing" % case["name"]
 	return ""

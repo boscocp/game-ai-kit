@@ -199,3 +199,16 @@ static func _nearest_reserve(world: InfiltrationWorld) -> InfiltrationGuard:
 		if guard.reserve() and guard.route.is_empty() and nearer:
 			best = guard
 	return best
+
+
+# T121: the director vectors runner refuses a file of the wrong types before
+# it reads one. Events, intensities or changes given as text, in a copy of a
+# real file, were a SCRIPT ERROR that skipped the check and let it exit 0.
+func test_a_director_vector_of_the_wrong_types_is_refused() -> void:
+	var runner: GDScript = preload("res://test/infiltration/director_vectors_runner.gd")
+	var vector: Dictionary = VectorShape.read_spec("vectors/director/a-peak-is-sustained-then-fades-then-relaxes.json")
+	assert_str(VectorShape.why_not(vector, runner.SHAPE)).is_empty()
+	var paths: Array = [["events"], ["intensity"], ["changes"], ["events", 0, "step"]]
+	for path: Array in paths:
+		var why: String = VectorShape.why_not(VectorShape.planted(vector, path, "x"), runner.SHAPE)
+		assert_str(why).override_failure_message(str(path)).is_not_empty()

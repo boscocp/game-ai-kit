@@ -49,6 +49,16 @@ func test_a_broken_vector_is_refused_by_its_rule() -> void:
 		assert_str(BanditVector.why_not_a_vector(broken)).starts_with(change[0])
 
 
+# T121: each of these, a list given as text in a copy of a real file, was
+# a SCRIPT ERROR that skipped the check and let the runner exit 0 or 1.
+func test_a_vector_of_the_wrong_types_is_refused_before_it_is_read() -> void:
+	var vector: Dictionary = _vector("epsilon-greedy-seeded.json")
+	var paths: Array = [["payoffs"], ["payoffs", 0], ["chosen"], ["pulls"], ["sums"]]
+	for path: Array in paths:
+		var why: String = BanditVector.why_not_a_vector(VectorShape.planted(vector, path, "x"))
+		assert_str(why).override_failure_message(str(path)).starts_with("V8")
+
+
 func test_a_bandit_that_breaks_ties_to_the_last_fails() -> void:
 	var vector: Dictionary = _vector("ucb1-ties-go-to-the-first.json")
 	var planted := LastOfEqual.new(int(vector["arms"]))

@@ -290,3 +290,15 @@ func test_an_answer_one_part_in_a_million_off_fails() -> void:
 	# 1e-4 passed every other test in this file.
 	var off: float = 50.0 * (1.0 + 1e-6)
 	assert_array(FuzzyVector.check("close", _with_case(4, "outputs", {"alertness": off}))).has_size(1)
+
+
+# T121's planted case: a list given as text, in a copy of a real file, is
+# refused before anything reads it -- this rule held before T121 measured.
+func test_a_vector_of_the_wrong_types_is_refused_before_it_is_read() -> void:
+	var vector: Dictionary = VectorShape.read_spec("vectors/fuzzy/a-guards-awareness-rate.json")
+	assert_str(FuzzyVector.why_not_a_vector(vector)).is_empty()
+	var paths: Array = [["controller", "inputs"], ["controller", "rules"], ["controller", "rules", 0, "if"],
+			["cases"]]
+	for path: Array in paths:
+		var why: String = FuzzyVector.why_not_a_vector(VectorShape.planted(vector, path, "x"))
+		assert_str(why).override_failure_message(str(path)).is_not_empty()

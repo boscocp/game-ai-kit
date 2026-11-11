@@ -105,7 +105,7 @@ func test_influence_is_symmetric_between_two_sides_of_equal_strength() -> void:
 
 
 func test_the_checker_refuses_a_vector_missing_a_part_or_of_an_unknown_kind() -> void:
-	var whole: Dictionary = {"name": "n", "why": "w", "kind": "positions", "query": {}, "expect": {"chosen": 0}}
+	var whole: Dictionary = VectorShape.read_spec("vectors/teamwork/equal-scores-go-to-the-first.json")
 	assert_str(TeamworkVector.why_not_a_vector(whole)).is_equal("")
 	for key: String in ["name", "why", "kind", "query", "expect"]:
 		var broken: Dictionary = whole.duplicate(true)
@@ -179,3 +179,16 @@ func test_the_arbiter_grants_one_flanker_and_keeps_a_shooter_over_random_request
 		assert_int(RoleArbiter.count(granted, RoleArbiter.FLANKER)).is_less_equal(1)
 		var anyone_can: bool = requests.any(func(request: Dictionary) -> bool: return request["can_shoot"])
 		assert_bool(RoleArbiter.count(granted, RoleArbiter.SHOOTER) > 0 or not anyone_can).is_true()
+
+
+# T121: a vector of the wrong types is refused before it is read. Each of
+# these, a list given as text in a copy of a real file, was a SCRIPT ERROR
+# that skipped the query and let the runner exit 0 or 1.
+func test_a_teamwork_vector_of_the_wrong_types_is_refused() -> void:
+	var vector: Dictionary = VectorShape.read_spec("vectors/teamwork/a-claim-crowds-its-neighbours.json")
+	assert_str(TeamworkVector.why_not_a_vector(vector)).is_empty()
+	var paths: Array = [["query", "config", "rings"], ["query", "target"], ["query", "view_from"],
+			["query", "blocked"], ["query", "script"], ["query", "script", 0, "from"]]
+	for path: Array in paths:
+		var why: String = TeamworkVector.why_not_a_vector(VectorShape.planted(vector, path, "x"))
+		assert_str(why).override_failure_message(str(path)).contains(" is not ")

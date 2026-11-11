@@ -26,3 +26,15 @@ func test_a_wrong_vector_is_refused() -> void:
 
 func _directory() -> String:
 	return ProjectSettings.globalize_path("res://").path_join("../spec/vectors/squad")
+
+
+# T121: the runner refuses a vector of the wrong types before it reads one.
+# A map or a cell given as text, in a copy of a real file, was a SCRIPT
+# ERROR that skipped the check and let the runner exit 0.
+func test_a_vector_of_the_wrong_types_is_refused() -> void:
+	var vector: Dictionary = VectorShape.read_spec("vectors/squad/a-chance-below-nothing-is-nothing.json")
+	assert_str(VectorShape.why_not(vector, RUNNER.SHAPE)).is_empty()
+	var paths: Array = [["map"], ["shooter", "cell"], ["target", "cell"], ["expected", "hit"]]
+	for path: Array in paths:
+		var why: String = VectorShape.why_not(VectorShape.planted(vector, path, "x"), RUNNER.SHAPE)
+		assert_str(why).override_failure_message(str(path)).is_not_empty()

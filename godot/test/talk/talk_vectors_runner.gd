@@ -19,6 +19,18 @@ extends SceneTree
 const FIELDS: Array[String] = ["intent", "argument", "refusal_code", "rule", "trust", "suspicion"]
 ## How many frames a recorded answer may take before the turn counts as lost.
 const PATIENCE_FRAMES: int = 30
+## The types this runner reads, checked before it reads any (T121). Here a
+## cast that fails is worse than a SCRIPT ERROR that exits 0: it aborts the
+## awaiting `_run`, `quit` is never called, and the run hangs.
+const SHAPE: Dictionary = {
+	"recording": VectorShape.TEXT, "outcome": VectorShape.TEXT,
+	"turns": [{"intent": VectorShape.TEXT, "argument": VectorShape.TEXT, "refusal_code": VectorShape.TEXT,
+			"rule": VectorShape.TEXT, "trust": VectorShape.NUMBER, "suspicion": VectorShape.NUMBER}],
+}
+## The recording a vector names, as far as this runner reads it.
+const RECORDING_SHAPE: Dictionary = {
+	"language": VectorShape.TEXT, "turns": [{"player": VectorShape.TEXT, "raw": VectorShape.TEXT}],
+}
 
 
 func _initialize() -> void:
@@ -45,8 +57,9 @@ func _run() -> void:
 	var turns: int = 0
 	for name: String in vectors:
 		var vector: Variant = JSON.parse_string(FileAccess.get_file_as_string(directory.path_join(name)))
-		if not (vector is Dictionary) or not (vector as Dictionary).has("turns"):
-			printerr("talk_vectors_runner: %s is not a vector" % name)
+		var why: String = VectorShape.why_not(vector, SHAPE, name)
+		if why != "":
+			printerr("talk_vectors_runner: %s is not a vector -- %s" % [name, why])
 			quit(2)
 			return
 		turns += (vector["turns"] as Array).size()
@@ -61,8 +74,9 @@ func _run() -> void:
 func _failures_in(name: String, vector: Dictionary, repo: String) -> Array[String]:
 	var path: String = repo.path_join(vector["recording"])
 	var recording: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
-	if not (recording is Dictionary):
-		return ["%s: cannot read %s" % [name, path]]
+	var unreadable: String = VectorShape.why_not(recording, RECORDING_SHAPE, path)
+	if unreadable != "":
+		return ["%s: cannot read %s -- %s" % [name, path, unreadable]]
 	var guard := TalkGuard.new(recording["language"])
 	root.add_child(guard)
 	guard.use_runtime(RecordedRuntime.from_file(path))

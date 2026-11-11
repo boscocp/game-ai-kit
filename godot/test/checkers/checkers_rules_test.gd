@@ -380,3 +380,22 @@ func _move_to(board: CheckersBoard, square: Vector2i) -> CheckersMove:
 
 func _move_of(board: CheckersBoard, square: Vector2i) -> CheckersMove:
 	return CheckersRules.moves_of(board, square)[0]
+
+
+# T121: the checkers vectors runner refuses a file of the wrong types before
+# it reads one. Each list here, given as text in a copy of a real file, was
+# a SCRIPT ERROR that skipped the check and let the runner exit 0.
+func test_a_checkers_vector_of_the_wrong_types_is_refused() -> void:
+	var runner: GDScript = preload("res://test/checkers/checkers_vectors_runner.gd")
+	var rules: Dictionary = VectorShape.read_spec("vectors/checkers/rules.json")
+	var scores: Dictionary = VectorShape.read_spec("vectors/checkers/evaluation.json")
+	assert_str(VectorShape.why_not(rules, runner.RULES_SHAPE)).is_empty()
+	assert_str(VectorShape.why_not(scores, runner.SCORES_SHAPE)).is_empty()
+	var paths: Array = [["cases", 0, "rows"], ["cases", 0, "moves"], ["cases", 0, "taken"]]
+	for path: Array in paths:
+		var why: String = VectorShape.why_not(VectorShape.planted(rules, path, "x"), runner.RULES_SHAPE)
+		assert_str(why).override_failure_message(str(path)).is_not_empty()
+	paths = [["cases", 0, "rows"], ["cases", 0, "weights"], ["cases", 0, "features"]]
+	for path: Array in paths:
+		var why: String = VectorShape.why_not(VectorShape.planted(scores, path, "x"), runner.SCORES_SHAPE)
+		assert_str(why).override_failure_message(str(path)).is_not_empty()

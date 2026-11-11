@@ -88,3 +88,13 @@ func test_a_collapse_blind_to_contradictions_fails() -> void:
 	var vector: Dictionary = _vector("three-colours-restart.json")
 	var planted := BlindToContradictions.new(CollapseVector.problem_of(vector), CollapseVector.weights_of(vector))
 	assert_array(_planted(vector, planted)).is_not_empty()
+
+
+# T121: a list given as text in a copy of a real file is refused before
+# anything reads it, never a SCRIPT ERROR the runner shrugs off.
+func test_a_vector_of_the_wrong_types_is_refused_before_it_is_read() -> void:
+	var vector: Dictionary = _vector("three-colours-restart.json")
+	var paths: Array = [["tiles"], ["collapsed"], ["contradictions"], ["pinned"], ["map"]]
+	for path: Array in paths:
+		var why: String = CollapseVector.why_not_a_vector(VectorShape.planted(vector, path, "x"))
+		assert_str(why).override_failure_message(str(path)).starts_with("C7")

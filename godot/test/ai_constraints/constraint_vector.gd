@@ -9,15 +9,29 @@ const KEYS: Array[String] = ["assigned", "assignments", "backtracks", "binary", 
 		"mrv", "propagate", "pruned", "seed", "solution", "variables"]
 const RELATIONS: Array[String] = ["different", "less", "queens"]
 const GLOBALS: Array[String] = ["sum-at-most", "some-equals"]
+## The types this reads, checked before anything reads them (T121). A
+## value is a number or a name, so a domain holds either.
+const SHAPE: Dictionary = {
+	"assigned": [[VectorShape.ANY]], "assignments": VectorShape.NUMBER, "backtracks": VectorShape.NUMBER,
+	"binary": [{"between": [VectorShape.TEXT], "relation": VectorShape.TEXT, "apart?": VectorShape.NUMBER}],
+	"global": [{"over": [VectorShape.TEXT], "relation": VectorShape.TEXT, "limit?": VectorShape.NUMBER,
+			"value?": VectorShape.NUMBER}],
+	"lcv": VectorShape.FLAG, "mrv": VectorShape.FLAG, "propagate": VectorShape.FLAG, "pruned": VectorShape.NUMBER,
+	"seed": VectorShape.NUMBER, "solution": VectorShape.OBJECT_OR_NULL,
+	"variables": [{"name": VectorShape.TEXT, "values": [VectorShape.ANY]}],
+}
 
 
 ## Why `vector` is not a usable vector, or "" when it is one -- the same
-## rules, V1 to V6, as `test_constraints_vectors.py`.
+## rules, V1 to V6, as `test_constraints_vectors.py`, and V7, its types.
 static func why_not_a_vector(vector: Dictionary) -> String:
 	var keys: Array = vector.keys()
 	keys.sort()
 	if keys != KEYS:
 		return "V1 its keys are %s, not %s" % [keys, KEYS]
+	var types: String = VectorShape.why_not(vector, SHAPE)
+	if types != "":
+		return "V7 " + types
 	if (vector["binary"] as Array).any(func(entry: Dictionary) -> bool: return not RELATIONS.has(entry.get("relation"))):
 		return "V2 a binary constraint names a relation neither side knows"
 	if (vector["global"] as Array).any(func(entry: Dictionary) -> bool: return not GLOBALS.has(entry.get("relation"))):

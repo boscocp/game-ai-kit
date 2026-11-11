@@ -26,6 +26,27 @@ const SHAPE_KEYS: Dictionary = {
 		"weights", "steps_per_second", "samples"],
 }
 const RULES: Array[String] = ["separation", "alignment", "cohesion", "flock"]
+## The types each shape reads, checked before anything reads them (T121):
+## a cast that fails in a `-s` script is a SCRIPT ERROR the run survives.
+const SHAPES: Dictionary = {
+	"forces": {
+		"boid": {"position": [VectorShape.NUMBER], "velocity": [VectorShape.NUMBER],
+				"max_speed": VectorShape.NUMBER, "max_force": VectorShape.NUMBER},
+		"neighbours": [{"position": [VectorShape.NUMBER], "velocity": [VectorShape.NUMBER]}],
+		"separation_radius": VectorShape.NUMBER, "time_to_target?": VectorShape.NUMBER,
+		"weights?": [VectorShape.NUMBER],
+		"expected": {"separation": [VectorShape.NUMBER], "alignment": [VectorShape.NUMBER],
+				"cohesion": [VectorShape.NUMBER], "flock": [VectorShape.NUMBER]},
+	},
+	"steps": {
+		"boids": [{"position": [VectorShape.NUMBER], "velocity": [VectorShape.NUMBER]}],
+		"max_speed": VectorShape.NUMBER, "max_force": VectorShape.NUMBER, "separation_radius": VectorShape.NUMBER,
+		"time_to_target?": VectorShape.NUMBER, "weights?": [VectorShape.NUMBER],
+		"steps_per_second": VectorShape.NUMBER,
+		"samples": [{"step": VectorShape.NUMBER, "positions": [[VectorShape.NUMBER]],
+				"velocities": [[VectorShape.NUMBER]]}],
+	},
+}
 
 
 ## Why `vector` is not a flock vector, or "" when it is one.
@@ -39,6 +60,9 @@ static func why_not_a_vector(vector: Dictionary) -> String:
 	for key: String in SHAPE_KEYS[shape]:
 		if not key in ["why", "time_to_target", "weights"] and not vector.has(key):
 			return "it has no %s" % key
+	var types: String = VectorShape.why_not(vector, SHAPES[shape])
+	if types != "":
+		return types
 	if shape == "steps" and (vector["samples"] as Array).is_empty():
 		return "it samples no step"
 	return ""

@@ -23,6 +23,21 @@ const BEHAVIOUR_KEYS: Dictionary = {
 	"pursue": ["kind", "weight", "quarry", "max_prediction", "time_to_target"],
 	"avoid": ["kind", "weight", "centres", "radii", "look_ahead"],
 }
+## The types this reads, checked before anything reads them (T121): a cast
+## that fails in a `-s` script is a SCRIPT ERROR the run survives. Which
+## keys a behaviour may carry is `BEHAVIOUR_KEYS`'s rule; this types them.
+const SHAPE: Dictionary = {
+	"steps_per_second": VectorShape.NUMBER,
+	"vehicle": {"position": [VectorShape.NUMBER], "velocity": [VectorShape.NUMBER],
+			"max_speed": VectorShape.NUMBER, "max_force": VectorShape.NUMBER},
+	"behaviours": [{"kind": VectorShape.TEXT, "weight?": VectorShape.NUMBER, "target?": [VectorShape.NUMBER],
+			"braking_radius?": VectorShape.NUMBER, "time_to_target?": VectorShape.NUMBER,
+			"quarry?": {"position": [VectorShape.NUMBER], "velocity": [VectorShape.NUMBER]},
+			"max_prediction?": VectorShape.NUMBER, "centres?": [[VectorShape.NUMBER]],
+			"radii?": [VectorShape.NUMBER], "look_ahead?": VectorShape.NUMBER}],
+	"samples": [{"step": VectorShape.NUMBER, "position": [VectorShape.NUMBER], "velocity": [VectorShape.NUMBER],
+			"force": [VectorShape.NUMBER]}],
+}
 
 
 ## Why `vector` is not a steering vector, or "" when it is one.
@@ -30,6 +45,9 @@ static func why_not_a_vector(vector: Dictionary) -> String:
 	for key: String in ["name", "steps_per_second", "vehicle", "behaviours", "samples"]:
 		if not vector.has(key):
 			return "it has no %s" % key
+	var types: String = VectorShape.why_not(vector, SHAPE)
+	if types != "":
+		return types
 	if (vector["samples"] as Array).is_empty():
 		return "it samples no step"
 	for spec: Dictionary in vector["behaviours"]:
