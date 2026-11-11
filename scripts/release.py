@@ -32,6 +32,20 @@ Into `OUTPUT/dist/`, from the commit at HEAD and nothing else:
     the stamp records, ships -- the one artifact not built from git's own
     bytes is held to the same commit by its stamp.
 
+A version is not reused
+-----------------------
+A version's number names bytes a stranger may already hold. When VERSION
+is already a tag, `v<VERSION>`, and HEAD differs from that tag under
+`godot/addons/` or `python/gameaikit/`, a build into the repository's own
+`dist/` -- the folder `make release` fills and the owner uploads from -- is
+refused, and the refusal says to bump VERSION (T160). A second, different
+zip under 0.1.0 was built once, and the store keeps no hash a person could
+tell the two apart by. A change elsewhere -- the tests, the docs -- ships
+nothing and is not refused. A build with `--output` elsewhere is not held:
+the library page builds that way from any clone, and nothing there is
+uploaded. A clone without the tags cannot see a published version, so the
+release is built from the owner's checkout, which has them.
+
 `OUTPUT` is laid out like the repository -- LICENSE and NOTICE at its root,
 archives in `dist/` -- so `check_license.py --repo OUTPUT` reads a release
 exactly as it reads the repository. That is the whole point: this script does
@@ -68,7 +82,7 @@ machine and a difference between them is a difference in the source.
 Exit codes
 ----------
 0   built
-1   refused: VERSION malformed, an addon or the package has no files, an
+1   refused: VERSION malformed or already published with other bytes, an addon or the package has no files, an
     addon has no manifest or holds a test, pyproject.toml disagrees with
     VERSION or the manifests, or the output would land inside the
     repository's own dist/
@@ -77,6 +91,7 @@ Exit codes
 Usage
 -----
     release.py --build [--output PATH] [--skip-notice]
+    release.py --check-version
     release.py --self-test
 """
 
@@ -102,6 +117,10 @@ ATTRIBUTION = ("LICENSE", "NOTICE")
 PACKAGE = "gameaikit"
 # The kit's zip: every addon, as one store asset (T149).
 KIT = "game-ai-kit-addons"
+
+# What a version's number promises: the bytes under these folders. The
+# tests beside them, under godot/test/ and python/tests/, ship nothing.
+SHIPPED_SOURCES = ("godot/addons/", "python/gameaikit/")
 
 # Major.minor.patch and nothing else. A suffix such as `-rc1` would need its
 # own normalisation rules for a wheel's filename, and there is no release here
@@ -184,6 +203,27 @@ def checked_version(text: str) -> str:
 def read_version(repo: pathlib.Path) -> str:
     """The version every artifact is stamped with, from the one file that holds it."""
     return checked_version(committed_bytes(repo, "VERSION").decode("utf-8"))
+
+
+def published_changes(repo: pathlib.Path, version: str) -> list[str]:
+    """What HEAD ships differently from the tag `v<version>`; empty when there is no such tag."""
+    tag = f"v{version}"
+    found = subprocess.run(["git", "-C", str(repo), "rev-parse", "-q", "--verify", f"refs/tags/{tag}"],
+                           capture_output=True, text=True)
+    if found.returncode != 0:
+        return []
+    listing = subprocess.run(["git", "-C", str(repo), "diff", "-z", "--name-only", tag, "HEAD",
+                              "--", *SHIPPED_SOURCES], capture_output=True, check=True, text=True)
+    return sorted(path for path in listing.stdout.split("\0") if path)
+
+
+def refuse_a_published_version(repo: pathlib.Path, version: str) -> None:
+    """Refuse to build new bytes under a version already tagged, naming what changed."""
+    changed = published_changes(repo, version)
+    if changed:
+        raise Refused(f"VERSION {version} is already published as v{version}, and HEAD changed "
+                      f"{len(changed)} shipped file(s) since, {changed[0]} first: "
+                      f"bump VERSION, in a wave, before releasing")
 
 
 def add_entry(bundle: zipfile.ZipFile, name: str, data: bytes, mode: int = 0o644) -> None:
@@ -484,6 +524,10 @@ def build(repo: pathlib.Path, output: pathlib.Path, skip_notice: bool,
           executable: pathlib.Path | None = None) -> list[pathlib.Path]:
     """Every artifact, into `output/dist/`, with the attribution at `output/`."""
     version = read_version(repo)
+    # The repository's own dist/ is what gets uploaded, so only a build
+    # there is held to an unused version (T160).
+    if output.resolve() == repo.resolve():
+        refuse_a_published_version(repo, version)
     # The repository's own dist/ is where the gate looks for archives, and
     # only at its top. A release rooted there writes them one level down,
     # where nothing checks them.
@@ -881,6 +925,70 @@ def check_refusals(root: pathlib.Path) -> list[str]:
     return failures
 
 
+def published_fixture(root: pathlib.Path) -> pathlib.Path:
+    """A repository published as v0.1.0: VERSION, one addon, the package, and their tests."""
+    repo = root / "published"
+    files = {"VERSION": "0.1.0\n", "LICENSE": "licence\n", "NOTICE": "notice\n", "godot/addons/ai_x/x.gd": "extends Node\n",
+             "godot/test/ai_x/x_test.gd": "extends Node\n",
+             "python/gameaikit/x.py": "X = 1\n", "python/tests/test_x.py": "X = 1\n"}
+    for name, text in files.items():
+        (repo / name).parent.mkdir(parents=True, exist_ok=True)
+        (repo / name).write_text(text)
+    fixture_commit(repo, "init", "-q")
+    fixture_commit(repo, "add", "-A")
+    fixture_commit(repo, "commit", "-q", "--no-verify", "-m", "0.1.0")
+    fixture_commit(repo, "tag", "v0.1.0")
+    return repo
+
+
+def fixture_commit(repo: pathlib.Path, *command: str) -> None:
+    """One git command in the fixture, as a person who is nobody."""
+    subprocess.run(["git", "-C", str(repo), "-c", "user.name=t", "-c", "user.email=t@t",
+                    "-c", "init.defaultBranch=main", *command], check=True, capture_output=True)
+
+
+def check_a_version_is_not_reused(root: pathlib.Path) -> list[str]:
+    """A tagged VERSION with a changed addon or module is refused; a test, or a new VERSION, is not.
+
+    Planted one commit at a time on a fixture tagged v0.1.0, in order: the
+    tests changed (shipped nothing: accepted), one addon file changed
+    (refused, naming it), that change kept with VERSION at 0.2.0 (accepted),
+    back at 0.1.0 (refused), and a package module changed too (both named).
+    Then the build itself: into the fixture it refuses for the version,
+    with `--output` elsewhere it does not.
+    """
+    repo = published_fixture(root)
+    steps = (("python/tests/test_x.py", "X = 2\n", None),
+             ("godot/test/ai_x/x_test.gd", "extends Node2D\n", None),
+             ("godot/addons/ai_x/x.gd", "extends Node2D\n", "godot/addons/ai_x/x.gd"),
+             ("VERSION", "0.2.0\n", None),
+             ("VERSION", "0.1.0\n", "godot/addons/ai_x/x.gd"),
+             ("python/gameaikit/x.py", "X = 2\n", "godot/addons/ai_x/x.gd"))
+    failures = []
+    for path, text, named in steps:
+        (repo / path).write_text(text)
+        fixture_commit(repo, "commit", "-q", "--no-verify", "-am", f"change {path}")
+        said = refusal_of(lambda: refuse_a_published_version(repo, read_version(repo)))
+        if (named is None) != (said is None) or (named and (named not in said or "bump VERSION" not in said)):
+            failures.append(f"after {path} changed, {'refused naming ' + named if named else 'accepted'} ({said})")
+    if published_changes(repo, "0.1.0") != ["godot/addons/ai_x/x.gd", "python/gameaikit/x.py"]:
+        failures.append(f"both shipped files are named ({published_changes(repo, '0.1.0')})")
+    if "bump VERSION" not in str(refusal_of(lambda: build(repo, repo, skip_notice=False))):
+        failures.append("a build into the repository's own dist/ is refused for the version")
+    if "bump VERSION" in str(refusal_of(lambda: build(repo, root / "elsewhere", skip_notice=False))):
+        failures.append("a build with --output elsewhere is not held to the version")
+    return failures
+
+
+def refusal_of(attempt) -> str | None:
+    """What `attempt` was refused for, or None when it was not."""
+    try:
+        attempt()
+    except Refused as refusal:
+        return str(refusal)
+    return None
+
+
 def check_stale_artifacts(root: pathlib.Path) -> list[str]:
     """Artifacts of an earlier version are cleared; what `make train` staged is not."""
     release = root / "stale"
@@ -902,7 +1010,7 @@ def self_test() -> int:
     checks = (check_the_gate_agrees, check_reproducible_and_stamped, check_the_wheel,
               check_only_the_commit_ships, check_contents, check_refusals,
               check_manifest_refusals, check_the_store_installs_into_addons,
-              check_stale_artifacts, check_the_executable)
+              check_stale_artifacts, check_the_executable, check_a_version_is_not_reused)
     failures = []
     with tempfile.TemporaryDirectory() as workspace:
         for check in checks:
@@ -1103,6 +1211,19 @@ def record_problems(bundle: zipfile.ZipFile, record_name: str) -> list[str]:
     return problems
 
 
+def checked_unpublished() -> int:
+    """`--check-version`: the build's first refusal alone, before `make release` exports."""
+    try:
+        refuse_a_published_version(REPO, read_version(REPO))
+    except Refused as refusal:
+        print(f"release: refused: {refusal}", file=sys.stderr)
+        return 1
+    except (OSError, subprocess.CalledProcessError) as error:
+        print(f"release: cannot read the version: {error}", file=sys.stderr)
+        return 2
+    return 0
+
+
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -1116,6 +1237,8 @@ def main(argv: list[str]) -> int:
                         help="also ship the menu `make export` wrote into this folder")
     parser.add_argument("--skip-notice", action="store_true",
                         help="plant a fault: build every artifact without NOTICE")
+    parser.add_argument("--check-version", action="store_true",
+                        help="only refuse a VERSION already tagged with other shipped bytes")
     parser.add_argument("--self-test", action="store_true")
     try:
         args = parser.parse_args(argv)
@@ -1126,6 +1249,8 @@ def main(argv: list[str]) -> int:
 
     if args.self_test:
         return self_test()
+    if args.check_version:
+        return checked_unpublished()
     if not args.build:
         parser.print_usage(sys.stderr)
         return 2

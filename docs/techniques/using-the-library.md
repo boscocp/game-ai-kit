@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-11-04
+verified_on: 2026-11-11
 tier: 2
 source: https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html ; https://docs.godotengine.org/en/stable/tutorials/editor/command_line_tutorial.html ; https://packaging.python.org/en/latest/tutorials/installing-packages/
 invalidated_if: scripts/release.py changes what an archive holds, ADR 0024 changes the prefixed names, .godot-version or python/pyproject.toml's version moves, or scripts/library_check.py stops following one of this page's steps
@@ -23,7 +23,9 @@ page that the check does not take fails the check.
 
 Two halves, each usable without the other.
 
-- **Godot addons**, one zip each. `ai_core` is the kernel: a grid
+- **Godot addons**, one zip each, and all of them in one kit zip, the way
+  [Godot's Asset Store](https://store.godotengine.org/asset/boscocp/game-ai-kit/)
+  delivers them. `ai_core` is the kernel: a grid
   (`GakGridGraph`), a pathfinder port (`GakPathfinder`) and a seeded
   generator (`GakXorshift`), no game logic.
   Every other addon is one technique -- `ai_search`, `ai_behaviour`,
@@ -69,8 +71,10 @@ the file manager and read `.venv/bin/python` as `.venv\Scripts\python`.
 ### The archives {#archives}
 
 <!-- library-step: release -->
-Nothing is published yet, so the archives are built from the clone. This
-needs only Python and git -- no Godot:
+The kit is on [Godot's Asset Store](https://store.godotengine.org/asset/boscocp/game-ai-kit/),
+and the wheel on PyPI; here the archives are built from the clone, so
+the version you test is the commit you cloned. This needs only Python and
+git -- no Godot:
 
 ```bash
 python3 game-ai-kit/scripts/release.py --build --output library
@@ -78,11 +82,12 @@ python3 game-ai-kit/scripts/release.py --build --output library
 
 `library/dist/` then holds one `<addon>-<version>.zip` per addon,
 `game-ai-kit-addons-<version>.zip` with every addon in one, and
-`gameaikit-<version>-py3-none-any.whl`. On the day the kit is published,
-the same files are what you download. (`make release` inside the clone is
+`gameaikit-<version>-py3-none-any.whl`. A released version's files are
+what the stores hand out. (`make release` inside the clone is
 the full release: it also exports the menu game as an executable, so it
 needs `make bootstrap` first -- the pinned Godot and its export templates
--- and a clean tree. You do not need it for the library.)
+-- and a clean tree, and it refuses a version already published when the
+addons or the package changed since. You do not need it for the library.)
 
 ### Unzip one addon {#unzip}
 
@@ -214,11 +219,11 @@ cd my_game && ../.venv/bin/python my_training.py
 ```
 
 <!-- library-step: infer -->
-In Godot, `ai_learning` beside the others (it needs no `ai_core`), and the
-import again:
+In Godot, `ai_learning` beside the others (it needs no `ai_core`), into
+the project's root like them, and the import again:
 
 ```bash
-unzip -q library/dist/ai_learning-0.1.0.zip -d my_game/addons/
+unzip -q library/dist/ai_learning-0.1.0.zip -d my_game/
 godot --headless --path my_game --import
 ```
 
@@ -253,6 +258,25 @@ func _ready() -> void:
 Retraining is running the script again and shipping the new file. The
 [ai_learning](ai_learning.md) page has the file's format and what refuses
 it.
+
+## Every addon at once {#kit}
+
+<!-- library-step: kit -->
+The store delivers the whole kit as one asset,
+`game-ai-kit-addons-<version>.zip`: every addon under one `addons/`, so
+each lands in `res://addons/<addon>/` beside the others; the store's
+installer lets you untick what you do not want. Unzipped by hand over the
+same project, it adds the rest beside the three already there (`-o`
+replaces those with the same bytes):
+
+```bash
+unzip -q -o library/dist/game-ai-kit-addons-0.1.0.zip -d my_game/
+godot --headless --path my_game --import
+```
+
+The check then looks for every addon in `my_game/addons/<addon>/` and
+nothing else there, and runs the route example again, with all of them
+registered at once.
 
 ## Versions and the licence {#versions}
 
