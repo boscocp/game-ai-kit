@@ -46,7 +46,8 @@ import tempfile
 # A hang must still end, but a slow self-test is not a hang:
 # `library_check.py` follows the library page once per planted fault, each
 # with Godot, and took 75 s locally and over 120 s on GitHub's runner after
-# waves 172 and 176 added its kit cases (main went red on that alone).
+# waves 172 and 176 added its kit cases. 300 s is a stopgap, not measured on
+# the runner; T168 makes that self-test fast and brings this back down.
 TIMEOUT_SECONDS = 300
 MARKER = "--self-test"
 

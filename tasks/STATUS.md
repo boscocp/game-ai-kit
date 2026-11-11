@@ -21,17 +21,25 @@ CI:
 | 176 | T162, loading every addon closes clean | #135 | `84becd0` |
 | 177 | T121, every vectors runner checks its types | #136 | `5aa1106` |
 
-Each review is `docs/reviews/<wave>-*.md`. Five of the eight found
-something the implementer's own gates passed green: T163's N20 refused
-T164's own tests; T164's `append` never read the file; T155's token
-holder got no point in 9% of choices; T157's ranged x3 only worked by
-accident; T162's `new()` built subclasses; T121 still let two runners
-exit 0.
+Each review is `docs/reviews/<wave>-*.md`, and every one of the eight
+found something the implementer's own gates passed green. Among them:
+T163's N20 refused the tests T164 must write; T164's `append` never read
+the file; T155's token holder got no point in 9% of choices; T157's
+ranged x3 only worked by accident; T162's `new()` built subclasses; T121
+still let two runners exit 0.
 
-This wave (179) records the batch and fixes main's CI:
+This wave (179) records the batch and unblocks main's CI:
 `lint-selftests` timed out on `library_check.py --self-test` (75 s
 here, over 120 s on GitHub) from #132 on. `run_selftests.py`'s limit is
-300 s.
+300 s, a stopgap not measured on the runner; T168 holds the real fix.
+
+**To check first in the next session: main's `make check` is owed.**
+`lint-selftests` sits inside `check-no-engine`, the first thing `check`
+runs, and make stops at the first error. So on #132-#135 CI never reached
+`test-godot`, `test-vectors` or `test-demos-exit`, and this batch merged
+without a full `make check` anywhere. Read main's CI after this wave: CI
+is not fixed until a run gets past `lint-selftests`, and a red gate after
+it is this batch's, to fix forward first.
 
 **The owner's decisions, 2026-11-11.**
 
@@ -49,25 +57,31 @@ here, over 120 s on GitHub) from #132 on. `run_selftests.py`'s limit is
    only.
 
 **Count for `docs/howto/parallel-batch.md`'s manual check.** All eight
-waves said `selected: everything` (a new example manifest, a script or
-the Makefile). No rebase conflicted on the Makefile or
+waves said `selected: everything` (a new example manifest, a changed
+addon manifest, a script or the Makefile). No rebase conflicted on the Makefile or
 `python/pyproject.toml`; `tasks/STATUS.md` conflicted on three rebases.
 
 **Waiting for the owner:**
 - T157's manual check: play `make demo-bossfight`, dodge by the
-  telegraphs, read the overlay. A better boss model than `soldier` at
-  3.2 m is the owner's call.
+  telegraphs, read the overlay, and record a clip for T153's next cut. A
+  better boss model than `soldier` at 3.2 m is the owner's call.
 - T164's manual check: read `godot/game/valley/valley_rules.json` and
   `standing.json` as a designer's consequences and weights.
-- T162: whether to report the engine's use-after-free in
-  `GDScriptLanguage::finish` upstream (`docs/godot/exit-leaks.md`).
+- T162's manual check: install HEAD's kit zip in the editor and close it
+  with no `leaked` or `still in use`. And whether to report the engine's
+  use-after-free in `GDScriptLanguage::finish` upstream
+  (`docs/godot/exit-leaks.md`).
+- T160: the store page's manual check, and its decision 5, the store's
+  Godot range (`publish.md` says minimum 4.7, maximum the newest offered;
+  the owner may prefer 4.7).
 - T167 (a static lint refusing an addon naming its own class as a value)
   is opened, not built.
 - Still open from 2026-11-10: offering this repository on
   godotengine/godot#125245; the two exit-leak manual checks.
 
-**Next.** T141 alone. Then T158 (the director and three difficulties),
-T165, T166, T167, and T161 (0.2.0) last. `make check-published` passes:
+**Next.** Main's `make check` first (above). Then T141 alone. Then T158
+(the director and three difficulties), T165, T166, T167, T168, and T161
+(0.2.0) last. `make check-published` passes:
 0.1.0's leak is a named, counted exception in `published.json`.
 
 ## Resuming after 2026-11-10, batch 164-168 merged (waves 164 to 169)
@@ -1791,6 +1805,7 @@ review.
 | T165 | The valley remembers: the example | todo | 2D turn-based, no combat, no opponent: villagers plan their day over the world's facts (GOAP/HTN, A*, ActionChoice); a ferryman, merchant and priestess read the standing with fixed manners; overlay deed → fact → plan → frontier, and deeds → virtue → manner; `make demo-valley`; concept page `karma-and-world-memory` |
 | T166 | A chronicle that only tells: story sifting | todo | a new addon `ai_sifting` (name to confirm), Felt-style patterns over the deed record, read-only by test; the valley's chronicle in templates |
 | T167 | No addon names itself as a value | todo | from review 176 (finding 4): a static lint, `scripts/check_self_naming.py`, refusing `Name.new(`, a static call or constant on `Name`, `is Name` or `as Name` inside the addon file whose `class_name` is `Name` (types stay allowed); planted case per spelling; no engine; T162's loader checks see it only in the orders they load |
+| T168 | A slow self-test is not a hang | todo | from review 179 (finding 3): print each self-test's duration, make `library_check.py --self-test` fast (its 17 cases in parallel or fewer runs), then bring `run_selftests.py`'s limit back down from wave 179's unmeasured 300 s |
 
 ---
 
