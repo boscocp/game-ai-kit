@@ -50,28 +50,38 @@ func append(deed: Dictionary) -> String:
 
 ## Why `deed` cannot be kept after the deeds already in the record, or ""
 ## when it can. Asked before anything is written, so the save and the
-## record never disagree.
+## record never disagree. Values are named as JSON writes them (`shown`),
+## so the Python twin's refusals read the same.
 func refusal(deed: Dictionary) -> String:
 	for key: Variant in deed.keys():
 		if not str(key) in KEYS:
-			return "a deed has no key %s: a deed is {day, verb, place}, and none has a person as its target" % key
+			return "a deed has no key %s: a deed is {day, verb, place}, and none has a person as its target" % shown(key)
 	for key: String in KEYS:
 		if not deed.has(key):
 			return "a deed has no %s" % key
 	var day: Variant = deed["day"]
 	if not (day is int or (day is float and float(day) == floorf(float(day)))) or int(day) < 1:
-		return "day %s is not a day of the game; days are counted from 1" % [day]
+		return "day %s is not a day of the game; days are counted from 1" % shown(day)
 	if not _deeds.is_empty() and int(day) < int(_deeds[-1]["day"]):
 		return "day %d comes after day %d in the record; deeds are kept in the order they were done" % [
 			int(day), int(_deeds[-1]["day"])]
-	return _vocabulary_refusal(str(deed["verb"]), str(deed["place"]))
+	return _vocabulary_refusal(deed["verb"], deed["place"])
 
 
-func _vocabulary_refusal(verb: String, place: String) -> String:
-	if not _verbs.has(verb):
-		return "unknown verb %s" % verb
-	if not place in _places:
-		return "%s is not a place in the valley; a deed acts on a place" % place
+## `value` as the record's JSON writes it, a whole number without its
+## `.0`: Godot reads every JSON number as a float, Python keeps `1` an
+## int, and a refusal must name the same thing on both sides.
+static func shown(value: Variant) -> String:
+	if value is float and is_finite(value) and float(value) == floorf(float(value)) and absf(value) < 1e15:
+		return str(int(value))
+	return JSON.stringify(value)
+
+
+func _vocabulary_refusal(verb: Variant, place: Variant) -> String:
+	if not (verb is String and _verbs.has(verb)):
+		return "unknown verb %s" % shown(verb)
+	if not (place is String and place in _places):
+		return "%s is not a place in the valley; a deed acts on a place" % shown(place)
 	if not place in _verbs[verb]:
 		return "%s does not act on the %s" % [verb, place]
 	return ""

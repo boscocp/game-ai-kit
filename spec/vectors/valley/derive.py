@@ -46,25 +46,39 @@ def standing(deeds):
 
 
 def at_fault(lines):
-    """The word a refusal of `lines` must name, or None when they are a good record."""
-    header = json.loads(lines[0])
-    if "version" not in header:
+    """The words a refusal of `lines` must name, or None when they are a good record.
+
+    Numbers are written as JSON writes them, `0` not `0.0`, and strings
+    quoted, so the words read the same from either twin.
+    """
+    header = json.loads(lines[0]) if lines else None
+    if not isinstance(header, dict) or "version" not in header:
         return "no version"
+    if len(header) != 1:
+        return "header holds more than its version"
+    if not isinstance(header["version"], (int, float)) or isinstance(header["version"], bool):
+        return f"version {json.dumps(header['version'])} is not a number"
     if header["version"] != 1:
         return f"version {header['version']}"
     last = 0
-    for line in lines[1:]:
-        deed = json.loads(line)
-        extra = [key for key in deed if key not in ("day", "verb", "place")]
+    for number, line in enumerate(lines[1:], start=2):
+        found = json.loads(line) if line else None
+        if not isinstance(found, dict):
+            return f"line {number} is not a deed"
+        extra = [key for key in found if key not in ("day", "verb", "place")]
         if extra:
-            return extra[0]
-        if deed["day"] < last:
-            return f"day {deed['day']}"
-        if deed["verb"] not in RULES["verbs"]:
-            return deed["verb"]
-        if deed["place"] not in RULES["verbs"][deed["verb"]]:
-            return deed["place"]
-        last = deed["day"]
+            return f"no key {json.dumps(extra[0])}"
+        if not isinstance(found["day"], int) or found["day"] < 1:
+            return f"day {json.dumps(found['day'])} is not a day"
+        if found["day"] < last:
+            return f"day {found['day']} comes after day {last}"
+        if found["verb"] not in RULES["verbs"]:
+            return f"unknown verb {json.dumps(found['verb'])}"
+        if found["place"] not in RULES["places"]:
+            return f"{json.dumps(found['place'])} is not a place"
+        if found["place"] not in RULES["verbs"][found["verb"]]:
+            return f"{found['verb']} does not act on the {found['place']}"
+        last = found["day"]
     return None
 
 
@@ -147,6 +161,24 @@ REFUSED = {
     "a-record-with-no-version-is-refused": (
         "No header: the first line is a deed, so the record carries no version.",
         [json.dumps(deed(1, "plant", "field"))]),
+    "a-header-holding-more-than-its-version-is-refused": (
+        "A header with a player's name beside the version: the header holds the version and nothing else.",
+        [json.dumps({"version": 1, "player": "Ana"}), json.dumps(deed(1, "plant", "field"))]),
+    "a-version-written-as-a-string-is-refused": (
+        "A header whose version is the string \"1\": not the number this game reads, and said so.",
+        [json.dumps({"version": "1"}), json.dumps(deed(1, "plant", "field"))]),
+    "a-deed-on-day-0-is-refused": (
+        "A deed on day 0: the days of the game count from 1, and the rebuild would never apply it.",
+        [HEADER, json.dumps(deed(0, "plant", "field"))]),
+    "a-repeated-header-is-refused": (
+        "The header written twice: the second is a line with a key beyond day, verb and place.",
+        [HEADER, HEADER, json.dumps(deed(1, "plant", "field"))]),
+    "a-line-that-is-not-an-object-is-refused": (
+        "A line holding a JSON list, not a deed.",
+        [HEADER, json.dumps(deed(1, "plant", "field")), "[]"]),
+    "a-blank-line-is-refused": (
+        "A blank line between two deeds: the writer never writes one, so it is not a deed.",
+        [HEADER, json.dumps(deed(1, "plant", "field")), "", json.dumps(deed(2, "dig_well", "square"))]),
 }
 
 
@@ -164,7 +196,7 @@ def main(directory):
         (folder / f"{name}.json").write_text(json.dumps(vector, indent=1) + "\n")
     for name, (description, lines) in REFUSED.items():
         names = at_fault(lines)
-        if names is None:
+        if not names:
             print(f"{name}: a good record, so it shows no refusal", file=sys.stderr)
             failed += 1
             continue

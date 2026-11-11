@@ -43,8 +43,8 @@ func _run(directory: String) -> int:
 		var vector: Dictionary = _read_vector(directory + "/" + name)
 		var kind: String = str(vector.get("kind", ""))
 		var fields: Array[String] = REBUILT_FIELDS if kind == "rebuilt" else REFUSED_FIELDS
-		if not counted.has(kind) or not vector.has_all(fields):
-			printerr("valley_vectors_runner: %s has no known kind, or is missing one of %s" % [name, fields])
+		if not counted.has(kind) or not vector.has_all(fields) or not _names_something(vector):
+			printerr("valley_vectors_runner: %s has no known kind, is missing one of %s, or names nothing" % [name, fields])
 			return 2
 		counted[kind] += 1
 		if kind == "rebuilt":
@@ -77,13 +77,22 @@ static func check_rebuilt(file: String, vector: Dictionary, rules: ValleyRules, 
 	return []
 
 
-## Whether the refusal of the vector's lines names what the vector says.
+## Whether the refusal of the vector's lines names what the vector says,
+## read as lines and as the file that holds them, a newline after each.
 static func check_refused(file: String, vector: Dictionary, rules: ValleyRules) -> Array[String]:
 	var lines := PackedStringArray(vector["lines"])
-	var why: String = ValleySave.read_lines(lines, rules.new_record())
-	if not str(vector["names"]) in why:
-		return ["%s: refused with \"%s\", which does not name %s" % [file, why, vector["names"]]]
+	var as_lines: String = ValleySave.read_lines(lines, rules.new_record())
+	var as_text: String = ValleySave.read_text("\n".join(lines) + "\n", rules.new_record())
+	for why: String in [as_lines, as_text]:
+		if not str(vector["names"]) in why:
+			return ["%s: refused with \"%s\", which does not name %s" % [file, why, vector["names"]]]
 	return []
+
+
+# A refused vector whose `names` is empty would hold any refusal, and a
+# good record too: "" is in every string.
+static func _names_something(vector: Dictionary) -> bool:
+	return str(vector.get("kind")) != "refused" or str(vector.get("names", "")).strip_edges() != ""
 
 
 static func _standing_differs(sums: Dictionary, wanted: Dictionary) -> bool:

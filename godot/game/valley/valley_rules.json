@@ -51,7 +51,7 @@
   },
   "plant": {
    "field": {"sets": {"planted": true}, "why": "The field is sown."},
-   "orchard": {"sets": {"standing": true}, "why": "Young trees are planted where the orchard was."}
+   "orchard": {"sets": {"standing": true}, "why": "Grown trees from the nursery are set where the orchard was, already old enough to bear."}
   },
   "dig_well": {
    "square": {"sets": {"well": true}, "why": "A well is dug in the square."}

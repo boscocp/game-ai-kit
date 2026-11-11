@@ -17,7 +17,7 @@ from gameaikit.valley.standing import Standing
 REPO = pathlib.Path(__file__).resolve().parents[2]
 VECTORS = REPO / "spec" / "vectors" / "valley"
 FEWEST_REBUILT = 8
-FEWEST_REFUSED = 7
+FEWEST_REFUSED = 13
 
 
 def vectors(kind: str) -> list[tuple[str, dict]]:
@@ -46,8 +46,11 @@ class TheVectors(unittest.TestCase):
 
     def test_every_refused_record_is_refused_by_name(self) -> None:
         for name, vector in vectors("refused"):
+            self.assertTrue(vector["names"].strip(), f"{name} names nothing, so any refusal would hold it")
             why = record.read_lines(vector["lines"], self.rules.new_record())
             self.assertIn(vector["names"], why, name)
+            text = "\n".join(vector["lines"]) + "\n"
+            self.assertIn(vector["names"], record.read_text(text, self.rules.new_record()), f"{name}, as a file")
 
 
 if __name__ == "__main__":

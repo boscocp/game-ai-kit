@@ -1,0 +1,10 @@
+{
+ "kind": "refused",
+ "description": "A line holding a JSON list, not a deed.",
+ "lines": [
+  "{\"version\": 1}",
+  "{\"day\": 1, \"verb\": \"plant\", \"place\": \"field\"}",
+  "[]"
+ ],
+ "names": "line 3 is not a deed"
+}

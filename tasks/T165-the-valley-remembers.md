@@ -40,6 +40,15 @@ _The owner asked for a karma system on 2026-11-10: the player's actions and choi
 - **This task creates `make demo-valley`.** `VillagerManner` and the
   other names are this session's proposal; the wave may change them, and
   must say so.
+- **A deed that changes nothing is not offered and not recorded.**
+  T164's record keeps any deed its schema allows, so shutting a gate
+  that is already shut, or digging a second well, would add care each
+  time: the standing could be farmed. Whether a deed changes a fact
+  needs the world of that day, which the record and the save are kept
+  from knowing (ADR 0025: the save names no world), so the check
+  belongs where the game offers deeds. A test farms `close_gate` on
+  the shut gate and sees it refused, and the standing unchanged
+  (T164's review, finding 4).
 - **Small at first:** six villagers, about eight places, one day per
   turn sequence, with the exact numbers in data. The wave chooses.
 - **Registered in full**, following "Adding an example" in

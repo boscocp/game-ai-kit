@@ -74,6 +74,40 @@ class TheRecord(unittest.TestCase):
         self.assertEqual(record.read_lines(['{"version": 1}', deed], self.rules.new_record()), "")
 
 
+class TheFileAppendedTo(unittest.TestCase):
+    """`append_refusal`: an append reads the file first, and refuses by name."""
+
+    HEADER = '{"version": 1}\n'
+    DAY_5 = '{"day": 5, "place": "field", "verb": "plant"}\n'
+
+    def setUp(self) -> None:
+        self.rules = ValleyRules.read()
+
+    def test_a_day_before_the_files_last_deed_is_refused_without_a_load(self) -> None:
+        why = record.append_refusal(self.HEADER + self.DAY_5, self.rules.new_record(), record.make(1, "burn", "barn"))
+        self.assertIn("day 1 comes after day 5", why)
+
+    def test_a_file_of_another_version_is_refused(self) -> None:
+        why = record.append_refusal('{"version": 2}\n', self.rules.new_record(), record.make(1, "burn", "barn"))
+        self.assertIn("version 2", why)
+
+    def test_a_torn_last_line_is_refused(self) -> None:
+        torn = self.HEADER + '{"day": 1, "verb": "pla'
+        self.assertIn("torn", record.append_refusal(torn, self.rules.new_record(), record.make(2, "burn", "barn")))
+
+    def test_an_empty_file_with_no_header_is_refused(self) -> None:
+        self.assertIn("empty", record.append_refusal("", self.rules.new_record(), record.make(1, "burn", "barn")))
+
+    def test_a_record_in_memory_unlike_the_file_is_refused(self) -> None:
+        why = record.append_refusal(self.HEADER + self.DAY_5, self.rules.new_record(), record.make(6, "burn", "barn"))
+        self.assertIn("load it before appending", why)
+
+    def test_the_loaded_record_may_append(self) -> None:
+        log = self.rules.new_record()
+        self.assertEqual(record.read_text(self.HEADER + self.DAY_5, log), "")
+        self.assertEqual(record.append_refusal(self.HEADER + self.DAY_5, log, record.make(6, "burn", "barn")), "")
+
+
 class TheRebuild(unittest.TestCase):
     def setUp(self) -> None:
         self.rules = ValleyRules.read()

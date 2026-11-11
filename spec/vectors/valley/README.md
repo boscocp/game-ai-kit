@@ -24,8 +24,11 @@ Each file is one of two kinds:
   `days`; `standing`, each virtue at the end of each day. A day is one
   night of the rules, then that day's deeds in the record's order.
 - `refused`: `lines`, a saved record as its file holds it -- the header
-  `{"version": 1}`, then one deed a line -- and `names`, the word the
-  refusal must contain: the key, verb, place, day or version at fault.
+  `{"version": 1}`, then one deed a line -- and `names`, the words the
+  refusal must contain: the key, verb, place, day or version at fault,
+  never empty, with numbers as JSON writes them (`0`, not `0.0`) and
+  strings quoted, as both twins print them. Each is read twice, as lines
+  and as the file that holds them, a newline after each line.
 
 ## Where the answers came from
 

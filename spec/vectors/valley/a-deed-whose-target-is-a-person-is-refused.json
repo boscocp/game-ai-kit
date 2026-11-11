@@ -5,5 +5,5 @@
   "{\"version\": 1}",
   "{\"day\": 1, \"verb\": \"burn\", \"target\": \"villager_3\"}"
  ],
- "names": "target"
+ "names": "no key \"target\""
 }

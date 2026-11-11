@@ -6,5 +6,5 @@
   "{\"day\": 1, \"verb\": \"plant\", \"place\": \"field\"}",
   "{\"day\": 2, \"verb\": \"kick\", \"place\": \"barn\"}"
  ],
- "names": "kick"
+ "names": "unknown verb \"kick\""
 }

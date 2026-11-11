@@ -5,5 +5,5 @@
   "{\"version\": 1}",
   "{\"day\": 1, \"verb\": \"burn\", \"place\": \"river\"}"
  ],
- "names": "river"
+ "names": "burn does not act on the river"
 }

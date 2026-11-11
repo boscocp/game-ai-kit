@@ -1,0 +1,9 @@
+{
+ "kind": "refused",
+ "description": "A header with a player's name beside the version: the header holds the version and nothing else.",
+ "lines": [
+  "{\"version\": 1, \"player\": \"Ana\"}",
+  "{\"day\": 1, \"verb\": \"plant\", \"place\": \"field\"}"
+ ],
+ "names": "header holds more than its version"
+}

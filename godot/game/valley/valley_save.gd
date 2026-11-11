@@ -7,8 +7,8 @@
 ## next session rebuilds it from them. A record with another version, or
 ## with none, is refused by name rather than misread.
 ##
-## Appending a deed opens the file, writes one line at its end and closes
-## it; loading reads every line once.
+## Appending a deed reads the file once to check it, then opens it, writes
+## one line at its end and closes it; loading reads every line once.
 ##
 ## When not to use it: to keep anything that is not a deed. If a number
 ## seems worth saving, it can be rebuilt from the record, and the record is
@@ -36,13 +36,27 @@ func _init(where: String = PATH) -> void:
 func load_into(record: DeedLog) -> String:
 	if not FileAccess.file_exists(path):
 		return ""
-	return read_lines(FileAccess.get_file_as_string(path).split("\n", false), record)
+	return read_text(FileAccess.get_file_as_string(path), record)
+
+
+## Read a saved record's whole text into `record`. The writer ends every
+## line with a newline and writes no blank line, so a file that does not
+## end in one has a torn last line -- a write cut short -- and a blank line
+## is not a deed. Both are refused, as an empty file is.
+static func read_text(text: String, record: DeedLog) -> String:
+	if text == "":
+		return "the record file is empty; its first line must be the header {\"version\": %d}" % VERSION
+	if not text.ends_with("\n"):
+		return "the record's last line is torn: the file does not end in a newline"
+	return read_lines(text.left(-1).split("\n"), record)
 
 
 ## Read a record's lines into `record`: the header first, then each deed,
 ## which `record` refuses or keeps. Returns "" or why the lines were
 ## refused, with the line at fault. Static, so the vectors can be read
-## without a file.
+## without a file. A line repeating the header's `version` is refused like
+## any other key beyond the three: stricter than N20, which lets it pass,
+## on purpose (ADR 0025).
 static func read_lines(lines: PackedStringArray, record: DeedLog) -> String:
 	if lines.is_empty():
 		return "the record is empty; its first line must be the header {\"version\": %d}" % VERSION
@@ -60,7 +74,8 @@ static func read_lines(lines: PackedStringArray, record: DeedLog) -> String:
 
 
 ## Why `line` is not the header of a record this game reads, or "" when it
-## is. A record with no version and one with another are both refused.
+## is. A record with no version and one with another are both refused, and
+## so is a header holding anything else -- a name in it would be a person.
 static func header_refusal(line: String) -> String:
 	var header: Variant = _parsed(line)
 	if not header is Dictionary or not header.has("version"):
@@ -68,17 +83,25 @@ static func header_refusal(line: String) -> String:
 	if header.size() != 1:
 		return "the record's header holds more than its version"
 	var version: Variant = header["version"]
-	if not (version is float or version is int) or float(version) != float(VERSION):
-		return "the record is version %s, and this game reads version %d" % [version, VERSION]
+	if not (version is float or version is int):
+		return "the record's version %s is not a number; this game reads version %d" % [DeedLog.shown(version), VERSION]
+	if float(version) != float(VERSION):
+		return "the record is version %s, and this game reads version %d" % [DeedLog.shown(version), VERSION]
 	return ""
 
 
 ## Keep `deed` in `record` and append it to the file, or refuse it. Returns
-## "" when both hold it, or why not. The record is asked first, so a refused
-## deed never reaches the disk, and the file is written before the record
-## keeps the deed, so a failed write leaves the two agreeing.
+## "" when both hold it, or why not. The file is read first, whole, and
+## must be a record this game reads, the same as `record`, with room for
+## the deed after its last one; a refused deed never reaches the disk. The
+## file is written before the record keeps the deed, so a failed write
+## leaves the two agreeing. Reading the file costs one pass over it.
 func append(record: DeedLog, deed: Dictionary) -> String:
 	var why: String = record.refusal(deed)
+	if FileAccess.file_exists(path):
+		why = append_refusal(FileAccess.get_file_as_string(path), record, deed)
+	elif why == "" and record.size() != 0:
+		why = "there is no record on disk, and the one in memory has deeds; nothing was appended"
 	if why != "":
 		return why
 	var file: FileAccess = _open_at_the_end()
@@ -90,6 +113,24 @@ func append(record: DeedLog, deed: Dictionary) -> String:
 	if not written:
 		return "the deed could not be written to the record"
 	return record.append(kept)
+
+
+## Why `deed` cannot be appended to a saved record whose text is `text`,
+## kept in memory as `record`, or "". The file must read clean -- not
+## empty, not torn, its version this game's -- `deed` must follow its last
+## deed, and `record` must be what the file holds: a session that appends
+## before loading would otherwise write a day out of order.
+static func append_refusal(text: String, record: DeedLog, deed: Dictionary) -> String:
+	var on_disk: DeedLog = record.cut(0)
+	var why: String = read_text(text, on_disk)
+	if why != "":
+		return "the record on disk is refused, and nothing was appended: %s" % why
+	why = on_disk.refusal(deed)
+	if why != "":
+		return why
+	if on_disk.deeds() != record.deeds():
+		return "the record in memory is not the one on disk; load it before appending"
+	return ""
 
 
 ## Remove the saved record, so the next session starts from the first day.

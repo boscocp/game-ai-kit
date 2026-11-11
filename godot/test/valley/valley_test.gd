@@ -7,7 +7,9 @@
 # name); and the world and the standing rebuild the same from it, twice,
 # and a record cut at day n gives day n. And the schema's one refusal that
 # matters most: a deed whose target is a person, planted, is refused by
-# name and never reaches the disk.
+# name and never reaches the disk. An append reads the file it appends to,
+# and refuses -- writing nothing -- a day out of order with the file, a
+# record in memory unlike it, and a file of another version, torn or empty.
 #
 # Every save here is the test's own, under user://tmp/, erased after each
 # test; gdUnit4 clears user://tmp after the suite as well.
@@ -103,6 +105,7 @@ func test_rebuilding_twice_gives_the_same_world() -> void:
 		var once: ValleyWorld = _rules.rebuild(record, LAST_DAY)
 		var twice: ValleyWorld = _rules.rebuild(record, LAST_DAY)
 		assert_dict(twice.facts).override_failure_message("seed %d" % number).is_equal(once.facts)
+		assert_dict(twice.because).override_failure_message("seed %d" % number).is_equal(once.because)
 		assert_dict(_standing.of(record)).is_equal(_standing.of(record))
 
 
@@ -142,12 +145,58 @@ func test_the_world_says_why_a_fact_changed() -> void:
 	assert_str(str(world.because["barn.standing"])).contains("day 2, burn the barn")
 
 
+func test_a_reason_is_kept_until_the_fact_changes() -> void:
+	# The barn burns on day 1, and the bread fails on day 2 for it. On day 2
+	# the river is diverted, the mill stops on day 3, and from the night
+	# after, a second rule writes the bread false too: the fact does not
+	# change, so its reason stays the barn's.
+	var record: DeedLog = _rules.new_record()
+	record.append(DeedLog.make(1, "burn", "barn"))
+	record.append(DeedLog.make(2, "divert_water", "river"))
+	var world: ValleyWorld = _rules.rebuild(record, 5)
+	assert_bool(world.fact("mill.turning")).is_false()
+	assert_str(str(world.because["market.bread"])).contains("burnt barn")
+
+
 func test_a_deed_read_out_cannot_change_the_record() -> void:
 	var record: DeedLog = _rules.new_record()
 	record.append(DeedLog.make(1, "burn", "barn"))
 	var copy: Array[Dictionary] = record.deeds()
+	copy[0]["place"] = "mill"
 	copy.clear()
 	assert_int(record.size()).is_equal(1)
+	assert_dict(record.deeds()[0]).is_equal(DeedLog.make(1, "burn", "barn"))
+
+
+func test_an_append_before_a_load_cannot_put_a_day_out_of_order() -> void:
+	ValleySave.new(SCRATCH).append(_rules.new_record(), DeedLog.make(5, "plant", "field"))
+	var before: String = FileAccess.get_file_as_string(SCRATCH)
+	var why: String = ValleySave.new(SCRATCH).append(_rules.new_record(), DeedLog.make(1, "burn", "barn"))
+	assert_str(why).contains("day 1 comes after day 5")
+	assert_str(FileAccess.get_file_as_string(SCRATCH)).is_equal(before)
+	why = ValleySave.new(SCRATCH).append(_rules.new_record(), DeedLog.make(6, "burn", "barn"))
+	assert_str(why).contains("load it before appending")
+	assert_str(FileAccess.get_file_as_string(SCRATCH)).is_equal(before)
+
+
+func test_an_append_to_a_file_this_game_refuses_writes_nothing() -> void:
+	var deed_line: String = JSON.stringify(DeedLog.make(1, "plant", "field"))
+	var unreadable: Dictionary = {
+		"version 2": JSON.stringify({"version": 2}) + "\n",
+		"torn": JSON.stringify({"version": 1}) + "\n" + deed_line.left(12),
+		"empty": "",
+	}
+	for named: String in unreadable:
+		_write_text(unreadable[named])
+		var why: String = ValleySave.new(SCRATCH).append(_rules.new_record(), DeedLog.make(2, "burn", "barn"))
+		assert_str(why).override_failure_message("%s: %s" % [named, why]).contains(named)
+		assert_str(FileAccess.get_file_as_string(SCRATCH)).is_equal(unreadable[named])
+
+
+func test_a_blank_line_in_the_file_is_refused() -> void:
+	var deed_line: String = JSON.stringify(DeedLog.make(1, "plant", "field"))
+	_write_scratch(PackedStringArray([JSON.stringify({"version": 1}), deed_line, "", deed_line]))
+	assert_str(ValleySave.new(SCRATCH).load_into(_rules.new_record())).contains("line 3 is not a deed")
 
 
 # A seeded record: up to two deeds a day, each a verb on a place it acts on.
@@ -178,7 +227,11 @@ func _sum_by_hand(record: DeedLog, day: int) -> Dictionary:
 
 
 func _write_scratch(lines: PackedStringArray) -> void:
+	_write_text("\n".join(lines) + "\n")
+
+
+func _write_text(text: String) -> void:
 	DirAccess.make_dir_recursive_absolute(SCRATCH.get_base_dir())
 	var file: FileAccess = FileAccess.open(SCRATCH, FileAccess.WRITE)
-	file.store_string("\n".join(lines) + "\n")
+	file.store_string(text)
 	file.close()

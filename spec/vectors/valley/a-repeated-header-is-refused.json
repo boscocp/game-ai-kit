@@ -1,0 +1,10 @@
+{
+ "kind": "refused",
+ "description": "The header written twice: the second is a line with a key beyond day, verb and place.",
+ "lines": [
+  "{\"version\": 1}",
+  "{\"version\": 1}",
+  "{\"day\": 1, \"verb\": \"plant\", \"place\": \"field\"}"
+ ],
+ "names": "no key \"version\""
+}
