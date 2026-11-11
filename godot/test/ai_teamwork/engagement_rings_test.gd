@@ -121,9 +121,16 @@ func _too_close(field: EngagementRings) -> String:
 		if point.claimed_by != -1:
 			claimed.append(point)
 	for index: int in range(claimed.size()):
-		for other: int in range(index + 1, claimed.size()):
-			if claimed[index].position.distance_to(claimed[other].position) < SPACING:
-				return "%s and %s closer than the spacing" % [claimed[index].id, claimed[other].id]
+		var why: String = _too_close_to(claimed[index], claimed.slice(index + 1))
+		if why != "":
+			return why
+	return ""
+
+
+func _too_close_to(point: EngagementRings.Point, others: Array[EngagementRings.Point]) -> String:
+	for other: EngagementRings.Point in others:
+		if point.position.distance_to(other.position) < SPACING:
+			return "%s and %s closer than the spacing" % [point.id, other.id]
 	return ""
 
 
