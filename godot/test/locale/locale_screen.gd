@@ -66,6 +66,7 @@ const EXAMPLES: Dictionary = {
 	"res://game3d/racing/racing3d.tscn": ["Interface/Status", "Interface/Legend"],
 	"res://game3d/botmatch/botmatch.tscn": ["Interface/Panel", "Interface/Legend"],
 	"res://game3d/infiltration/infiltration.tscn": ["Interface/Panel", "Interface/Legend"],
+	"res://game3d/bossfight/bossfight.tscn": ["Interface/Panel", "Interface/BossPanel", "Interface/Legend"],
 	"res://game/rts/rts.tscn": ["Interface/Header", "Interface/Thinking", "Interface/Card/Info", "Interface/Legend"],
 	"res://game/fighting/fighting.tscn": ["Interface/Status", "Interface/Decision", "Interface/Legend"],
 	"res://game/maze/maze.tscn": ["Interface/Status", "Interface/Decision", "Interface/Legend"],

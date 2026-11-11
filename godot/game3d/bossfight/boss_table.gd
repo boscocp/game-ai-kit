@@ -22,7 +22,7 @@ extends RefCounted
 ## The shipped moveset.
 const FILE: String = "res://game3d/bossfight/boss_attacks.json"
 ## The three windows, in the order an attack runs them.
-const WINDOWS: Array[String] = ["telegraph", "active", "recovery"]
+const WINDOWS: Array[String] = ["telegraph", "active", "recovery"]  # not shown: the data's field names
 ## A phase needs a choice to make: with one attack, "never three in a row"
 ## would leave the boss with nothing to do.
 const FEWEST_ATTACKS: int = 2
@@ -71,7 +71,7 @@ static func from_file(path: String = FILE) -> BossTable:
 	var parser := JSON.new()
 	if parser.parse(FileAccess.get_file_as_string(path)) != OK or not (parser.data is Dictionary):
 		var broken: BossTable = new()
-		broken.refusal = "%s is not a JSON object: %s" % [path, parser.get_error_message()]
+		broken.refusal = "%s is not a JSON object: %s" % [path, parser.get_error_message()]  # not shown: a refusal for whoever edits the data, in its keys' English
 		return broken
 	return from_data(parser.data)
 
@@ -112,9 +112,9 @@ func longest_attack() -> float:
 ## with every attack shown for at least the minimum.
 static func why_not_table(data: Dictionary) -> String:
 	if float(data.get("minimum_telegraph", 0.0)) <= 0.0:
-		return "the minimum telegraph must be above zero"
+		return "the minimum telegraph must be above zero"  # not shown: a refusal for whoever edits the data, in its keys' English
 	if not (data.get("attacks") is Dictionary) or not (data.get("phases") is Array):
-		return "a table needs an attacks object and a phases list"
+		return "a table needs an attacks object and a phases list"  # not shown: a refusal for whoever edits the data, in its keys' English
 	for attack_name: String in data["attacks"]:
 		var objection: String = _why_not_attack(attack_name, data["attacks"][attack_name])
 		if objection != "":
@@ -124,11 +124,11 @@ static func why_not_table(data: Dictionary) -> String:
 
 static func _why_not_attack(attack_name: String, fields: Variant) -> String:
 	if not (fields is Dictionary) or not (fields as Dictionary).has("kind"):
-		return "attack %s needs a kind" % attack_name
+		return "attack %s needs a kind" % attack_name  # not shown: a refusal for whoever edits the data, in its keys' English
 	for window: String in WINDOWS:
 		var seconds: float = float(fields.get(window, 0.0))
 		if seconds <= 0.0:
-			return "attack %s's %s window is %.2f s; every window must be above zero" % [attack_name, window, seconds]
+			return "attack %s's %s window is %.2f s; every window must be above zero" % [attack_name, window, seconds]  # not shown: a refusal for whoever edits the data, in its keys' English
 	var as_action: Dictionary = {"name": attack_name, "weight": fields.get("weight", 1.0)}
 	as_action["considerations"] = fields.get("considerations", [])
 	return ActionChoice.why_not_actions([as_action])
@@ -140,21 +140,21 @@ static func _why_not_attack(attack_name: String, fields: Variant) -> String:
 static func _why_not_phases(data: Dictionary) -> String:
 	var phases: Array = data["phases"]
 	if phases.is_empty():
-		return "a boss needs at least one phase"
+		return "a boss needs at least one phase"  # not shown: a refusal for whoever edits the data, in its keys' English
 	var above: float = INF
 	for index: int in range(phases.size()):
 		var at_most: float = float(phases[index].get("health_at_most", 0.0))
 		var phase_name: String = str(phases[index].get("name", index))
 		if index == 0 and at_most < 1.0:
-			return "the first phase, %s, must start at full health, 1.0" % phase_name
+			return "the first phase, %s, must start at full health, 1.0" % phase_name  # not shown: a refusal for whoever edits the data, in its keys' English
 		if at_most <= 0.0:
-			return "phase %s opens at health %.2f, which is never met: the boss is defeated at 0" % [phase_name, at_most]
+			return "phase %s opens at health %.2f, which is never met: the boss is defeated at 0" % [phase_name, at_most]  # not shown: a refusal for whoever edits the data, in its keys' English
 		if at_most >= above:
-			return "phase %s opens at %.2f, not below the phase before it" % [phase_name, at_most]
+			return "phase %s opens at %.2f, not below the phase before it" % [phase_name, at_most]  # not shown: a refusal for whoever edits the data, in its keys' English
 		above = at_most
 		var objection: String = _why_not_moveset(phases[index], data)
 		if objection != "":
-			return "phase %s: %s" % [phase_name, objection]
+			return "phase %s: %s" % [phase_name, objection]  # not shown: a refusal for whoever edits the data, in its keys' English
 	return ""
 
 
@@ -163,17 +163,17 @@ static func _why_not_phases(data: Dictionary) -> String:
 static func _why_not_moveset(phase: Dictionary, data: Dictionary) -> String:
 	var scale: float = float(phase.get("telegraph_scale", 1.0))
 	if scale <= 0.0 or scale > 1.0:
-		return "telegraph_scale %.2f is outside (0, 1]" % scale
+		return "telegraph_scale %.2f is outside (0, 1]" % scale  # not shown: a refusal for whoever edits the data, in its keys' English
 	var names: Array = phase.get("attacks", [])
 	if names.size() < FEWEST_ATTACKS:
-		return "%d attacks, fewer than %d to choose between" % [names.size(), FEWEST_ATTACKS]
+		return "%d attacks, fewer than %d to choose between" % [names.size(), FEWEST_ATTACKS]  # not shown: a refusal for whoever edits the data, in its keys' English
 	var minimum: float = float(data["minimum_telegraph"])
 	for attack_name: Variant in names:
 		if not data["attacks"].has(attack_name):
-			return "there is no attack called %s" % attack_name
+			return "there is no attack called %s" % attack_name  # not shown: a refusal for whoever edits the data, in its keys' English
 		var shown_for: float = float(data["attacks"][attack_name]["telegraph"]) * scale
 		if shown_for < minimum:
-			return "attack %s is telegraphed for %.2f s, under the minimum %.2f s" % [attack_name, shown_for, minimum]
+			return "attack %s is telegraphed for %.2f s, under the minimum %.2f s" % [attack_name, shown_for, minimum]  # not shown: a refusal for whoever edits the data, in its keys' English
 	return ""
 
 

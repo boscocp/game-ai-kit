@@ -218,7 +218,8 @@ claim about any shipped game.
 - **T156, telegraphs**: the warning before a blow, and an enemy that reads
   the player's.
 - **T157, the boss fight** (`godot/game3d/bossfight/`): a boss and minions,
-  melee and ranged, where the tokens can be watched.
+  melee and ranged, where the tokens can be watched -- built in wave 175,
+  [its page](../godot/bossfight.md).
 - **T158, difficulty**: the table of pool sizes and delays T154 takes as
   input.
 
