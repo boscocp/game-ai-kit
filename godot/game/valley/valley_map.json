@@ -1,0 +1,37 @@
+{
+ "about": "The valley's ground (T165): one letter a cell, read row by row from the top. `.` is ground anyone walks on, `~` the river, which nobody crosses but at a crossing. A crossing's letter is open only while its fact holds in the day's world: `=` the stone bridge, `:` the ford, which needs its footbridge. `places` are the cells a villager stands on to use a place: the river has a bank on each side. The west village is the market and the square; the east village has the farm -- the barn, the mill on its race, the orchard behind its gate and the low field. Nothing here changes at game time: the deeds change the world's facts, and the facts open or shut the crossings.",
+ "rows": [
+  "..........~...........",
+  "..........~...........",
+  "..........=...........",
+  "..........~...........",
+  "..........~...........",
+  "..........~...........",
+  "..........~...........",
+  "..........~...........",
+  "..........~...........",
+  "..........:...........",
+  "..........~...........",
+  "..........~..........."
+ ],
+ "crossings": {
+  "=": "bridge.standing",
+  ":": "ford.footbridge"
+ },
+ "villages": {
+  "west": [0, 9],
+  "east": [11, 21]
+ },
+ "places": {
+  "market": [[4, 3]],
+  "square": [[4, 7]],
+  "barn": [[15, 3]],
+  "mill": [[11, 5]],
+  "river": [[9, 6], [11, 7]],
+  "orchard": [[18, 7]],
+  "gate": [[16, 8]],
+  "field": [[13, 10]],
+  "bridge": [[10, 2]],
+  "ford": [[10, 9]]
+ }
+}

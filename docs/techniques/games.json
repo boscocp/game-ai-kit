@@ -253,6 +253,20 @@
         "en": "H hides the reasoning: who holds a token, the queue, the timer, the rings and their claims, the boss's phase and telegraph, the director's state and next wave; Q locks on",
         "pt-BR": "H esconde o raciocínio: quem segura um *token*, a fila, o cronômetro, os anéis e as reservas, a fase do chefe e o seu *telegraph*, o estado do diretor (*director*) e a próxima onda; Q trava a mira"
       }
+    },
+    "demo-valley": {
+      "game": {
+        "en": "The valley that remembers",
+        "pt-BR": "O vale que se lembra"
+      },
+      "like": {
+        "en": "Fable or Ultima IV: what you did stays done, and people remember it",
+        "pt-BR": "Fable ou Ultima IV: o que você fez fica feito, e as pessoas se lembram"
+      },
+      "keys": {
+        "en": "Tab follows another villager: the deed behind each fact it reads, its plan, its A* search on the ground; 1-9 a deed",
+        "pt-BR": "Tab segue outro aldeão: o feito por trás de cada fato que ele lê, o plano, a busca A* no chão; 1-9 um feito"
+      }
     }
   },
   "algorithms": {
@@ -487,6 +501,10 @@
     "engagement-rings": {
       "en": "engagement rings round the target",
       "pt-BR": "anéis de combate em volta do alvo"
+    },
+    "deed-record": {
+      "en": "a record of deeds the world is rebuilt from",
+      "pt-BR": "um registro de feitos do qual o mundo é reconstruído"
     }
   }
 }

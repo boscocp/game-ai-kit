@@ -58,7 +58,8 @@
     "wave-function-collapse": {"name": "wave function collapse: the cell of least entropy collapsed first, a map built from a table of tiles", "evidence": ["WaveCollapse"]},
     "discourse-acts": {"name": "a language model reads the player's words as one declared act, behind a validator", "evidence": ["LlmValidator", "LlmConversation"]},
     "attack-tokens": {"name": "attack tokens: one or two of a group strike at a time", "evidence": ["AttackTokens"]},
-    "engagement-rings": {"name": "engagement rings: where the rest stand while one strikes", "evidence": ["EngagementRings"]}
+    "engagement-rings": {"name": "engagement rings: where the rest stand while one strikes", "evidence": ["EngagementRings"]},
+    "deed-record": {"name": "a record of deeds: the world rebuilt from what the player did, and a standing summed from it", "evidence": ["ValleyRules", "Standing"]}
   },
   "examples": [
     {
@@ -352,6 +353,21 @@
       "controls": "WASD walk, the mouse turns the camera; click or J a light attack, Shift dodges, Q locks on; Tab the next level, easy, normal or hard; H hides the reasoning, N fights again, P pauses, Space one decision while paused",
       "watch": "Watch the yellow rings: never more than two at once, and none on a minion while the boss's heavy blow winds up. Let a melee minion reach you while the ranged one aims: its line vanishes, its token was taken back. Read the panel's timer: once a melee minion is on you, no ranged minion asks for a token for three times the ranged delay.",
       "docs": "docs/godot/bossfight.md"
+    },
+    {
+      "target": "demo-valley",
+      "title": "The valley that remembers: what you do to its places stays done",
+      "scene": "res://game/valley/valley.tscn",
+      "decides": "How each villager meets its day -- bread bought or baked, water from the river or the well -- from the world your deeds left; and what the ferryman, the merchant and the priestess make of you.",
+      "techniques": [
+        {"technique": "deed-record", "part": "each deed you do is kept in the one file the kit saves; every day, in this session and the next, the world is rebuilt from it, and the panel names the deed behind each fact a villager reads"},
+        {"technique": "goap", "part": "the followed villager's plan in the panel: bread bought at the market, or the wheat taken, ground and baked when the market is out of reach"},
+        {"technique": "a-star", "part": "the followed villager's search on the ground: yellow cells expanded, cyan frontier, the white route; with the bridge down it fills one bank and stops at the water"},
+        {"technique": "weighed-actions", "part": "the goals left scored in the panel: a goal with no plan scores nothing, a dearer plan less"}
+      ],
+      "controls": "1-9 do a deed on a place, one a day; Tab follows another villager; space one turn, P pauses, N ends the day; E erases the valley's memory, after you confirm",
+      "watch": "Pull the bridge down and end the day: the east village's searches stop at the river, and their plans for bread turn from the market to the barn, the mill and their own ovens. Close the game and open it again: the bridge is still down. The ferryman's price follows your fear, and the panel names the deeds that made it.",
+      "docs": "docs/godot/valley.md"
     }
   ]
 }

@@ -45,9 +45,9 @@ func load_into(record: DeedLog) -> String:
 ## is not a deed. Both are refused, as an empty file is.
 static func read_text(text: String, record: DeedLog) -> String:
 	if text == "":
-		return "the record file is empty; its first line must be the header {\"version\": %d}" % VERSION
+		return "the record file is empty; its first line must be the header {\"version\": %d}" % VERSION  # not shown: the record's own English, quoted where the save is refused
 	if not text.ends_with("\n"):
-		return "the record's last line is torn: the file does not end in a newline"
+		return "the record's last line is torn: the file does not end in a newline"  # not shown: the record's own English, quoted where the save is refused
 	return read_lines(text.left(-1).split("\n"), record)
 
 
@@ -59,17 +59,17 @@ static func read_text(text: String, record: DeedLog) -> String:
 ## on purpose (ADR 0025).
 static func read_lines(lines: PackedStringArray, record: DeedLog) -> String:
 	if lines.is_empty():
-		return "the record is empty; its first line must be the header {\"version\": %d}" % VERSION
+		return "the record is empty; its first line must be the header {\"version\": %d}" % VERSION  # not shown: the record's own English, quoted where the save is refused
 	var why: String = header_refusal(lines[0])
 	if why != "":
 		return why
 	for index: int in range(1, lines.size()):
 		var deed: Variant = _parsed(lines[index])
 		if not deed is Dictionary:
-			return "line %d is not a deed" % (index + 1)
+			return "line %d is not a deed" % (index + 1)  # not shown: the record's own English, quoted where the save is refused
 		why = record.append(deed)
 		if why != "":
-			return "line %d: %s" % [index + 1, why]
+			return "line %d: %s" % [index + 1, why]  # not shown: the record's own English, quoted where the save is refused
 	return ""
 
 
@@ -79,14 +79,14 @@ static func read_lines(lines: PackedStringArray, record: DeedLog) -> String:
 static func header_refusal(line: String) -> String:
 	var header: Variant = _parsed(line)
 	if not header is Dictionary or not header.has("version"):
-		return "the record has no version; its first line must be the header {\"version\": %d}" % VERSION
+		return "the record has no version; its first line must be the header {\"version\": %d}" % VERSION  # not shown: the record's own English, quoted where the save is refused
 	if header.size() != 1:
-		return "the record's header holds more than its version"
+		return "the record's header holds more than its version"  # not shown: the record's own English, quoted where the save is refused
 	var version: Variant = header["version"]
 	if not (version is float or version is int):
-		return "the record's version %s is not a number; this game reads version %d" % [DeedLog.shown(version), VERSION]
+		return "the record's version %s is not a number; this game reads version %d" % [DeedLog.shown(version), VERSION]  # not shown: the record's own English, quoted where the save is refused
 	if float(version) != float(VERSION):
-		return "the record is version %s, and this game reads version %d" % [DeedLog.shown(version), VERSION]
+		return "the record is version %s, and this game reads version %d" % [DeedLog.shown(version), VERSION]  # not shown: the record's own English, quoted where the save is refused
 	return ""
 
 
@@ -101,17 +101,17 @@ func append(record: DeedLog, deed: Dictionary) -> String:
 	if FileAccess.file_exists(path):
 		why = append_refusal(FileAccess.get_file_as_string(path), record, deed)
 	elif why == "" and record.size() != 0:
-		why = "there is no record on disk, and the one in memory has deeds; nothing was appended"
+		why = "there is no record on disk, and the one in memory has deeds; nothing was appended"  # not shown: the record's own English, quoted where the save is refused
 	if why != "":
 		return why
 	var file: FileAccess = _open_at_the_end()
 	if file == null:
-		return "the record cannot be opened: %s" % error_string(FileAccess.get_open_error())
+		return "the record cannot be opened: %s" % error_string(FileAccess.get_open_error())  # not shown: the record's own English, quoted where the save is refused
 	var kept: Dictionary = DeedLog.make(int(deed["day"]), str(deed["verb"]), str(deed["place"]))
 	var written: bool = file.store_line(JSON.stringify(kept))
 	file.close()
 	if not written:
-		return "the deed could not be written to the record"
+		return "the deed could not be written to the record"  # not shown: the record's own English, quoted where the save is refused
 	return record.append(kept)
 
 
@@ -124,12 +124,12 @@ static func append_refusal(text: String, record: DeedLog, deed: Dictionary) -> S
 	var on_disk: DeedLog = record.cut(0)
 	var why: String = read_text(text, on_disk)
 	if why != "":
-		return "the record on disk is refused, and nothing was appended: %s" % why
+		return "the record on disk is refused, and nothing was appended: %s" % why  # not shown: the record's own English, quoted where the save is refused
 	why = on_disk.refusal(deed)
 	if why != "":
 		return why
 	if on_disk.deeds() != record.deeds():
-		return "the record in memory is not the one on disk; load it before appending"
+		return "the record in memory is not the one on disk; load it before appending"  # not shown: the record's own English, quoted where the save is refused
 	return ""
 
 

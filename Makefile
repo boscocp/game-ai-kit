@@ -971,6 +971,10 @@ valley-erase: ## Erase this checkout's valley save, and start again from the fir
 	@# .user-data/. Its self-test runs in lint-selftests, found there by its --self-test.
 	@$(PYTHON) scripts/valley_erase.py
 
+.PHONY: demo-valley
+demo-valley: import ## The valley that remembers: 1-9 a deed on a place, kept between sessions; Tab follows a villager, space one turn, P pause, N ends the day, E erases
+	@$(GODOT) --path godot res://game/valley/valley.tscn
+
 .PHONY: demo-skirmish
 demo-skirmish: import ## The learned policy plays blue: click a unit, click a neighbouring cell, space ends the turn
 	@# Until T27 this was `make run`. Where the policy finally plays is T30's

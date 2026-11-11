@@ -1,0 +1,38 @@
+{
+ "about": "The valley's six villagers and their day (T165). Each person has a home and the goals of a day; nothing about a person is saved, and every day starts them at home again with nothing carried. `goals` says what holds when a goal is met. `actions` are what a villager can do, for GOAP: `at` is the place it is done, `needs` the facts that must hold first -- the world's (`market.bread`) or what the villager carries (`has_wheat`) -- `makes` what it carries afterwards, and `work` what doing it costs on top of the walk there. A plan's cost is each action's walk, A*'s from where the villager stands, plus its work. `choice` weighs the goals left, with ai_utility's ActionChoice: a goal with no plan scores 0, and a dearer plan scores less. `day_turns` is how many turns a day lasts.",
+ "day_turns": 48,
+ "people": [
+  {"name": "Ana", "home": [20, 2], "goals": ["bread", "water", "fruit"]},
+  {"name": "Bento", "home": [13, 1], "goals": ["bread", "water"]},
+  {"name": "Clara", "home": [19, 10], "goals": ["water", "fruit", "bread"]},
+  {"name": "Davi", "home": [1, 2], "goals": ["bread", "water"]},
+  {"name": "Elisa", "home": [2, 9], "goals": ["bread", "fruit", "water"]},
+  {"name": "Fabio", "home": [7, 1], "goals": ["water", "bread"]}
+ ],
+ "carried": ["has_wheat", "has_flour", "has_bread", "has_water", "has_fruit"],
+ "goals": {
+  "bread": {"has_bread": true},
+  "water": {"has_water": true},
+  "fruit": {"has_fruit": true}
+ },
+ "actions": [
+  {"name": "buy_bread", "at": "market", "needs": {"market.bread": true}, "makes": {"has_bread": true}, "work": 1},
+  {"name": "take_wheat", "at": "barn", "needs": {"barn.standing": true}, "makes": {"has_wheat": true}, "work": 1},
+  {"name": "grind_wheat", "at": "mill", "needs": {"has_wheat": true, "mill.turning": true}, "makes": {"has_flour": true, "has_wheat": false}, "work": 2},
+  {"name": "bake_bread", "at": "home", "needs": {"has_flour": true}, "makes": {"has_bread": true, "has_flour": false}, "work": 2},
+  {"name": "draw_from_well", "at": "square", "needs": {"square.well": true}, "makes": {"has_water": true}, "work": 1},
+  {"name": "draw_from_river", "at": "river", "needs": {}, "makes": {"has_water": true}, "work": 8},
+  {"name": "pick_fruit", "at": "orchard", "needs": {"orchard.fruit": true}, "makes": {"has_fruit": true}, "work": 1}
+ ],
+ "choice": [
+  {"name": "bread", "weight": 3.0, "considerations": [
+   {"percept": "bread.planned", "curve": "step", "at": 0.5},
+   {"percept": "bread.cost", "curve": "linear", "slope": -0.02, "intercept": 1.0}]},
+  {"name": "water", "weight": 2.0, "considerations": [
+   {"percept": "water.planned", "curve": "step", "at": 0.5},
+   {"percept": "water.cost", "curve": "linear", "slope": -0.02, "intercept": 1.0}]},
+  {"name": "fruit", "weight": 1.0, "considerations": [
+   {"percept": "fruit.planned", "curve": "step", "at": 0.5},
+   {"percept": "fruit.cost", "curve": "linear", "slope": -0.02, "intercept": 1.0}]}
+ ]
+}

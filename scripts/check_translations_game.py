@@ -147,6 +147,10 @@ SHOWN_DATA: dict[str, tuple[str, ...]] = {
         "examples[].title", "examples[].decides", "examples[].controls", "examples[].watch",
         "examples[].techniques[].part", "techniques.*.name",
     ),
+    # The valley's reasons, shown beside each fact a villager reads, and
+    # what its three people say (T165).
+    "godot/game/valley/valley_rules.json": ("verbs.*.*.why", "rules[].why"),
+    "godot/game/valley/manners.json": ("people.*.rules[].says",),
 }
 
 

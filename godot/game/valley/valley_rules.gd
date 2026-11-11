@@ -92,7 +92,7 @@ static func holds(when: Dictionary, facts: Dictionary) -> bool:
 func apply(world: ValleyWorld, deed: Dictionary) -> void:
 	var place: String = str(deed["place"])
 	var act: Dictionary = verbs[str(deed["verb"])][place]
-	var why: String = "day %d, %s the %s: %s" % [int(deed["day"]), deed["verb"], place, act["why"]]
+	var why: String = "day %d, %s the %s: %s" % [int(deed["day"]), deed["verb"], place, act["why"]]  # not shown: worded by ValleyPanel.reason_words
 	var sets: Dictionary = act["sets"]
 	for fact: String in sets:
 		world.write("%s.%s" % [place, fact], bool(sets[fact]), why)
