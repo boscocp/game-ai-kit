@@ -1,12 +1,10 @@
 {
-  "about": "The fight's AI knobs (T157): the player's token pools and the delays between grants, the three rings round the player, and the group the boss fights with. T158's difficulty table sets the token and wave numbers per level; the bodies' speeds and damage are constants in their scripts.",
+  "about": "The fight's AI knobs (T157, T158) that no level changes: the multipliers, timeouts and patience of the player's token pools, the three rings round the player, and the director's pacing. The pools' sizes and delays, the boss's tells and the waves are each level's, in difficulty.json; the bodies' speeds and damage are constants in their scripts.",
   "step_seconds": 0.0333,
   "decide_every": 0.25,
   "arena_half": 15,
   "pillars": [[-7, -7], [7, -7], [-7, 7], [7, 7]],
   "tokens": {
-    "pools": {"melee": 2, "ranged": 1},
-    "delays": {"melee": 0.6, "ranged": 2.0},
     "timeouts": {"melee": 5.0, "ranged": 4.0},
     "multipliers": {"pressed": {"melee": 1.0, "ranged": 3.0}, "free": {"melee": 1.0, "ranged": 1.0}},
     "patience": 3
@@ -19,5 +17,5 @@
       {"name": "ranged", "radius": 10.0, "count": 12, "phase": 0.13}
     ]
   },
-  "wave": {"melee": 3, "ranged": 2}
+  "director": {"wave_every": 8.0, "relief_at": 2, "peak_seconds": 15.0, "relief_seconds": 6.0}
 }

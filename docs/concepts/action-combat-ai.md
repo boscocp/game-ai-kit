@@ -175,7 +175,7 @@ claim about any shipped game.
   recovery, so the opening belongs to the player.
 - **Nothing about the player is counted.** The boss reads distance and
   facing at each decision and keeps no history of the player. ADR 0016 is
-  not extended, and difficulty is T158's table.
+  not extended, and difficulty is T158's table, chosen by the person.
 
 ## When not to use it {#when-not}
 
@@ -220,8 +220,11 @@ claim about any shipped game.
 - **T157, the boss fight** (`godot/game3d/bossfight/`): a boss and minions,
   melee and ranged, where the tokens can be watched -- built in wave 175,
   [its page](../godot/bossfight.md).
-- **T158, difficulty**: the table of pool sizes and delays T154 takes as
-  input.
+- **T158, a director and three levels**: when the minions come, paced
+  through build-up, peak and relief from the fight's events; and easy,
+  normal and hard, each a row of pool sizes and delays T154 takes as
+  input, the boss's tell speed and minimum, and the waves -- built in wave
+  181, [on the example's page](../godot/bossfight.md#three-levels-chosen-by-you).
 
 ## Could not be checked {#unchecked}
 

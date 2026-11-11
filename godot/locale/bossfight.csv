@@ -41,3 +41,17 @@ melee,melee
 ranged,ranged
 pressed,pressionado
 free,livre
+build-up,crescendo
+peak,pico
+relief,alívio
+easy,fácil
+normal,normal
+hard,difícil
+The fight cannot start: {why},A luta não pode começar: {why}
+"level {level} (Tab changes it): tells x {speed}, never under {least} s","nível {level} (Tab muda): avisos x {speed}, nunca abaixo de {least} s"
+"   {kind}: {pool} tokens, {delay} s apart; waves of {wave}, at most {cap} standing","   {kind}: {pool} tokens, {delay} s entre eles; ondas de {wave}, no máximo {cap} de pé"
+the next wave waits for the heavy blow to end,a próxima onda espera o golpe pesado acabar
+"no wave until {least} or fewer stand, or {left} s pass","nenhuma onda até restarem {least} ou menos, ou passarem {left} s"
+a pause: build-up again in {left} s,uma pausa: crescendo de novo em {left} s
+the next wave in {left} s,a próxima onda em {left} s
+"director: {state}, wave {waves}; {waits}","diretor: {state}, onda {waves}; {waits}"

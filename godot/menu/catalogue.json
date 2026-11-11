@@ -52,6 +52,7 @@
     "target-tile": {"name": "a target tile, and the shortest straight line to it: the arcade's ghosts", "evidence": ["MazeGhost"]},
     "value-iteration": {"name": "value iteration: an MDP solved in Python, its policy looked up", "evidence": ["MdpPacMan"]},
     "director": {"name": "a director: the player's intensity paces the threats, after Left 4 Dead", "evidence": ["Director"]},
+    "wave-director": {"name": "a director: the fight's events pace the waves -- build-up, peak, relief -- never the player's skill", "evidence": ["BossDirector"]},
     "constraints": {"name": "constraint satisfaction: AC-3 and backtracking place the level", "evidence": ["ConstraintSolver"]},
     "bayes": {"name": "a Bayesian network: is anyone there at all, from the signs, by enumeration", "evidence": ["BayesNetwork"]},
     "wave-function-collapse": {"name": "wave function collapse: the cell of least entropy collapsed first, a map built from a table of tiles", "evidence": ["WaveCollapse"]},
@@ -345,9 +346,10 @@
         {"technique": "perception", "part": "a faded ring point is one a pillar hides you from: a ranged minion does not stand there to shoot"},
         {"technique": "arrive", "part": "each minion walks to its point and stops on it, kept apart from the others"},
         {"technique": "behaviour-tree", "part": "the boss's phase, the top of its tree, in the panel on the right and over its head"},
-        {"technique": "weighed-actions", "part": "every attack of the phase scored in the panel on the right: the highest is thrown, never three times in a row"}
+        {"technique": "weighed-actions", "part": "every attack of the phase scored in the panel on the right: the highest is thrown, never three times in a row"},
+        {"technique": "wave-director", "part": "the panel's director line -- build-up, peak, relief -- and what the next wave waits for; the level's numbers above it, Tab to change them"}
       ],
-      "controls": "WASD walk, the mouse turns the camera; click or J a light attack, Shift dodges, Q locks on; H hides the reasoning, N fights again, P pauses, Space one decision while paused",
+      "controls": "WASD walk, the mouse turns the camera; click or J a light attack, Shift dodges, Q locks on; Tab the next level, easy, normal or hard; H hides the reasoning, N fights again, P pauses, Space one decision while paused",
       "watch": "Watch the yellow rings: never more than two at once, and none on a minion while the boss's heavy blow winds up. Let a melee minion reach you while the ranged one aims: its line vanishes, its token was taken back. Read the panel's timer: once a melee minion is on you, no ranged minion asks for a token for three times the ranged delay.",
       "docs": "docs/godot/bossfight.md"
     }

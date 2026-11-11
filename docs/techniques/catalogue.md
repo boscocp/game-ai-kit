@@ -74,8 +74,9 @@ A row per demo, a column per technique; each mark links the technique's page, an
   - techniques: ● [ai_bayes](ai_bayes.md) (a Bayesian network, exact inference by enumeration); ● [ai_constraints](ai_constraints.md) (constraint satisfaction, AC-3 and backtracking); ● [ai_fuzzy](ai_fuzzy.md) (fuzzy logic); ● [ai_perception](ai_perception.md) (vision shape with light and hearing, awareness, belief map); ● [ai_search](ai_search.md) (A*); ● [ai_steering](ai_steering.md) (flocking); ● [ai_teamwork](ai_teamwork.md) (a shared search, role arbiter); ● [ai_utility](ai_utility.md) (utility-weighed actions).
   - written inside the example itself: a director pacing the threats by intensity.
 - <a id="demo-bossfight"></a>**The boss fight**, `make demo-bossfight` -- like Marvel's Spider-Man or a soulslike: a group round you, one strikes at a time.
-  - keys: H hides the reasoning: who holds a token, the queue, the timer, the rings and their claims, the boss's phase and telegraph; Q locks on.
+  - keys: H hides the reasoning: who holds a token, the queue, the timer, the rings and their claims, the boss's phase and telegraph, the director's state and next wave; Q locks on.
   - techniques: ● [ai_behaviour](ai_behaviour.md) (behaviour tree); ● [ai_perception](ai_perception.md) (vision cone with line of sight and hearing); ● [ai_steering](ai_steering.md) (arrive); ● [ai_teamwork](ai_teamwork.md) (attack tokens, lent one kind at a time, engagement rings round the target); ● [ai_utility](ai_utility.md) (utility-weighed actions).
+  - written inside the example itself: a director pacing the waves by the fight's events.
 - <a id="demo-botmatch"></a>**Bot match**, `make demo-botmatch` -- like a bot match in Unreal Tournament or Counter-Strike.
   - keys: 1-3 blue's claims, commander and retreat; Tab a bot; T take it over; M the map.
   - techniques: ● [ai_perception](ai_perception.md); ● [ai_search](ai_search.md) (A*); ● [ai_teamwork](ai_teamwork.md) (tactical positions with claims, team commander over influence, squad confidence and retreat in waves); ● [ai_utility](ai_utility.md) (utility-weighed actions).

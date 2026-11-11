@@ -1,9 +1,11 @@
-## The boss fight's AI knobs, read from `boss_fight.json`: the token pools and
-## their delays, the three rings, and the group the boss fights with.
+## The boss fight's AI knobs: from `boss_fight.json` what no level changes
+## -- the token multipliers and timeouts, the three rings, the director's
+## pacing -- and from one level of `difficulty.json` (T158) the token pools
+## and their delays, the waves' size and their cap.
 ##
-## Data, so T158's difficulty table can fill the same fields per level and
-## the code that reads them does not change. The bodies' speeds and damage
-## are not here: they are the game's, not the AI's.
+## Data, so a level fills the same fields and the code that reads them does
+## not change. The bodies' speeds and damage are not here: they are the
+## game's, not the AI's.
 ##
 ## When not to use it: for anything a body does -- that is `BossFightPlayer`,
 ## `BossMinion` and `BossFight`'s constants.
@@ -24,8 +26,16 @@ var decide_every: float = 0.25
 var arena_half: int = 15
 ## The pillars' cells: they block sight and bodies.
 var pillars: Array[Vector2i] = []
-## Melee and ranged minions in a wave.
+## The level these rules were read for.
+var level: String = ""
+## Melee and ranged minions a wave brings.
 var wave: Dictionary[String, int] = {}
+## How much faster (below 1) or slower the level shows the boss's tells.
+var telegraph_scale: float = 1.0
+## The most of each kind that may stand at once: a wave stops there.
+var wave_cap: Dictionary[String, int] = {}
+## The director's numbers, as `BossDirector` takes them.
+var director: Dictionary = {}
 ## The raw token and ring sections, turned into configs on demand.
 var _tokens: Dictionary = {}
 var _rings: Dictionary = {}
@@ -33,8 +43,14 @@ var _rings: Dictionary = {}
 var refusal: String = ""
 
 
-## The shipped rules, or refused ones whose `refusal` says why.
-static func read(path: String = FILE) -> BossFightRules:
+## The shipped rules at `level_name` ("" the default level), or refused
+## ones whose `refusal` says why -- an unknown level among them.
+static func read(path: String = FILE, level_name: String = "") -> BossFightRules:
+	return BossDifficulty.read().rules_for(level_name, path)
+
+
+## `path` alone, no level applied yet: what every level shares.
+static func shared(path: String = FILE) -> BossFightRules:
 	var rules: BossFightRules = new()
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
 	if not (parsed is Dictionary):
@@ -46,11 +62,23 @@ static func read(path: String = FILE) -> BossFightRules:
 	rules.arena_half = int(data.get("arena_half", rules.arena_half))
 	for cell: Array in data.get("pillars", []):
 		rules.pillars.append(Vector2i(int(cell[0]), int(cell[1])))
-	for kind: String in data.get("wave", {}):
-		rules.wave[kind] = int(data["wave"][kind])
 	rules._tokens = data.get("tokens", {})
 	rules._rings = data.get("rings", {})
+	rules.director = data.get("director", {})
 	return rules
+
+
+## Take `fields`, one level of `difficulty.json`, named `level_name`: its
+## pools and delays into the token sections, its wave and its cap.
+func apply(level_name: String, fields: Dictionary) -> void:
+	level = level_name
+	telegraph_scale = float(fields.get("telegraph_scale", 1.0))
+	_tokens = _tokens.duplicate(true)
+	for section: String in ["pools", "delays"]:
+		_tokens[section] = fields.get("tokens", {}).get(section, {})
+	for kind: String in fields.get("wave", {}):
+		wave[kind] = int(fields["wave"][kind])
+		wave_cap[kind] = int(fields.get("wave_cap", {}).get(kind, wave[kind]))
 
 
 ## The player's token pool's numbers, as `AttackTokens` takes them.

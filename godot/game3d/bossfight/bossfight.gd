@@ -7,9 +7,13 @@
 ## Keys: WASD walk (relative to the camera), the mouse turns the camera, a
 ## click or J a light attack, Shift dodges (nothing hurts you mid-dodge), Q
 ## locks on to the nearest enemy in view and again lets go. H hides the AI's
-## reasoning, N fights again, P pauses, Space one decision while paused.
-## The controller: the left stick walks, the right looks, RT attacks, A
-## dodges, RB locks on, Y hides the reasoning.
+## reasoning, N fights again, P pauses, Space one decision while paused, Tab
+## the next difficulty level (T158), which starts the fight again. The
+## controller: the left stick walks, the right looks, RT attacks, A dodges,
+## RB locks on, Y hides the reasoning, Back the next level.
+##
+## Opened with `-- --difficulty=<level>`, it starts at that level; a level
+## that does not exist is refused by name on the panel, and nothing moves.
 ##
 ## The camera and the walking are the infiltration level's, copied rather
 ## than shared: an example depends on no other example (`modules/`).
@@ -20,10 +24,12 @@ const CAMERA_BACK: float = 6.0
 const CAMERA_UP: float = 3.0
 ## The controller, as the keys.
 const PAD_BUTTONS: Dictionary = {JOY_BUTTON_A: KEY_SHIFT, JOY_BUTTON_RIGHT_SHOULDER: KEY_Q, JOY_BUTTON_Y: KEY_H,
-		JOY_BUTTON_X: KEY_J}
+		JOY_BUTTON_X: KEY_J, JOY_BUTTON_BACK: KEY_TAB}
 
 var fight: BossFight
 var _seed: int = 1
+## The level the fight is played at: the flag's, then Tab's.
+var _level: String = ""
 var _paused: bool = false
 var _thinking: bool = true
 var _carried: float = 0.0
@@ -51,6 +57,7 @@ func _ready() -> void:
 	for label: Label in [_boss_panel.heading, _boss_panel.reasons]:
 		label.add_theme_font_size_override("font_size", 13)
 	$Interface.add_child(_boss_panel)
+	_level = BossDifficulty.asked(OS.get_cmdline_user_args())
 	_show_legend()
 	_new_fight()
 	Language.apply_if_opened_alone(self)
@@ -126,6 +133,9 @@ func _key(keycode: Key) -> void:
 		KEY_N:
 			_seed += 1
 			_new_fight()
+		KEY_TAB:
+			_level = BossDifficulty.read().after(fight.rules.level)
+			_new_fight()
 		KEY_P:
 			_paused = not _paused
 		KEY_SPACE:
@@ -140,7 +150,9 @@ func _step_while_paused() -> void:
 
 
 func _new_fight() -> void:
-	fight = BossFight.shipped(_seed)
+	fight = BossFight.shipped(_seed, _level)
+	if fight.refusal() != "":
+		printerr("bossfight: %s" % fight.refusal())  # not shown: a console line
 	_drawing.build(fight)
 
 

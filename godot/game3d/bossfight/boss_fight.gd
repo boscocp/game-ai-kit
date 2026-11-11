@@ -22,14 +22,14 @@
 ##    melee is on the player: the request's account of Spider-Man, not
 ##    checked against the talk (`action-combat-ai.md`);
 ## 7. the ranged minions act, so one whose token was just taken never fires;
-## 8. the boss's blow, the bolts, the summons, and who is down.
+## 8. the boss's blow, the bolts, the director's wave, and who is down.
 ##
 ## The boss's own ranged attack is not held: the minions' pressure is the
 ## minions' rule, and the boss's blows obey only the token count (T156).
 ##
-## A phase the boss enters with `summon` brings each kind back to the
-## wave's size, never above it. T158's director replaces that rule with
-## its pacing.
+## When minions come is `BossDirector`'s (T158): build-up, peak, relief,
+## and a wave at once when the boss enters a phase that summons. A wave
+## brings the level's `wave` of each kind, never past its `wave_cap`.
 ##
 ## When not to use it: for drawing. `BossfightDrawing` draws it.
 class_name BossFight
@@ -62,6 +62,7 @@ var table: BossTable
 var tokens: AttackTokens
 var rings: EngagementRings
 var boss: BossBrain
+var director: BossDirector
 var boss_body: SteeringVehicle
 var boss_facing: Vector2 = Vector2.DOWN
 var player := BossFightPlayer.new()
@@ -99,6 +100,7 @@ func _init(fight_rules: BossFightRules, boss_table: BossTable, seed_value: int) 
 	tokens = AttackTokens.new(rules.token_config())
 	rings = EngagementRings.new(rules.rings_config())
 	boss = BossBrain.new(table, tokens)
+	director = BossDirector.new(rules.director)
 	boss_body = SteeringVehicle.new(Vector2(0, -5), Vector2.ZERO, BOSS_SPEED, BOSS_STRONGEST)
 	player.position = Vector2(0, 6)
 	graph = _arena_graph()
@@ -106,9 +108,10 @@ func _init(fight_rules: BossFightRules, boss_table: BossTable, seed_value: int) 
 	_fill_wave()
 
 
-## The shipped fight.
-static func shipped(seed_value: int) -> BossFight:
-	return BossFight.new(BossFightRules.read(), BossTable.from_file(), seed_value)
+## The shipped fight at `level` ("" the default level).
+static func shipped(seed_value: int, level: String = "") -> BossFight:
+	var difficulty: BossDifficulty = BossDifficulty.read()
+	return BossFight.new(difficulty.rules_for(level), difficulty.table_for(level), seed_value)
 
 
 ## Why it cannot fight, or "": the boss's own refusal.
@@ -134,7 +137,7 @@ func step(intent: BossFightIntent) -> void:
 	_minions_act(BossMinion.RANGED)
 	_boss_acts()
 	_move_bolts()
-	_summon()
+	_direct()
 	_settle()
 
 
@@ -199,10 +202,15 @@ func alive_of(kind: String) -> int:
 	return minions.filter(func(minion: BossMinion) -> bool: return minion.alive() and minion.kind == kind).size()
 
 
-# How many of `kind` a wave adds: up to the wave's size, never above it.
-# Its own function so a test can plant a summon that piles on.
+# How many of `kind` a wave adds: the wave's size, never past the cap.
+# Its own function so a test can plant a wave that piles on.
 func _missing(kind: String) -> int:
-	return maxi(0, rules.wave.get(kind, 0) - alive_of(kind))
+	return clampi(rules.wave_cap.get(kind, 0) - alive_of(kind), 0, rules.wave.get(kind, 0))
+
+
+## True when every kind stands at its cap: a wave would add nobody.
+func full() -> bool:
+	return [BossMinion.MELEE, BossMinion.RANGED].all(func(kind: String) -> bool: return _missing(kind) == 0)
 
 
 func _fill_wave() -> void:
@@ -370,13 +378,17 @@ func _hurt_player(amount: float, by: String) -> bool:
 	return true
 
 
-# A phase that summons brings the group back to the wave's size.
-func _summon() -> void:
+# The director reads the phases the boss entered since the last step, who
+# stands, and whether a heavy blow is underway; a wave when it says so.
+func _direct() -> void:
+	var entered: Array[Dictionary] = []
 	while _boss_events_read < boss.events.size():
-		var event: Dictionary = boss.events[_boss_events_read]
+		if boss.events[_boss_events_read]["what"] == "phase":
+			entered.append(boss.events[_boss_events_read])
 		_boss_events_read += 1
-		if event["what"] == "phase" and event["summon"]:
-			_fill_wave()
+	var standing: int = minions.filter(func(minion: BossMinion) -> bool: return minion.alive()).size()
+	if director.step(time, entered, standing, full(), boss.heavy_underway()):
+		_fill_wave()
 
 
 func _settle() -> void:
