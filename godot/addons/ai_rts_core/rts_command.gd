@@ -44,6 +44,7 @@ func _init(order_kind: String = MOVE, ids: Array[int] = []) -> void:
 
 ## Walk `ids` to `destination`.
 static func move(ids: Array[int], destination: Vector2i) -> RtsCommand:
+	# `new()`, not its own class name: naming it would make the script hold itself (T162, docs/godot/exit-leaks.md).
 	var command: RtsCommand = new(MOVE, ids)
 	command.cell = destination
 	return command

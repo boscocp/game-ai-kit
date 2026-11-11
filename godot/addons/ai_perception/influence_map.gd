@@ -34,6 +34,7 @@ func _init(map_width: int, map_height: int) -> void:
 ## whichever watchers happened to have a partner.
 static func of_watchers(graph: GakGridGraph, cone: VisionCone, eyes: Array[Vector2i],
 		facings: Array[Vector2i]) -> InfluenceMap:
+	# `new()`, not its own class name: naming it would make the script hold itself (T162, docs/godot/exit-leaks.md).
 	var map: InfluenceMap = new(graph.width, graph.height)
 	if eyes.size() != facings.size():
 		return map

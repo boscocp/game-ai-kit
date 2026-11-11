@@ -43,6 +43,7 @@ static func from_dictionary(data: Variant) -> ClonedPlayer:
 	var wrong: String = _why_wrong(data)
 	if wrong != "":
 		return _refused(wrong)
+	# `new()`, not its own class name: naming it would make the script hold itself (T162, docs/godot/exit-leaks.md).
 	var loaded: ClonedPlayer = new()
 	loaded.generated_by = data["generated_by"]
 	loaded.trained_on = data["trained_on"]

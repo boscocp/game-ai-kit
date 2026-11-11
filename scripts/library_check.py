@@ -35,8 +35,9 @@ a command:
            its `project.godot` still the reader's, its `addons/` holding
            exactly the addons that have a zip of their own, no `class_name`
            declared twice, and the route example run on the kit's own
-           files (T160); then every script in it loaded, with nothing
-           still alive when the engine quits (T162)
+           files (T160); then every script in it loaded, as many as its
+           `addons/` holds and not 0, with nothing still alive when the
+           engine quits (T162)
   licence  every zip and the wheel carry LICENSE and NOTICE
 
 A `stranger.gd` run must exit 0 *and* print its marker: a script error
@@ -69,7 +70,8 @@ the same unzipped with `-o` (the check sees the reader's project gone),
 one with an addon no zip of its own has, one
 whose `ai_bandit` declares `GakXorshift` again, and one carrying
 `check_published.LEAKING`, three scripts that leave one alive at exit;
-and a page with a step the check does not
+a kit `addons/` with no script, which the load must refuse rather than
+pass on nothing; and a page with a step the check does not
 take, or without one it does.
 
 Exit codes
@@ -339,7 +341,24 @@ def kit_findings(place: Place, planted: Planted) -> list[str]:
     if findings:
         return findings
     shutil.copy(place.project / "route_example.gd", project / "route_example.gd")
-    return run_runner("kit", "route", project, planted) or load_every_class(project, "step 'kit'")[0]
+    return run_runner("kit", "route", project, planted) or kit_load_findings(project)
+
+
+def kit_load_findings(project: pathlib.Path) -> list[str]:
+    """Every script of the kit loaded, as many as its `addons/` holds, and nothing alive at exit.
+
+    Why the count: a loader that walked nothing would load nothing, leak
+    nothing and pass (invariant 4's empty scene). So the loaded count must
+    be the number of `.gd` files there, and that number must not be 0.
+    """
+    findings, loaded = load_every_class(project, "step 'kit'")
+    if findings:
+        return findings
+    scripts = len(list((project / "addons").rglob("*.gd")))
+    if scripts == 0 or loaded is None or loaded[0] != scripts:
+        return [f"step 'kit': the loader loaded {loaded[0] if loaded else 0} script(s), "
+                f"and my_kit/addons/ holds {scripts}: a kit with no script loaded is no check"]
+    return []
 
 
 def run_example(step: str, text: str, place: Place, planted: Planted) -> list[str]:
@@ -519,7 +538,22 @@ def run_cases(english: str, place: pathlib.Path) -> list[str]:
         found = follow(text, place / f"case-{number}", planted)
         if not any(named in line for line in found):
             failures.append(f"{planted} fails, naming {named} ({found})")
-    return failures
+    return failures + empty_kit_case(place / "case-empty")
+
+
+def empty_kit_case(project: pathlib.Path) -> list[str]:
+    """A kit whose `addons/` holds a folder and no script: the load must not pass.
+
+    Planted here and not through the page: the `kit` step's earlier checks
+    already refuse a kit that lacks an addon, so only the load itself can
+    show that a loader walking nothing is refused (review of wave 176).
+    """
+    (project / "addons" / "ai_core").mkdir(parents=True)
+    (project / "project.godot").write_text(BLANK_PROJECT)
+    found = kit_load_findings(project)
+    if not any("a kit with no script loaded is no check" in line for line in found):
+        return [f"a kit with no script is refused, naming its count ({found})"]
+    return []
 
 
 def self_test() -> int:

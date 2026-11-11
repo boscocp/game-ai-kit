@@ -68,6 +68,7 @@ func _init(level_name: String, horizon: int, depth: int, noise: float) -> void:
 ## with a noise of 0.5 lost to normal 42 to 58 -- nor below easy above the
 ## floor, and nothing here thinks further than 2 plies.
 static func presets() -> Array[Difficulty]:
+	# `new()`, not its own class name: naming it would make the script hold itself (T162, docs/godot/exit-leaks.md).
 	return [
 		new("easy", 0, 1, 0.5),
 		new("normal", 0, 1, 0.0),

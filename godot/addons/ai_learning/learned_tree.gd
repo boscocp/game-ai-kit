@@ -45,6 +45,7 @@ static func from_entry(entry: Dictionary) -> LearnedTree:
 	var built: Array[Dictionary] = []
 	for node: Dictionary in entry["nodes"]:
 		built.append(_with_whole_numbers(node))
+	# `new()`, not its own class name: naming it would make the script hold itself (T162, docs/godot/exit-leaks.md).
 	return new(PackedStringArray(entry["features"]), PackedStringArray(entry["classes"]), built)
 
 

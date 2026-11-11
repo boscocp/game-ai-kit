@@ -125,3 +125,21 @@ func test_a_negative_height_is_clamped_like_a_negative_width() -> void:
 
 	assert_int(graph.height).is_equal(0)
 	assert_bool(graph.contains(Vector2i(0, 0))).is_false()
+
+
+# A game's board, built with no arguments: the shape that made a bare
+# `new(width, height)` in `duplicate_graph` fail (review of wave 176).
+class SixColumnBoard extends GakGridGraph:
+	func _init() -> void:
+		super(6, 2)
+
+
+func test_a_subclass_s_copy_is_still_a_gak_grid_graph() -> void:
+	var board := SixColumnBoard.new()
+	board.block(Vector2i(5, 1))
+	var copy: GakGridGraph = board.duplicate_graph()
+
+	assert_object(copy).is_not_null()
+	assert_bool(copy.get_script() == GakGridGraph).is_true()
+	assert_int(copy.width).is_equal(6)
+	assert_bool(copy.is_blocked(Vector2i(5, 1))).is_true()

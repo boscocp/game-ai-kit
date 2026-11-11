@@ -44,6 +44,7 @@ static func from_entry(entry: Dictionary) -> LearnedForest:
 	for nodes: Array in entry["trees"]:
 		built.append(LearnedTree.from_entry({"features": entry["features"], "classes": entry["classes"],
 			"nodes": nodes}))
+	# `new()`, not its own class name: naming it would make the script hold itself (T162, docs/godot/exit-leaks.md).
 	return new(PackedStringArray(entry["features"]), PackedStringArray(entry["classes"]), built)
 
 

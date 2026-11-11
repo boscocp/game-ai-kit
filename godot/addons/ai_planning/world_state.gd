@@ -54,13 +54,23 @@ func holds_all(predicates: PackedStringArray) -> bool:
 ## writes "this is still true afterwards" when it has to delete a precondition,
 ## and in the other order that predicate would quietly vanish.
 func after(removed: PackedStringArray, added: PackedStringArray) -> WorldState:
-	var next: WorldState = new()
+	var next: WorldState = _empty()
 	next._facts = _facts.duplicate()
 	for predicate: String in removed:
 		next._facts.erase(predicate)
 	for predicate: String in added:
 		next._facts[predicate] = true
 	return next
+
+
+## A state where nothing holds, always a `WorldState`.
+##
+## Why static: in an instance function a bare `new()` builds the instance's
+## own script, and `after` must hand back a `WorldState` whatever subclass
+## asks. In a static function `new()` builds the class it is written in.
+static func _empty() -> WorldState:
+	# `new()`, not its own class name: naming it would make the script hold itself (T162, docs/godot/exit-leaks.md).
+	return new()
 
 
 ## Every predicate that holds, sorted, so two states built in different orders

@@ -35,6 +35,7 @@ func _init(recorded: PackedStringArray = PackedStringArray()) -> void:
 static func from_file(path: String) -> RecordedRuntime:
 	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
 	if file == null:
+		# `new()`, not its own class name: naming it would make the script hold itself (T162, docs/godot/exit-leaks.md).
 		return new()
 	var reader := JSON.new()
 	if reader.parse(file.get_as_text()) != OK or not (reader.data is Dictionary):

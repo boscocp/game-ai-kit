@@ -90,6 +90,7 @@ static func from_dictionary(data: Dictionary, source: String) -> ModelFile:
 	if wrong != "":
 		return _refused("%s (%s)" % [wrong, source])
 
+	# `new()`, not its own class name: naming it would make the script hold itself (T162, docs/godot/exit-leaks.md).
 	var loaded: ModelFile = new()
 	loaded.generated_by = str(data.get("generated_by", "unknown"))
 	loaded.extra = data.duplicate(true)

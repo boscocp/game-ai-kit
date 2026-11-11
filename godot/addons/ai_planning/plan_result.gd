@@ -67,6 +67,7 @@ func action_names() -> PackedStringArray:
 ## There is no plan: the planner tried every state it could reach and the goal
 ## was in none of them.
 static func impossible(states_visited: int) -> PlanResult:
+	# `new()`, not its own class name: naming it would make the script hold itself (T162, docs/godot/exit-leaks.md).
 	return new([] as Array[StripsAction], false, states_visited, false)
 
 

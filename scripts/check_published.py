@@ -51,8 +51,12 @@ wrong reason -- then the planted ones, each named in what it prints: a zip
 with no NOTICE in its addon, a record whose sha256 is wrong, one whose size
 is wrong, a `test/` folder inside, an addon script that does not parse, and
 a `class_name` the import cannot register (it sits inside a string), so the
-loaded count is one fewer than the zip's, and three scripts that leave one
-of them alive at exit.
+loaded count is one fewer than the zip's. Then three scripts that leave
+one of them alive at exit (`LEAKING`): refused with no `known_at_exit`,
+passed when the record knows its exact counts, and refused when the
+record's counts are not the ones printed. The rebuild compare and the
+stray-path rule are planted in `python/tests/test_check_published.py`,
+which needs neither the network nor the engine.
 
 What "alive at exit" is (T162)
 ------------------------------
@@ -61,9 +65,14 @@ still in use at exit`. `godot_shards.FORGIVEN` lets that line through as
 no engine error, on purpose, for the gates that are not about it, so the
 run exited 0. Here it is a finding: a stranger who loads the kit the same
 way sees the same line. Its cause, measured on 4.7.2, is in
-`docs/godot/exit-leaks.md`: a script naming its own class as a value. The rebuild compare and the
-stray-path rule are planted in `python/tests/test_check_published.py`,
-which needs neither the network nor the engine.
+`docs/godot/exit-leaks.md`: a script naming its own class as a value.
+
+An uploaded file cannot be fixed, and its record stays. So an upload that
+leaks is named in its own entry, `known_at_exit`: the two counts the engine
+prints, `still_in_use` and `leaked`, and `why`. The gate passes that upload
+only while the run prints exactly those counts. Any other leak, in any
+upload, fails it. A count that changed fails too, so a new engine that
+leaks more, or less, in 0.1.0 is seen.
 
 Exit codes
 ----------
@@ -109,6 +118,10 @@ MARKER = re.compile(r"PUBLISHED-CHECK: (\d+) script\(s\) loaded, (\d+) class_nam
 CLASS_NAME = re.compile(r"^class_name\s+\w+", re.M)
 TAG = re.compile(r"^v\d+\.\d+\.\d+$")
 FIELDS = ("download", "version", "sha256", "size", "provenance", "note")
+#: The two counts the engine prints at exit, by the name `known_at_exit` gives them.
+EXIT_COUNTS = ("still_in_use", "leaked")
+EXIT_COUNT_LINES = {"still_in_use": re.compile(rf"(\d+) resources {IN_USE}"),
+                    "leaked": re.compile(rf"(\d+) ObjectDB instances were {LEAKED}")}
 #: Long enough for an import on a loaded machine; short enough to be a finding.
 IMPORT_SECONDS = 240
 DOWNLOAD_SECONDS = 120
@@ -130,6 +143,9 @@ class Upload:
     size: int
     provenance: str
     note: str
+    #: The exit counts this upload is known to print, `{"still_in_use": n,
+    #: "leaked": n}`; empty for an upload that must close clean.
+    known_at_exit: tuple[tuple[str, int], ...] = ()
 
     @property
     def label(self) -> str:
@@ -153,10 +169,27 @@ def read_record(path: pathlib.Path) -> list[Upload]:
             raise Unreachable(f"{path}: an upload lacks {missing}")
         if entry["provenance"] != "unknown" and not TAG.match(entry["provenance"]):
             raise Unreachable(f"{path}: provenance {entry['provenance']!r} is neither a tag nor 'unknown'")
-        uploads.append(Upload(**{field: entry[field] for field in FIELDS}))
+        uploads.append(Upload(**{field: entry[field] for field in FIELDS},
+                              known_at_exit=known_counts(path, entry.get("known_at_exit"))))
     if not uploads:
         raise Unreachable(f"{path} records no upload")
     return uploads
+
+
+def known_counts(path: pathlib.Path, known: object) -> tuple[tuple[str, int], ...]:
+    """An entry's `known_at_exit` as the counts to expect; Unreachable when malformed.
+
+    Why it insists on both counts and a `why`: an exception nobody can trace
+    back to a task is a hole in the gate, not a record.
+    """
+    if known is None:
+        return ()
+    if (not isinstance(known, dict) or set(known) != {"still_in_use", "leaked", "why"}
+            or not all(isinstance(known[count], int) and known[count] >= 0 for count in EXIT_COUNTS)
+            or not any(known[count] for count in EXIT_COUNTS)
+            or not isinstance(known["why"], str) or not known["why"]):
+        raise Unreachable(f"{path}: known_at_exit must be still_in_use and leaked, not both 0, and a why")
+    return tuple((count, known[count]) for count in EXIT_COUNTS)
 
 
 # --- the download -----------------------------------------------------------
@@ -259,13 +292,40 @@ def exit_leaks(output: str) -> list[str]:
     return [line.strip() for line in output.splitlines() if LEAKED in line or IN_USE in line]
 
 
-def load_every_class(project: pathlib.Path, step: str) -> tuple[list[str], tuple[int, int] | None]:
+def exit_counts(output: str) -> tuple[tuple[str, int], ...]:
+    """The two counts the engine printed at exit, as `known_at_exit` holds them; () when none."""
+    counts = []
+    for name, line in EXIT_COUNT_LINES.items():
+        found = line.search(output)
+        counts.append((name, int(found.group(1)) if found else 0))
+    return tuple(counts) if any(count for _, count in counts) else ()
+
+
+def exit_findings(output: str, step: str, known: tuple[tuple[str, int], ...]) -> list[str]:
+    """Nothing when the run printed exactly the counts its record knows of, none for most.
+
+    Why a count that changed is a finding too: the exception covers the
+    leak that was measured, not whatever a later engine makes of that file.
+    """
+    printed = exit_counts(output)
+    if printed == known and (known or not exit_leaks(output)):
+        return []
+    if not known:
+        return [f"{step}: loading every script leaves something alive at exit, "
+                f"which a stranger sees too (docs/godot/exit-leaks.md): {exit_leaks(output)}"]
+    return [f"{step}: the record's known_at_exit is {dict(known)}, and this run printed "
+            f"{dict(printed) or 'nothing'}: a changed count is a finding (docs/godot/exit-leaks.md)"]
+
+
+def load_every_class(project: pathlib.Path, step: str,
+                     known: tuple[tuple[str, int], ...] = ()) -> tuple[list[str], tuple[int, int] | None]:
     """Every script under the imported `project`'s `addons/` loaded; what went wrong, and the counts.
 
     Why the exit lines are read here and not in `godot_checked.py`: there
     they are forgiven for every gate that is not about them, and they are
     printed after the last line the loader runs, so only its output shows
-    them. `library_check.py` calls this on the kit it unzipped (T162).
+    them. `known` is the upload's `known_at_exit`. `library_check.py` calls
+    this on the kit it unzipped, which must close clean (T162).
     """
     (project / LOADER.name).write_bytes(LOADER.read_bytes())
     command = [sys.executable, str(CHECKED), "--project", str(project),
@@ -275,14 +335,13 @@ def load_every_class(project: pathlib.Path, step: str) -> tuple[list[str], tuple
     if code != 0 or found is None:
         errors = [line for line in output.splitlines() if "ERROR" in line][:5]
         return [f"{step}: a script does not load in a stranger's project (exit {code}): {errors}"], None
-    leaks = exit_leaks(output)
+    leaks = exit_findings(output, step, known)
     if leaks:
-        return [f"{step}: loading every script leaves something alive at exit, "
-                f"which a stranger sees too (docs/godot/exit-leaks.md): {leaks}"], None
+        return leaks, None
     return [], (int(found.group(1)), int(found.group(2)))
 
 
-def install_findings(archive: pathlib.Path) -> list[str]:
+def install_findings(archive: pathlib.Path, known: tuple[tuple[str, int], ...] = ()) -> list[str]:
     """The archive in a blank project outside the repository: imported, every script loaded."""
     with tempfile.TemporaryDirectory(prefix="gak-published-") as root:
         project = blank_project(pathlib.Path(root), archive)
@@ -291,7 +350,7 @@ def install_findings(archive: pathlib.Path) -> list[str]:
             raise Unreachable("no engine: run 'make bootstrap'")
         if code != 0 or engine_errors(output):
             return [f"install: the import fails (exit {code}): {engine_errors(output)[:5]}"]
-        findings, loaded = load_every_class(project, "install")
+        findings, loaded = load_every_class(project, "install", known)
     if loaded is None:
         return findings
     if loaded != expected_counts(archive):
@@ -352,7 +411,7 @@ def archive_findings(archive: pathlib.Path, upload: Upload) -> list[str]:
     except zipfile.BadZipFile:
         return [*findings, "contents: the download is not a zip"]
     contents = contents_findings(names)
-    return [*findings, *(contents or install_findings(archive))]
+    return [*findings, *(contents or install_findings(archive, upload.known_at_exit))]
 
 
 def check(record: pathlib.Path) -> int:
@@ -406,6 +465,8 @@ LEAKING = {
     "addons/ai_core/c_planted_child.gd": b"class_name GakPlantedChild\nextends GakPlantedBase\n\n\n"
                                          b"static func make() -> RefCounted:\n\treturn GakPlantedChild.new()\n",
 }
+#: What `LEAKING` beside `ai_core` prints at exit on 4.7.2: one resource, two objects.
+LEAKING_COUNTS = (("still_in_use", 1), ("leaked", 2))
 
 
 def plants(clean: dict[str, bytes]) -> list[tuple[str, dict[str, bytes], str, str]]:
@@ -425,20 +486,29 @@ def plants(clean: dict[str, bytes]) -> list[tuple[str, dict[str, bytes], str, st
         ("an addon script that does not parse", broken, "", "Parse Error"),
         ("a class_name the import cannot register", unseen, "", "class_name(s) came up"),
         ("a script left alive at exit", {**clean, **LEAKING}, "", "alive at exit"),
+        ("a leak the record counts differently", {**clean, **LEAKING}, "miscounted", "a changed count"),
+        ("a leak the record knows of, gone from the file", clean, "known", "a changed count"),
     ]
 
 
 def lying(upload: Upload, field: str) -> Upload:
-    """`upload` with `field` made false; as it is when `field` is empty."""
+    """`upload` with `field` made false; as it is when `field` is empty.
+
+    `known` records `LEAKING`'s own counts, and `miscounted` one object more.
+    """
     if field == "sha256":
         return dataclasses.replace(upload, sha256="0" * 64)
     if field == "size":
         return dataclasses.replace(upload, size=upload.size + 1)
+    if field == "known":
+        return dataclasses.replace(upload, known_at_exit=LEAKING_COUNTS)
+    if field == "miscounted":
+        return dataclasses.replace(upload, known_at_exit=(("still_in_use", 1), ("leaked", 3)))
     return upload
 
 
 def self_test() -> int:
-    """The untouched zip must pass; each planted fault must be named."""
+    """The untouched zip, and a leak recorded with its counts, must pass; each planted fault must be named."""
     clean = addon_entries("ai_core")
     failures = []
     with tempfile.TemporaryDirectory(prefix="gak-published-selftest-") as root:
@@ -448,6 +518,11 @@ def self_test() -> int:
         found = archive_findings(pathlib.Path(root) / "case-clean.zip", untouched)
         if found:
             failures.append(f"the untouched zip passes ({found})")
+        # The exception itself: a leak whose exact counts the record holds.
+        known = lying(planted_zip(pathlib.Path(root) / "case-known.zip", {**clean, **LEAKING}), "known")
+        found = archive_findings(pathlib.Path(root) / "case-known.zip", known)
+        if found:
+            failures.append(f"a leak the record knows of, with its counts, passes ({found})")
         for number, (label, entries, lies, named) in enumerate(plants(clean)):
             archive = pathlib.Path(root) / f"case-{number}.zip"
             upload = lying(planted_zip(archive, entries), lies)
