@@ -29,6 +29,8 @@ static func overlay(fight: BossFight) -> Dictionary:
 ## the seconds left.
 static func tokens(fight: BossFight, kind: String) -> Dictionary:
 	var state: String = fight.last_grant.get(kind, {}).get("state", fight.player_state())
+	if kind == BossMinion.RANGED and fight.holding_fire():
+		state = BossFightRules.PRESSED
 	var base: float = fight.tokens.delay_for(kind, BossFightRules.FREE)
 	return {"pool": fight.tokens.free_tokens(kind) + fight.tokens.held(kind), "free": fight.tokens.free_tokens(kind),
 		"holders": _listed(fight.tokens.holders(kind)), "queue": _listed(fight.tokens.waiting(kind)),

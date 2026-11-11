@@ -8,20 +8,28 @@
 ## runs in an order that is the rule written down:
 ##
 ## 1. the player moves, swings, dodges, locks on;
-## 2. every `decide_every` seconds the minions ask for tokens and points;
-## 3. the boss decides; the pool grants, its delay stretched while the
-##    player is pressed;
-## 4. the melee minions act -- one may start winding up;
-## 5. if a melee minion is winding up or striking, every ranged token is
-##    taken back (`revoke_kind`, T154's fourth way back), and the delay
-##    before the next ranged grant is stretched: a ranged attacker holds
-##    fire while melee is on the player, the request's account of
-##    Spider-Man, not checked against the talk (`action-combat-ai.md`);
-## 6. the ranged minions act, so one whose token was just taken never fires;
-## 7. the boss's blow, the bolts, the summons, and who is down.
+## 2. whether the player is pressed -- a melee minion winding up or
+##    striking -- is read, as of now;
+## 3. every `decide_every` seconds the minions ask for tokens and points; a
+##    ranged minion holding fire asks for none;
+## 4. the boss decides; the pool grants;
+## 5. the melee minions act -- one may start winding up;
+## 6. if that pressed the player, every ranged minion's token is taken back
+##    (T154's fourth way back) and its request withdrawn, and the ranged
+##    minions hold fire: no ranged minion asks again while the player is
+##    pressed, nor until the pool's pressed ranged delay (2 s x 3) has
+##    passed since the pressure began. A ranged attacker holds fire while
+##    melee is on the player: the request's account of Spider-Man, not
+##    checked against the talk (`action-combat-ai.md`);
+## 7. the ranged minions act, so one whose token was just taken never fires;
+## 8. the boss's blow, the bolts, the summons, and who is down.
 ##
-## A phase the boss enters with `summon` brings the group back to the wave's
-## size. T158's director replaces that rule with its pacing.
+## The boss's own ranged attack is not held: the minions' pressure is the
+## minions' rule, and the boss's blows obey only the token count (T156).
+##
+## A phase the boss enters with `summon` brings each kind back to the
+## wave's size, never above it. T158's director replaces that rule with
+## its pacing.
 ##
 ## When not to use it: for drawing. `BossfightDrawing` draws it.
 class_name BossFight
@@ -67,8 +75,10 @@ var time: float = 0.0
 var outcome: String = ""
 ## True while a melee minion winds up or strikes at the player.
 var pressed: bool = false
+## Until when the ranged minions hold fire after pressure began.
+var held_fire_until: float = -INF
 ## What happened, in order: {at, what, who}: struck, fired, called_off,
-## revoked, hit, summoned, down.
+## held_fire, revoked, hit, summoned, down.
 var events: Array[Dictionary] = []
 ## Per kind, the last grant: {at, state} -- the reissue timer's start.
 var last_grant: Dictionary[String, Dictionary] = {}
@@ -77,6 +87,8 @@ var _serial: int = 0
 var _boss_landed: bool = false
 var _boss_events_read: int = 0
 var _arrive := ArriveBehaviour.new(Vector2.ZERO, 2.0, 0.2)
+## Places every wave, the first and the summoned, from the fight's seed.
+var _random := RandomNumberGenerator.new()
 
 
 ## A fight on `fight_rules` against `boss_table`, its first wave placed by
@@ -90,9 +102,8 @@ func _init(fight_rules: BossFightRules, boss_table: BossTable, seed_value: int) 
 	boss_body = SteeringVehicle.new(Vector2(0, -5), Vector2.ZERO, BOSS_SPEED, BOSS_STRONGEST)
 	player.position = Vector2(0, 6)
 	graph = _arena_graph()
-	var random := RandomNumberGenerator.new()
-	random.seed = seed_value
-	_fill_wave(random)
+	_random.seed = seed_value
+	_fill_wave()
 
 
 ## The shipped fight.
@@ -111,6 +122,7 @@ func step(intent: BossFightIntent) -> void:
 		return
 	time += rules.step_seconds
 	_player_acts(intent)
+	pressed = _pressing()
 	rings.place(player.position)
 	if time >= _next_decision:
 		_next_decision = time + rules.decide_every
@@ -137,12 +149,28 @@ func player_state() -> String:
 
 
 ## Seconds until `kind` may be granted again: the delay set at its last
-## grant, by the state the player was in then, less the time since.
+## grant, by the state the player was in then, less the time since; for
+## ranged, at least until the minions stop holding fire.
 func next_grant_in(kind: String) -> float:
-	if not last_grant.has(kind):
-		return 0.0
-	var record: Dictionary = last_grant[kind]
-	return maxf(0.0, record["at"] + tokens.delay_for(kind, record["state"]) - time)
+	var left: float = 0.0
+	if last_grant.has(kind):
+		var record: Dictionary = last_grant[kind]
+		left = record["at"] + tokens.delay_for(kind, record["state"]) - time
+	if kind == BossMinion.RANGED:
+		left = maxf(left, held_fire_until - time)
+	return maxf(0.0, left)
+
+
+## True while the ranged minions hold fire: the player pressed, or the
+## pressed ranged delay not yet over since the pressure began.
+func holding_fire() -> bool:
+	return pressed or time < held_fire_until
+
+
+## How long the ranged minions hold fire after pressure begins: the pool's
+## ranged delay with the pressed multiplier -- 2 s x 3 shipped.
+func hold_fire_seconds() -> float:
+	return tokens.delay_for(BossMinion.RANGED, BossFightRules.PRESSED)
 
 
 ## Where the enemy with token id `who` stands, or the player's own place
@@ -166,12 +194,22 @@ func _make_minion(kind: String, serial: int, at: Vector2) -> BossMinion:
 	return BossMinion.new(kind, serial, at)
 
 
-func _fill_wave(random: RandomNumberGenerator) -> void:
+## Minions of `kind` standing now.
+func alive_of(kind: String) -> int:
+	return minions.filter(func(minion: BossMinion) -> bool: return minion.alive() and minion.kind == kind).size()
+
+
+# How many of `kind` a wave adds: up to the wave's size, never above it.
+# Its own function so a test can plant a summon that piles on.
+func _missing(kind: String) -> int:
+	return maxi(0, rules.wave.get(kind, 0) - alive_of(kind))
+
+
+func _fill_wave() -> void:
 	for kind: String in [BossMinion.MELEE, BossMinion.RANGED]:
-		var alive: int = minions.filter(func(minion: BossMinion) -> bool: return minion.alive() and minion.kind == kind).size()
-		for count: int in range(rules.wave.get(kind, 0) - alive):
+		for count: int in range(_missing(kind)):
 			_serial += 1
-			var angle: float = random.randf_range(0.0, TAU)
+			var angle: float = _random.randf_range(0.0, TAU)
 			var at: Vector2 = Vector2.from_angle(angle) * (rules.arena_half - 2.0)
 			minions.append(_make_minion(kind, _serial, at))
 			events.append({"at": time, "what": "summoned", "who": minions[-1].id})
@@ -226,11 +264,12 @@ func _minions_decide(intent: BossFightIntent) -> void:
 			bodies.append(minion.body)
 	for minion: BossMinion in minions:
 		minion.keep_apart_from(bodies)
-		minion.decide(tokens, rings, intent.view_from, intent.view_forward, time)
+		var hold: bool = minion.kind == BossMinion.RANGED and holding_fire()
+		minion.decide(tokens, rings, intent.view_from, intent.view_forward, time, hold)
 
 
 # The pool grants; each grant starts its kind's reissue timer, noted with
-# the player's state, which set the delay.
+# the player's state now, which set the delay.
 func _grant() -> void:
 	for who: String in tokens.step(time, player_state()):
 		var kind: String = BossMinion.MELEE if who in tokens.holders(BossMinion.MELEE) else BossMinion.RANGED
@@ -252,14 +291,28 @@ func _minions_act(kind: String) -> void:
 			events.append({"at": time, "what": happened, "who": minion.id, "pressed": pressed})
 
 
-# Melee on the player takes back every ranged token: the fourth way back.
-# Its own function so a test can plant a fight that forgets.
+# True when a melee minion winds up or strikes at the player.
+func _pressing() -> bool:
+	return minions.any(func(minion: BossMinion) -> bool: return minion.state in BossMinion.PRESSING)
+
+
+# Melee on the player takes back every ranged minion's token -- the fourth
+# way back -- and its request, and starts the hold when the pressure is
+# new. Its own function so a test can plant a fight that forgets.
 func _hold_fire() -> void:
-	pressed = minions.any(func(minion: BossMinion) -> bool: return minion.state in BossMinion.PRESSING)
+	var was_pressed: bool = pressed
+	pressed = _pressing()
 	if not pressed:
 		return
-	for who: String in tokens.revoke_kind(BossMinion.RANGED, time):
-		events.append({"at": time, "what": "revoked", "who": who})
+	if not was_pressed:
+		held_fire_until = time + hold_fire_seconds()
+		events.append({"at": time, "what": "held_fire", "who": BossMinion.RANGED})
+	for minion: BossMinion in minions:
+		if minion.kind != BossMinion.RANGED:
+			continue
+		if tokens.release(minion.id, AttackTokens.REVOKED, time):
+			events.append({"at": time, "what": "revoked", "who": minion.id})
+		tokens.withdraw(minion.id, time)
 
 
 func _boss_acts() -> void:
@@ -323,9 +376,7 @@ func _summon() -> void:
 		var event: Dictionary = boss.events[_boss_events_read]
 		_boss_events_read += 1
 		if event["what"] == "phase" and event["summon"]:
-			var random := RandomNumberGenerator.new()
-			random.seed = _boss_events_read
-			_fill_wave(random)
+			_fill_wave()
 
 
 func _settle() -> void:

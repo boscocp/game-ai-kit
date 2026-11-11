@@ -63,7 +63,10 @@ static func _outcome(fight: BossFight) -> String:
 
 static func _pressure(fight: BossFight) -> String:
 	if fight.pressed:
-		return TranslationServer.translate("pressed: a melee minion is on you, so every ranged token is taken back")
+		return TranslationServer.translate("pressed: a melee minion is on you, so the ranged lose their tokens and hold fire")
+	if fight.holding_fire():
+		return TranslationServer.translate("holding fire: the ranged ask again in {left} s, after melee was on you").format(
+			{"left": Language.decimal(fight.held_fire_until - fight.time, 1)})
 	return TranslationServer.translate("free: no melee minion is striking, so the ranged may shoot")
 
 

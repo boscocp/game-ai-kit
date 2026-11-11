@@ -43,8 +43,15 @@ minion. The pool is the one numbers file, `boss_fight.json`:
 |---|---|---|
 | tokens | 2 | 1 |
 | seconds between grants | 0.6 | 2.0 |
-| that, while you are pressed | x 1.0 | x 3.0 |
+| the pressed multiplier | x 1.0 | x 3.0 |
 | the longest a token is held | 5.0 | 4.0 |
+
+The ranged x 3 is the hold below: once melee pressure begins, no ranged
+minion asks for a token for 2 s x 3 = 6 s, nor while the pressure lasts.
+The fight reads that number from the pool (`delay_for("ranged",
+"pressed")`), so a difficulty table that changes the multiplier changes
+the hold. The melee x 1 is the pool's own: a grant made while you are
+pressed sets the next melee grant's delay by it.
 
 A minion without a token stands on the **waiting ring** (5 m). With a melee
 token it walks to a point on the **inner ring** (2 m) and winds up once it
@@ -66,15 +73,23 @@ The rule that keeps a ranged minion from shooting while a melee one is on
 you is not a check before firing: it is the order of the step.
 
 1. You move, swing, dodge, lock on.
-2. Every quarter second the minions ask for tokens and choose ring points.
-3. The boss decides; the pool grants.
-4. The melee minions act: one in reach starts winding up.
-5. If a melee minion is winding up or striking, you are **pressed**: every
-   ranged token is taken back (`revoke_kind`, T154's fourth way back), and
-   the next ranged grant waits three times as long.
-6. The ranged minions act. One whose token was just taken calls its aim
+2. Whether you are **pressed** -- a melee minion winding up or striking --
+   is read, as of now.
+3. Every quarter second the minions ask for tokens and choose ring points.
+   A ranged minion asks for none while the ranged hold fire: while you are
+   pressed, and for 6 s after the pressure began.
+4. The boss decides; the pool grants. So no ranged minion is granted a
+   token while you are pressed: none of them is asking.
+5. The melee minions act: one in reach starts winding up.
+6. If that pressed you, every ranged minion's token is taken back (T154's
+   fourth way back) and its request withdrawn, and the 6 s hold starts.
+7. The ranged minions act. One whose token was just taken calls its aim
    off, so it never fires.
-7. The boss's blow, the bolts, the summons, and who is down.
+8. The boss's blow, the bolts, the summons, and who is down.
+
+A token taken back in step 6 was granted in step 4 of the same step, while
+you were still free; it is the only way a ranged grant goes unused, and it
+is not counted as that minion's turn (below).
 
 The request that asked for this example described it as Insomniac's
 Spider-Man: a group, one attacks at a time, and a ranged one from far away.
@@ -91,8 +106,8 @@ orange through its telegraph and red while the blow lands, a ranged
 minion's aim growing towards you, and your lock-on. Over each head: its
 state and its place in the queue. In the panel on the left: each kind's
 holders, its queue in the order it would be served, and the reissue timer
--- the base delay, the factor your state set at the last grant, the
-seconds left -- and each ring's claims. On the right, T156's `BossPanel`:
+-- the base delay, the factor in force (for ranged, x 3 while the hold
+lasts), the seconds left -- and each ring's claims. On the right, T156's `BossPanel`:
 the phase, the attack, the telegraph bar, and every attack's score.
 
 `decision_overlay()` hands the same to a test (`BossFightShown`). No field
@@ -108,24 +123,43 @@ flags:
 
 - **at most the pool's melee attackers at any step**: the minions in a
   melee window, plus the boss in one at its attack's cost, never above 2;
-- **every minion that waits gets a turn**: none waits more than 15 s;
+- **every minion that waits gets a turn**: none spends more than 15 s
+  queued between two tokens it kept. A token taken back in the step it was
+  granted is no turn. The time a ranged minion's request is withdrawn by
+  the hold is not counted: the hold is the rule, not the pool passing it
+  over;
 - **a ranged minion never fires while melee pressure is on**, the pressure
   read from the minions' states;
 - **the fight ends**.
 
+And four the fight adds:
+
+- **no ranged grant to a minion at a step that began with you pressed**,
+  and none within 6 s after a hold began, the 6 s read from the pool;
+- **no kind above the wave's size** at any step, summons included;
+- **the overlay names a real holder, a real queue and a real claim** at
+  some step -- not only "none".
+
 Each check first rejects a planted case: a fight that forgets to take the
-ranged token back (it fires under pressure on some seed), minions that
-believe they hold a token (the pool is passed), a minion left waiting 16 s,
-and a fight where nothing hurts a player who never swings (it runs the full
-60 s). The runs are not empty: in them the pool fills, melee minions
-strike, ranged ones fire, and ranged tokens are taken back.
+ranged token back (it fires under pressure on some seed), a fight whose
+hold is cut to nothing (a grant inside the 6 s), summons that add a whole
+wave on top of the living, minions that believe they hold a token (the pool
+is passed), a minion left waiting 16 s, an overlay that only ever says
+"none", and a fight where nothing hurts a player who never swings (it runs
+the full 60 s). The runs are not empty: in them the pool fills, melee
+minions strike, ranged ones fire, ranged tokens are taken back, summons
+come, and a ranged grant comes after a hold. Two cases are set up by hand:
+a melee minion that falls holding its token gives it back, and a minion
+the rings refuse a point gets one at its next decision once one is free.
 
 Measured on 2026-11-11, seeds 1, 2, 3, 5, 8, 13, 21 and 34: every fight was
-won by the scripted player, in 28 to 48 s; the melee load reached the pool
-and never passed it; 4 to 9 ranged tokens were taken back per fight, and
-no minion fired under pressure; the longest wait was 9.5 s, a melee minion
-summoned mid-fight. A ranged minion waited 8.6 s at most: the pressed
-delay alone is 6 s. About 0.2 s of compute per fight.
+won by the scripted player, in 25 to 48 s; the melee load reached the pool
+and never passed it; the ranged held fire 7 to 13 times a fight; 2 or 3
+ranged tokens a fight were granted while you were free and taken back in
+the same step; no minion fired under pressure, and none was granted a
+ranged token inside a hold. The longest queued wait was 7.7 s for a melee
+minion and 4.0 s for a ranged one. Melee never stood above 3, ranged above
+2. About 0.25 s of compute per fight.
 
 ## Decisions this wave took
 
@@ -139,6 +173,9 @@ delay alone is 6 s. About 0.2 s of compute per fight.
 - "Pressure" is a melee minion winding up or striking, not the boss: the
   boss attacks most of the time, and counting it would leave the ranged
   minions nothing.
+- The boss's own ranged attack (`hurl`) does not hold fire: the minions'
+  pressure is their rule, and the boss's blows obey only the token count
+  (T156). Its ranged token is never taken back.
 - The scripted player always wins at these numbers. "The fight ends" is the
   property; who wins is not.
 

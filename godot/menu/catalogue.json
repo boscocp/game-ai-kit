@@ -348,7 +348,7 @@
         {"technique": "weighed-actions", "part": "every attack of the phase scored in the panel on the right: the highest is thrown, never three times in a row"}
       ],
       "controls": "WASD walk, the mouse turns the camera; click or J a light attack, Shift dodges, Q locks on; H hides the reasoning, N fights again, P pauses, Space one decision while paused",
-      "watch": "Watch the yellow rings: never more than two at once, and none on a minion while the boss's heavy blow winds up. Let a melee minion reach you while the ranged one aims: its line vanishes, its token was taken back. Read the panel's timer: while you are pressed, the next ranged token waits three times as long.",
+      "watch": "Watch the yellow rings: never more than two at once, and none on a minion while the boss's heavy blow winds up. Let a melee minion reach you while the ranged one aims: its line vanishes, its token was taken back. Read the panel's timer: once a melee minion is on you, no ranged minion asks for a token for three times the ranged delay.",
       "docs": "docs/godot/bossfight.md"
     }
   ]

@@ -88,14 +88,19 @@ func holds_token(tokens: AttackTokens) -> bool:
 	return id in tokens.holders(kind)
 
 
-## A decision: ask for a token when free to, and choose a point on the ring
-## that fits it. -1 from the rings -- every point taken, or a bump -- leaves
-## it where it is, and it asks again at its next decision.
-func decide(tokens: AttackTokens, rings: EngagementRings, view_from: Vector2, view_forward: Vector2, now: float) -> void:
+## A decision: ask for a token when free to -- not while it rests after an
+## attack, nor while `hold_fire` says the ranged hold fire, when a request
+## it had is withdrawn -- and choose a point on the ring that fits it. -1
+## from the rings -- every point taken, or a bump -- leaves it where it is,
+## and it asks again at its next decision.
+func decide(tokens: AttackTokens, rings: EngagementRings, view_from: Vector2, view_forward: Vector2, now: float,
+		hold_fire: bool = false) -> void:
 	if state not in [CIRCLING, CLOSING]:
 		return
 	var holds: bool = holds_token(tokens)
-	if not holds and now >= _rest_until:
+	if hold_fire:
+		tokens.withdraw(id, now)
+	elif not holds and now >= _rest_until:
 		tokens.request(id, kind, 1, 0, body.position.distance_to(rings.target), now)
 	ring = EngagementRings.ring_for(holds, kind == RANGED)
 	point = rings.choose(number, ring, body.position, view_from, view_forward)

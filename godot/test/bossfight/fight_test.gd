@@ -1,10 +1,15 @@
 # The boss fight's promises over seeded, headless, scripted 60 s runs (T157):
 # at most the pool's melee attackers at any step, every waiting minion gets
 # a turn, no ranged minion fires while melee pressure is on, and the fight
-# ends. Each is first shown a planted case it must reject: a fight that
-# forgets to take the ranged token back, a minion that strikes without a
-# token, a minion left waiting, and a fight nobody can finish. And what the
-# overlay promises: every field holds something, a refused boss shows why.
+# ends; and the fight's own: no ranged grant under pressure or inside the
+# hold after it, no kind above the wave's size across summons, and an
+# overlay that names real holders, queues and claims. Each is first shown a
+# planted case it must reject: a fight that forgets to take the ranged
+# token back, one whose hold is cut to nothing, one whose summons pile on,
+# a minion that strikes without a token, a minion left waiting, an overlay
+# that only ever says "none", and a fight nobody can finish. And: a fallen
+# token holder gives its token back, a minion the rings refuse asks again,
+# every overlay field holds something, a refused boss shows why.
 extends GdUnitTestSuite
 
 const Audit: GDScript = preload("res://test/bossfight/fight_audit.gd")
@@ -42,6 +47,28 @@ class StrikesWithoutToken:
 		return Tokenless.new(kind, serial, at) if kind == BossMinion.MELEE else BossMinion.new(kind, serial, at)
 
 
+# A fight that holds the ranged fire for no time at all.
+class ShortHold:
+	extends BossFight
+
+	func _init(seed_value: int) -> void:
+		super(BossFightRules.read(), BossTable.from_file(), seed_value)
+
+	func hold_fire_seconds() -> float:
+		return 0.0
+
+
+# A fight whose summons add a whole wave on top of the living.
+class PilesOn:
+	extends BossFight
+
+	func _init(seed_value: int) -> void:
+		super(BossFightRules.read(), BossTable.from_file(), seed_value)
+
+	func _missing(kind: String) -> int:
+		return rules.wave.get(kind, 0)
+
+
 # A fight where nothing hurts the player: with a player that never swings,
 # nobody falls.
 class NobodyFalls:
@@ -55,7 +82,7 @@ class NobodyFalls:
 
 
 func test_the_four_promises_hold_on_every_seed() -> void:
-	var seen: Dictionary = {"strikes": 0, "revoked": 0, "fired": 0, "full": 0}
+	var seen: Dictionary = {"strikes": 0, "revoked": 0, "fired": 0, "full": 0, "summons": 0, "after_hold": 0}
 	for seed_value: int in SEEDS:
 		var fight := BossFight.shipped(seed_value)
 		var trace: Dictionary = Audit.new(seed_value).run(fight)
@@ -63,13 +90,42 @@ func test_the_four_promises_hold_on_every_seed() -> void:
 		assert_array(Audit.left_waiting(trace)).override_failure_message("seed %d left waiting" % seed_value).is_empty()
 		assert_array(Audit.fired_under_pressure(trace)).override_failure_message("seed %d fired under pressure" % seed_value).is_empty()
 		assert_str(trace["ended"]).override_failure_message("seed %d did not end in 60 s" % seed_value).is_not_empty()
+		_holds_the_fight_s_own(seed_value, fight, trace)
 		_count(fight, trace, seen)
-	# Not vacuous: the pool was full, melee struck, ranged fired, and a
-	# ranged token was taken back, somewhere in the runs.
-	assert_int(seen["full"]).is_greater(0)
-	assert_int(seen["strikes"]).is_greater(0)
-	assert_int(seen["fired"]).is_greater(0)
-	assert_int(seen["revoked"]).is_greater(0)
+	# Not vacuous: the pool was full, melee struck, ranged fired, a ranged
+	# token was taken back, a summon came, and a ranged grant came after a hold.
+	for what: String in seen:
+		assert_int(seen[what]).override_failure_message("never seen: " + what).is_greater(0)
+
+
+func _holds_the_fight_s_own(seed_value: int, fight: BossFight, trace: Dictionary) -> void:
+	var said: String = "seed %d: " % seed_value
+	assert_array(Audit.granted_under_pressure(trace)).override_failure_message(said + "granted under pressure").is_empty()
+	assert_array(Audit.granted_while_holding(fight)).override_failure_message(said + "granted in a hold").is_empty()
+	assert_array(Audit.above_the_wave(fight, trace)).override_failure_message(said + "above the wave").is_empty()
+	assert_array(Audit.never_named(trace)).override_failure_message(said + "overlay named nobody").is_empty()
+
+
+func test_a_fight_that_cuts_its_hold_is_caught() -> void:
+	var caught: int = 0
+	for seed_value: int in SEEDS:
+		var fight := ShortHold.new(seed_value)
+		Audit.new(seed_value).run(fight)
+		caught += Audit.granted_while_holding(fight).size()
+	assert_int(caught).is_greater(0)
+
+
+func test_a_summon_that_piles_on_is_caught() -> void:
+	var caught: int = 0
+	for seed_value: int in SEEDS:
+		var fight := PilesOn.new(seed_value)
+		caught += Audit.above_the_wave(fight, Audit.new(seed_value).run(fight)).size()
+	assert_int(caught).is_greater(0)
+
+
+func test_an_overlay_that_names_nobody_is_caught() -> void:
+	assert_array(Audit.never_named({"shown": {}})).contains_exactly(["holders", "queue", "claims"])
+	assert_array(Audit.never_named({"shown": {"holders": true, "queue": true}})).contains_exactly(["claims"])
 
 
 func test_a_fight_that_forgets_to_hold_fire_is_caught() -> void:
@@ -108,15 +164,56 @@ func test_the_same_seed_is_the_same_fight() -> void:
 
 
 func test_melee_on_the_player_takes_the_ranged_token_back() -> void:
-	var fight := BossFight.shipped(3)
-	Audit.new(3).run(fight)
-	var revoked: Array = fight.events.filter(func(event: Dictionary) -> bool: return event["what"] == "revoked")
-	assert_array(revoked).is_not_empty()
-	for event: Dictionary in revoked:
-		assert_bool(str(event["who"]).begins_with(BossMinion.MELEE)).is_false()
-		var taken: Array = fight.tokens.events.filter(func(token_event: Dictionary) -> bool:
-			return token_event["id"] == event["who"] and token_event["at"] == event["at"] and token_event["what"] == AttackTokens.REVOKED)
-		assert_array(taken).has_size(1)
+	var revoked_in_all: int = 0
+	for seed_value: int in SEEDS:
+		var fight := BossFight.shipped(seed_value)
+		Audit.new(seed_value).run(fight)
+		var revoked: Array = fight.events.filter(func(event: Dictionary) -> bool: return event["what"] == "revoked")
+		revoked_in_all += revoked.size()
+		for event: Dictionary in revoked:
+			assert_bool(str(event["who"]).begins_with(BossMinion.RANGED)).is_true()
+			assert_array(_token_events(fight, event)).has_size(1)
+	assert_int(revoked_in_all).is_greater(0)
+
+
+# The pool's REVOKED events matching the fight's `event`, by who and when.
+func _token_events(fight: BossFight, event: Dictionary) -> Array:
+	return fight.tokens.events.filter(func(token_event: Dictionary) -> bool:
+		return token_event["id"] == event["who"] and token_event["at"] == event["at"] and token_event["what"] == AttackTokens.REVOKED)
+
+
+func test_a_minion_the_rings_refuse_asks_again_next_decision() -> void:
+	var config := EngagementRings.Config.new()
+	var ring := EngagementRings.Ring.new()
+	ring.name = EngagementRings.WAITING
+	ring.radius = 5.0
+	ring.count = 1
+	config.rings.append(ring)
+	var rings := EngagementRings.new(config)
+	var tokens := AttackTokens.new(BossFightRules.read().token_config())
+	var minion := BossMinion.new(BossMinion.MELEE, 1, Vector2(0, 8))
+	rings.choose(99, EngagementRings.WAITING, Vector2(0, 9), Vector2(0, -6), Vector2.DOWN)
+	minion.decide(tokens, rings, Vector2(0, -6), Vector2.DOWN, 0.0)
+	assert_int(minion.point).is_equal(-1)
+	rings.release(99)
+	minion.decide(tokens, rings, Vector2(0, -6), Vector2.DOWN, 0.25)
+	assert_int(minion.point).is_equal(0)
+
+
+func test_a_fallen_token_holder_gives_its_token_back() -> void:
+	var fight := BossFight.shipped(1)
+	var audit: RefCounted = Audit.new(1)
+	var holder: BossMinion = null
+	while fight.time < 30.0 and holder == null:
+		fight.step(audit.intent_for(fight))
+		holder = _melee_holder(fight)
+	assert_object(holder).is_not_null()
+	var held_before: int = fight.tokens.held(BossMinion.MELEE)
+	assert_bool(holder.hurt(1.0, fight.tokens, fight.rings, fight.time)).is_true()
+	assert_bool(holder.holds_token(fight.tokens)).is_false()
+	assert_int(fight.tokens.held(BossMinion.MELEE)).is_equal(held_before - 1)
+	assert_bool(holder.id in fight.tokens.waiting(BossMinion.MELEE)).is_false()
+	assert_int(fight.rings.claim_of(holder.number)).is_equal(-1)
 
 
 func test_the_overlay_holds_something_in_every_field() -> void:
@@ -160,6 +257,19 @@ func _count(fight: BossFight, trace: Dictionary, seen: Dictionary) -> void:
 	for sample: Dictionary in trace["loads"]:
 		if sample["load"] == trace["pool"]:
 			seen["full"] += 1
+	seen["summons"] += trace["summons"]
+	var hold: float = fight.tokens.delay_for(BossMinion.RANGED, BossFightRules.PRESSED)
+	var grants: Array = Audit.ranged_grants(fight)
+	for held: Dictionary in fight.events.filter(func(event: Dictionary) -> bool: return event["what"] == "held_fire"):
+		seen["after_hold"] += grants.filter(func(grant: Dictionary) -> bool: return grant["at"] >= held["at"] + hold).size()
+
+
+# A melee minion standing and holding a token, or null.
+func _melee_holder(fight: BossFight) -> BossMinion:
+	for minion: BossMinion in fight.minions:
+		if minion.alive() and minion.kind == BossMinion.MELEE and minion.holds_token(fight.tokens):
+			return minion
+	return null
 
 
 # Every path in `value` that holds nothing: an empty list, word or table.

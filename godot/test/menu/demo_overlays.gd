@@ -73,8 +73,8 @@ const REQUIRED: Dictionary = {
 	"res://game3d/infiltration/infiltration.tscn": [["awareness", true], ["action", false], ["intruder", true]],
 	"res://game/maze/maze.tscn": [["target", false], ["distance", true]],
 	"res://game/talk/talk.tscn": [["trust", true], ["suspicion", true], ["thinking", false]],
-	"res://game3d/bossfight/bossfight.tscn": [["holders", false], ["queue", false], ["next_in", true], ["claims", false],
-		["telegraph", true]],
+	"res://game3d/bossfight/bossfight.tscn": [["holders", false], ["queue", false], ["next_in", true], ["factor", true],
+		["claims", false], ["phase", false], ["telegraph", true]],
 }
 
 ## The same, for an example opened in a mode other than its first (T85),
