@@ -89,4 +89,5 @@ valley's save, `user://valley/`, is meant to survive between sessions.
 `git clean -fdx` still deletes it with the rest, and that is accepted: a
 checkout is a working copy, and deleting the save is what the erase button
 does. `make valley-erase` removes only that folder, and refuses one outside
-the checkout's `.user-data/`. Tests never write the real save.
+the checkout's `.user-data/` or reached through a link. Tests never write
+the real save: they hand `ValleySave` a path under `user://tmp/` (ADR 0025).

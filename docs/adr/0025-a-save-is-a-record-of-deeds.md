@@ -51,7 +51,10 @@ What each part is for:
 - **Appended, never edited, with a schema version.** The record is the
   only truth; a record that can be edited is a model that can be tuned.
   The version lets a later example refuse a file it does not understand
-  rather than misread it.
+  rather than misread it. It lives in the record's first line, a header
+  `{"version": 1}`, and every line after it is one deed. N20 also lets a
+  deed line carry `version`, so a record that repeats it on each line is
+  not refused; it is the record's key, never a person.
 - **One class writes it** (`ValleySave`, T164's name). One writer is one
   place to read when asking what the game keeps.
 - **Nothing derived is saved.** Not the world, not the standing, not a
@@ -101,26 +104,54 @@ net for the common spellings, not a proof. It refuses, each with a planted
 case (invariant 4):
 
 1. **A save written by any other file**: a file write, an erase, or a line
-   naming the save (`user://`, `deeds.json`, `ValleySave.PATH`) anywhere
-   but `valley_save.gd`. Reading the save back from another file is
+   naming the save (`user://`, `deeds.json`, `ValleySave.PATH`) in any game
+   file but `valley_save.gd`. Reading the save back from another file is
    refused too: the record reaches the world through the class that keeps
    it.
 2. **Derived state written beside the record**: `valley_save.gd` names no
    world, rules, standing or virtue.
 3. **An authored weight changed at game time**: N13's step towards a target
-   (in `standing.gd`, any scaled `+=`), and any write into a weight outside
-   `_load_weights`, the function that reads `standing.json`.
-4. **A deed whose target is a person**: a deed literal with a key beyond
-   `day`, `verb` and `place`, or such a key written into a deed.
+   (in `standing.gd`, any scaled `+=`); in `standing.gd`, any write into a
+   weight outside `_load_weights`, the function that reads
+   `standing.json`; elsewhere, a weight written through a standing
+   (`standing._weights[...] =`). A path's `edge_weight` for A\* is not an
+   authored weight and passes.
+4. **A deed whose target is a person**: a deed literal -- a dictionary
+   naming `verb` -- with a key beyond `day`, `verb` and `place` (and the
+   header's `version`), quoted or in `key = value` form, on one line or
+   one key per line; a key or field written into a deed
+   (`deed["target"] =`, `deed.target =`, `deeds[0]["target"] =`); and any
+   merge into a deed.
 5. **The record or the standing read to set difficulty**: in the valley's
-   folder, any challenge parameter at all (difficulty, accuracy, aim,
-   reaction, a search depth, skill); anywhere else, one on a line that
-   also names the record or the standing.
+   folder, difficulty, accuracy, aim or skill named at all; a search depth
+   anywhere, and those words outside the folder, on a line that also names
+   the record or the standing. A villager's plan bound (`MAX_DEPTH`) is
+   not the player's difficulty, and a villager's `reaction` read off the
+   standing is the consequence this record allows: both pass.
 
-What N20 cannot see, and what holds it instead: that the world and the
-standing rebuild the same from the record, twice, and that a record cut at
-day n gives day n (T164's tests); that a villager reads only the standing
-(T165's review).
+**What a test may do.** A test under `godot/test/` that names the valley
+must reach a save, plant a person to see it refused, and clean up after
+itself. So there N20 holds only three refusals: it names no real save
+(`user://valley`, `ValleySave.PATH`), steps no value, and sets no
+challenge from the record or the standing. It may hand `ValleySave` a path
+of its own under `user://tmp/`, write and erase it, and build a deed with
+a planted key. Planted both ways: those three lines pass in a test; the
+same `user://tmp/` line in a game file is still refused, and a test naming
+the real save is refused.
+
+What N20 cannot see, and what holds it instead:
+
+- **that the record is appended to and never edited**: `valley_save.gd`
+  may open its file with `FileAccess.WRITE` and truncate it. A T164 test
+  appends a deed to a record and reads the first deed back unchanged;
+- **that the record carries its version**: a T164 test loads a record with
+  an unknown version, and with none, and sees both refused by name;
+- **that the world and the standing rebuild the same from the record**,
+  twice, and that a record cut at day n gives day n (T164's tests);
+- **that a villager reads only the standing** (T165's review);
+- **the spellings its net misses**: a `ConfigFile` saved through a
+  parameter (`cfg.save(p)`, a gap every rule in the gate shares), a deed's
+  key set through a renamed copy, a deed nested inside another literal.
 
 ### Where the save lives
 
@@ -158,8 +189,10 @@ default layout. Nothing is gained that is worth that.
 
 The game has an erase button, with a confirmation (T165). `make
 valley-erase` does the same for the checkout: it asks `scripts/godot` where
-`user://` is, refuses anything outside the checkout's `.user-data/`, and
-removes `valley/` there.
+`user://` is, refuses anything outside the checkout's `.user-data/` -- and
+a `.user-data/`, or any folder below it, that is a symbolic link, since a
+link resolved first lies wherever it points -- and removes `valley/`
+there.
 
 ## Alternatives considered
 

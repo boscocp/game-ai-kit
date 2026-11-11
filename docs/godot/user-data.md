@@ -138,7 +138,8 @@ it under the redirect.
   through `scripts/godot`'s redirect (ADR 0022). It is the one thing under
   `.user-data/` meant to survive a session; `git clean -fdx` deletes it,
   and `make valley-erase` removes only `valley/`, refusing a folder
-  outside the checkout's `.user-data/`.
+  outside the checkout's `.user-data/`, and a `.user-data/` or folder
+  below it that is a symbolic link.
 - **In an exported build** run by a player, the save lands in that
   player's data folder, the default row above. That is where a game's save
   belongs, and invariant 8, which is about what the repository writes on
