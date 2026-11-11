@@ -1,0 +1,30 @@
+{
+  "about": "The boss fight's three levels (T158), chosen by the person, never by how they play. Each sets the player's token pools and the delays between grants (T154), how fast the boss's tells are and the shortest any may be shown for (T156), how many minions a wave brings and the most of each kind that may stand at once. A level's minimum telegraph is never under the boss table's own (boss_attacks.json), and every attack in every phase, at the level's speed, is shown for at least the level's minimum: a level that breaks either is refused, and the whole file with it.",
+  "default": "normal",
+  "levels": [
+    {
+      "name": "easy",
+      "tokens": {"pools": {"melee": 1, "ranged": 1}, "delays": {"melee": 1.2, "ranged": 3.0}},
+      "telegraph_scale": 1.25,
+      "minimum_telegraph": 0.5,
+      "wave": {"melee": 2, "ranged": 1},
+      "wave_cap": {"melee": 3, "ranged": 1}
+    },
+    {
+      "name": "normal",
+      "tokens": {"pools": {"melee": 2, "ranged": 1}, "delays": {"melee": 0.6, "ranged": 2.0}},
+      "telegraph_scale": 1.0,
+      "minimum_telegraph": 0.4,
+      "wave": {"melee": 3, "ranged": 2},
+      "wave_cap": {"melee": 4, "ranged": 2}
+    },
+    {
+      "name": "hard",
+      "tokens": {"pools": {"melee": 3, "ranged": 2}, "delays": {"melee": 0.4, "ranged": 1.5}},
+      "telegraph_scale": 0.8,
+      "minimum_telegraph": 0.4,
+      "wave": {"melee": 3, "ranged": 2},
+      "wave_cap": {"melee": 5, "ranged": 3}
+    }
+  ]
+}

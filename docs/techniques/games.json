@@ -250,8 +250,8 @@
         "pt-BR": "Marvel's Spider-Man ou um soulslike: um grupo em volta, um golpeia de cada vez"
       },
       "keys": {
-        "en": "H hides the reasoning: who holds a token, the queue, the timer, the rings and their claims, the boss's phase and telegraph; Q locks on",
-        "pt-BR": "H esconde o raciocínio: quem segura um *token*, a fila, o cronômetro, os anéis e as reservas, a fase do chefe e o seu *telegraph*; Q trava a mira"
+        "en": "H hides the reasoning: who holds a token, the queue, the timer, the rings and their claims, the boss's phase and telegraph, the director's state and next wave; Q locks on",
+        "pt-BR": "H esconde o raciocínio: quem segura um *token*, a fila, o cronômetro, os anéis e as reservas, a fase do chefe e o seu *telegraph*, o estado do diretor (*director*) e a próxima onda; Q trava a mira"
       }
     }
   },
@@ -459,6 +459,10 @@
     "director": {
       "en": "a director pacing the threats by intensity",
       "pt-BR": "um diretor (*director*) que dosa as ameaças pela intensidade"
+    },
+    "wave-director": {
+      "en": "a director pacing the waves by the fight's events",
+      "pt-BR": "um diretor (*director*) que dosa as ondas pelos eventos da luta"
     },
     "constraints": {
       "en": "constraint satisfaction, AC-3 and backtracking",

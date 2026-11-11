@@ -15,9 +15,15 @@
 #
 # And what the fight adds to them: no ranged minion is granted a token at
 # a step that began with the player pressed, nor within the hold after
-# pressure began; a summon never brings a kind above the wave's size; and
-# the overlay names a real holder, a real queue and a real claim at some
-# step, not only "none".
+# pressure began; no wave brings a kind above its cap; and the overlay
+# names a real holder, a real queue and a real claim at some step, not
+# only "none".
+#
+# And T158's: the pools the run saw are the level's, every telegraph the
+# boss ran is at least the level's minimum, and the director's waves came
+# in build-up or with a summoning phase, never in a relief cut short, never
+# while a heavy blow was underway -- that read from the boss, not from the
+# director.
 #
 # The scripted player goes for the nearest minion close by, else the boss;
 # it swings in reach, dodges a telegraph about to land and a bolt about to
@@ -44,18 +50,21 @@ func _init(seed_value: int) -> void:
 func run(fight: BossFight) -> Dictionary:
 	var trace: Dictionary = {"loads": [], "waits": {}, "granted": {}, "fired_pressed": [], "fired": 0,
 		"ended": "", "lasted": 0.0, "pool": fight.tokens.free_tokens(BossMinion.MELEE),
-		"granted_pressed": [], "most_alive": {}, "summons": 0, "shown": {}}
+		"granted_pressed": [], "most_alive": {}, "summons": 0, "shown": {}, "pools": {}, "waved_heavy": []}
 	var queued_for: Dictionary = {}
 	var fired_before: Dictionary = {}
 	while fight.time < SECONDS and fight.outcome == "":
 		var pressed_before: bool = _pressure(fight)
 		var events_before: int = fight.tokens.events.size()
+		var directed_before: int = fight.director.events.size()
 		fight.step(intent_for(fight))
+		_note_waves(fight, directed_before, trace)
 		trace["loads"].append({"at": fight.time, "load": melee_load(fight)})
 		_note_waits(fight, queued_for, trace)
 		_note_fires(fight, fired_before, trace)
 		_note_grants(fight, events_before, pressed_before, trace)
 		_note_alive(fight, trace)
+		_note_pools(fight, trace)
 		_note_shown(fight, trace)
 	trace["summons"] = fight.events.filter(func(event: Dictionary) -> bool:
 		return event["what"] == "summoned" and event["at"] > 0.0).size()
@@ -135,12 +144,76 @@ static func ranged_grants(fight: BossFight) -> Array:
 		return event["what"] == AttackTokens.GRANTED and event["kind"] == BossMinion.RANGED and event["id"] != BossBrain.ID)
 
 
-## Each kind that stood above the wave's size at some step: "kind: most".
-static func above_the_wave(fight: BossFight, trace: Dictionary) -> PackedStringArray:
+## Each kind that stood above its cap at some step: "kind: most".
+static func above_the_cap(fight: BossFight, trace: Dictionary) -> PackedStringArray:
 	var found := PackedStringArray()
 	for kind: String in trace["most_alive"]:
-		if trace["most_alive"][kind] > fight.rules.wave.get(kind, 0):
+		if trace["most_alive"][kind] > fight.rules.wave_cap.get(kind, 0):
 			found.append("%s: %d" % [kind, trace["most_alive"][kind]])
+	return found
+
+
+## Each kind whose pool, at some step, was not `fields`' -- one level of
+## `difficulty.json` as the file writes it: "kind: sizes seen".
+static func off_the_pools(trace: Dictionary, fields: Dictionary) -> PackedStringArray:
+	var found := PackedStringArray()
+	for kind: String in BossDifficulty.KINDS:
+		var wanted: int = int(fields["tokens"]["pools"][kind])
+		var seen: Array = trace["pools"].get(kind, {}).keys()
+		if seen != [wanted]:
+			found.append("%s: %s" % [kind, seen])
+	return found
+
+
+## The waves that brought more of a kind than the level's wave: "kind at
+## time: count". The minions a wave adds are its "summoned" events at one
+## instant, each named by its kind.
+static func waves_too_big(fight: BossFight) -> PackedStringArray:
+	var counts: Dictionary = {}
+	for event: Dictionary in fight.events:
+		if event["what"] == "summoned":
+			var key: String = "%s at %.2f" % [str(event["who"]).get_slice("-", 0), event["at"]]
+			counts[key] = counts.get(key, 0) + 1
+	var found := PackedStringArray()
+	for key: String in counts:
+		if counts[key] > fight.rules.wave.get(key.get_slice(" ", 0), 0):
+			found.append("%s: %d" % [key, counts[key]])
+	return found
+
+
+## The boss's attacks shown for less than `minimum` seconds: {attack, telegraph}.
+static func telegraphs_under(fight: BossFight, minimum: float) -> Array[Dictionary]:
+	var found: Array[Dictionary] = []
+	for event: Dictionary in fight.boss.events:
+		if event["what"] == "attack" and event["telegraph"] < minimum - 0.0001:
+			found.append({"attack": event["attack"], "telegraph": event["telegraph"]})
+	return found
+
+
+## The director's waves that came out of turn: in a relief, in a peak
+## without a phase summoning them, or while a heavy blow was underway.
+static func waves_out_of_turn(fight: BossFight, trace: Dictionary) -> Array[Dictionary]:
+	var found: Array[Dictionary] = []
+	for event: Dictionary in fight.director.events:
+		var allowed: bool = event["state"] == BossDirector.BUILD_UP or (event["state"] == BossDirector.PEAK and event.get("summon", false))
+		if event["what"] == "wave" and not allowed:
+			found.append(event)
+	for at: float in trace["waved_heavy"]:
+		found.append({"at": at, "what": "wave in a heavy blow"})
+	return found
+
+
+## The reliefs that ended in build-up before the rules' relief seconds --
+## read from the rules, so a director that cuts its own is caught.
+static func short_reliefs(fight: BossFight) -> Array[float]:
+	var found: Array[float] = []
+	var relief_from: float = -1.0
+	for event: Dictionary in fight.director.events:
+		if event["what"] != "pacing":
+			continue
+		if event["state"] == BossDirector.BUILD_UP and relief_from >= 0.0 and event["at"] - relief_from < float(fight.rules.director["relief_seconds"]) - 0.0001:
+			found.append(relief_from)
+		relief_from = event["at"] if event["state"] == BossDirector.RELIEF else -1.0
 	return found
 
 
@@ -226,6 +299,21 @@ func _note_grants(fight: BossFight, events_before: int, pressed_before: bool, tr
 		var ranged: bool = event["kind"] == BossMinion.RANGED and event["id"] != BossBrain.ID
 		if pressed_before and ranged and event["what"] == AttackTokens.GRANTED:
 			trace["granted_pressed"].append({"at": event["at"], "who": event["id"]})
+
+
+# A wave the director sent this step while the boss was in a heavy blow.
+func _note_waves(fight: BossFight, directed_before: int, trace: Dictionary) -> void:
+	for index: int in range(directed_before, fight.director.events.size()):
+		if fight.director.events[index]["what"] == "wave" and fight.boss.heavy_underway():
+			trace["waved_heavy"].append(fight.time)
+
+
+# Each kind's pool as the pool itself counts it: free and held.
+func _note_pools(fight: BossFight, trace: Dictionary) -> void:
+	for kind: String in BossDifficulty.KINDS:
+		var sizes: Dictionary = trace["pools"].get(kind, {})
+		sizes[fight.tokens.free_tokens(kind) + fight.tokens.held(kind)] = true
+		trace["pools"][kind] = sizes
 
 
 func _note_alive(fight: BossFight, trace: Dictionary) -> void:

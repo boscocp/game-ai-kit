@@ -1,7 +1,7 @@
 {
   "module": "bossfight",
   "kind": "example",
-  "about": "The boss fight (T156-T158): a boss whose phases are the top of a behaviour tree, whose next attack is a utility choice, and whose every attack runs a telegraph, an active window and a recovery, striking with the target's attack tokens; and the fight you play against it and its minions (T157), who share the player's tokens, stand on engagement rings, walk by steering and shoot only along a clear line, the ranged token taken back while a melee one strikes.",
+  "about": "The boss fight (T156-T158): a boss whose phases are the top of a behaviour tree, whose next attack is a utility choice, and whose every attack runs a telegraph, an active window and a recovery, striking with the target's attack tokens; and the fight you play against it and its minions (T157), who share the player's tokens, stand on engagement rings, walk by steering and shoot only along a clear line, the ranged token taken back while a melee one strikes; and the director that paces their waves through build-up, peak and relief, and the three levels a person chooses (T158).",
   "owns": [
     "godot/game3d/bossfight/",
     "godot/test/bossfight/",

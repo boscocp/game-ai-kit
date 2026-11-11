@@ -2,10 +2,10 @@
 # at most the pool's melee attackers at any step, every waiting minion gets
 # a turn, no ranged minion fires while melee pressure is on, and the fight
 # ends; and the fight's own: no ranged grant under pressure or inside the
-# hold after it, no kind above the wave's size across summons, and an
+# hold after it, no kind above its cap across waves, and an
 # overlay that names real holders, queues and claims. Each is first shown a
 # planted case it must reject: a fight that forgets to take the ranged
-# token back, one whose hold is cut to nothing, one whose summons pile on,
+# token back, one whose hold is cut to nothing, one whose waves pile on,
 # a minion that strikes without a token, a minion left waiting, an overlay
 # that only ever says "none", and a fight nobody can finish. And: a fallen
 # token holder gives its token back, a minion the rings refuse asks again,
@@ -58,7 +58,7 @@ class ShortHold:
 		return 0.0
 
 
-# A fight whose summons add a whole wave on top of the living.
+# A fight whose waves add a whole wave on top of the living, past the cap.
 class PilesOn:
 	extends BossFight
 
@@ -102,7 +102,7 @@ func _holds_the_fight_s_own(seed_value: int, fight: BossFight, trace: Dictionary
 	var said: String = "seed %d: " % seed_value
 	assert_array(Audit.granted_under_pressure(trace)).override_failure_message(said + "granted under pressure").is_empty()
 	assert_array(Audit.granted_while_holding(fight)).override_failure_message(said + "granted in a hold").is_empty()
-	assert_array(Audit.above_the_wave(fight, trace)).override_failure_message(said + "above the wave").is_empty()
+	assert_array(Audit.above_the_cap(fight, trace)).override_failure_message(said + "above the cap").is_empty()
 	assert_array(Audit.never_named(trace)).override_failure_message(said + "overlay named nobody").is_empty()
 
 
@@ -115,11 +115,11 @@ func test_a_fight_that_cuts_its_hold_is_caught() -> void:
 	assert_int(caught).is_greater(0)
 
 
-func test_a_summon_that_piles_on_is_caught() -> void:
+func test_a_wave_that_piles_on_is_caught() -> void:
 	var caught: int = 0
 	for seed_value: int in SEEDS:
 		var fight := PilesOn.new(seed_value)
-		caught += Audit.above_the_wave(fight, Audit.new(seed_value).run(fight)).size()
+		caught += Audit.above_the_cap(fight, Audit.new(seed_value).run(fight)).size()
 	assert_int(caught).is_greater(0)
 
 
