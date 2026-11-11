@@ -3,7 +3,10 @@
 ##
 ## There is no combat and no opponent. Six villagers live their day -- bread,
 ## water, fruit -- each planning with GOAP over routes A\* finds, and
-## choosing between goals with utility. You may do one deed a day to a
+## choosing between goals with utility. A plan's cost is an approximation:
+## each action is priced by the walk from where the villager stands when it
+## plans, not from the step before, so GOAP's costs stay fixed during one
+## search; on a map this small the order of plans barely changes. You may do one deed a day to a
 ## place: burn the barn, pull the bridge down, dig a well. The deed is kept
 ## in the record, the one file the kit keeps between sessions, and the
 ## world of every later day, in this session and the next, is rebuilt from

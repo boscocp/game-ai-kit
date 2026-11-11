@@ -115,6 +115,75 @@ func test_a_new_well_draws_the_west_village() -> void:
 	assert_array(elisa.plans["water"]).is_equal(["draw_from_well"])
 
 
+func test_the_bridge_pulled_down_under_a_villager_strands_it_where_it_stands() -> void:
+	var game := _game()
+	var stranded: ValleyVillager = _east_villager_across(game)
+	assert_object(stranded).override_failure_message("no east villager crossed the bridge on day 1").is_not_null()
+	var crossing: Vector2i = ValleyMap.authored().cells_of("bridge")[0]
+	assert_str(game.act("pull_down", "bridge")).is_empty()
+	for _turn: int in range(game.day_turns - game.turn):
+		game.step_turn()
+		_assert_nobody_walks_the_gone_bridge(game, crossing)
+	assert_int(stranded.cell.x).is_less(crossing.x)
+	assert_int(int(stranded.walks[ValleyVillager.HOME])).is_equal(SearchResult.NO_ROUTE)
+
+
+func test_the_walk_decides_who_bakes_and_who_buys() -> void:
+	var game := _game()
+	assert_str(game.act("build_footbridge", "ford")).is_empty()
+	game.next_day()
+	assert_str(game.act("pull_down", "bridge")).is_empty()
+	game.next_day()
+	var ana: ValleyVillager = game.villagers[0]
+	var clara: ValleyVillager = game.villagers[2]
+	assert_array(ana.plans["bread"]).is_equal(["take_wheat", "grind_wheat", "bake_bread"])
+	assert_array(clara.plans["bread"]).is_equal(["buy_bread"])
+	assert_int(ana.plan_cost(ana.plans["bread"])).is_less(ana.plan_cost(["buy_bread"] as Array[String]))
+	assert_int(clara.plan_cost(clara.plans["bread"])).is_less(
+		clara.plan_cost(["take_wheat", "grind_wheat", "bake_bread"] as Array[String]))
+
+
+func test_the_dearer_plan_scores_less() -> void:
+	var game := _game()
+	var davi: ValleyVillager = game.villagers[3]
+	var near: float = davi.scores["bread"]
+	assert_str(game.act("pull_down", "bridge")).is_empty()
+	var ana: ValleyVillager = game.villagers[0]
+	assert_float(float(ana.scores["bread"])).is_less(near)
+	assert_int(ana.plan_cost(ana.plans["bread"])).is_greater(davi.plan_cost(davi.plans["bread"]))
+
+
+func test_the_keys_can_do_every_deed_the_valley_can_offer() -> void:
+	# At most one deed a place can change anything: every two verbs on a
+	# place set one of its facts to opposite values. So no day offers more
+	# deeds than there are places, and there are keys for them all.
+	var places: Array = []
+	for verb: String in _rules.verbs:
+		places.append_array((_rules.verbs[verb] as Dictionary).keys().filter(
+			func(place: String) -> bool: return not place in places))
+	assert_int(places.size()).is_less_equal(ValleyDemo.DEED_KEYS.size())
+	for place: String in places:
+		_assert_one_verb_at_a_time_changes(place)
+
+
+# Every turn: no villager stands on a shut cell but the bridge it was on,
+# and no route goes over the bridge that is gone.
+func _assert_nobody_walks_the_gone_bridge(game: ValleyGame, crossing: Vector2i) -> void:
+	for villager: ValleyVillager in game.villagers:
+		var on_open_ground: bool = ValleyMap.authored().is_open(villager.cell, game.world.facts) or villager.cell == crossing
+		assert_bool(on_open_ground).override_failure_message("%s walked onto %s" % [villager.name, villager.cell]).is_true()
+		assert_bool(villager.route.has(crossing)).is_false()
+
+
+# Any two verbs acting on `place` set one of its facts to opposite values.
+func _assert_one_verb_at_a_time_changes(place: String) -> void:
+	var acting: Array = _rules.verbs.keys().filter(func(verb: String) -> bool: return _rules.verbs[verb].has(place))
+	for first: String in acting:
+		for second: String in acting.filter(func(other: String) -> bool: return other != first):
+			var opposed: bool = _opposed(_rules.verbs[first][place]["sets"], _rules.verbs[second][place]["sets"])
+			assert_bool(opposed).override_failure_message("%s and %s both change the %s" % [first, second, place]).is_true()
+
+
 func test_a_burnt_barn_leaves_nobody_a_plan_for_bread() -> void:
 	var game := _game()
 	assert_str(game.act("burn", "barn")).is_empty()
@@ -150,6 +219,27 @@ func test_fear_doubles_the_ferrymans_price_and_names_its_deeds() -> void:
 # A session on the test's own save, from the first day.
 func _game() -> ValleyGame:
 	return ValleyGame.new(ValleySave.new(SCRATCH))
+
+
+# Turns of day 1 until a villager of the east village stands west of the
+# bridge; that villager, or null when none did.
+func _east_villager_across(game: ValleyGame) -> ValleyVillager:
+	var crossing: int = ValleyMap.authored().cells_of("bridge")[0].x
+	while game.turn < game.day_turns - 1:
+		game.step_turn()
+		var across: Array = game.villagers.filter(
+			func(villager: ValleyVillager) -> bool: return villager.home.x > crossing and villager.cell.x < crossing)
+		if not across.is_empty():
+			return across[0]
+	return null
+
+
+# Whether two verbs' facts on one place disagree on some fact.
+func _opposed(first: Dictionary, second: Dictionary) -> bool:
+	for fact: String in first:
+		if second.has(fact) and bool(second[fact]) != bool(first[fact]):
+			return true
+	return false
 
 
 func _ferryman(game: ValleyGame) -> Dictionary:

@@ -39,7 +39,7 @@ teaches: karma-and-world-memory
   opens with ethical dilemmas, and the player's answers rank the eight
   virtues. Afterwards actions raise and lower each virtue: underpaying a
   merchant marks the player as dishonest, fleeing a battle lowers valour,
-  alms to beggars raise sacrifice; and "virtue affects how NPCs interact
+  giving beggars alms "demonstrates Compassion"; and "virtue affects how NPCs interact
   with the player" [Ultima IV].
 - **Fable** (2004) splits it into good and evil points. Saving villagers
   is good, killing innocents evil, and even food counts. Alignment changes
@@ -122,7 +122,10 @@ Town, and the case in "When not to use it" below.
   and a greeting -- Fable's townspeople, written as data. The villagers
   plan their day from the world's facts alone (`ValleyVillager`): when the
   bridge is gone they bake their own bread because the market is out of
-  reach, not because they know who pulled it down.
+  reach, not because they know who pulled it down. A plan's cost is an
+  approximation: each action is priced by the walk from where the villager
+  stands when it plans, not from the step before, which keeps GOAP's costs
+  fixed during one search and is close enough on a map this small.
 - **A deed that changes nothing is not kept**, or a player could stand
   well by shutting a shut gate every day.
 - **Erasing is a button.** The record is the only thing kept, so removing

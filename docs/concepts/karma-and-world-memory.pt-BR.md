@@ -44,7 +44,7 @@ teaches: karma-and-world-memory
   abre com dilemas éticos, e as respostas ordenam as oito virtudes. Depois,
   as ações sobem e descem cada virtude: pagar de menos a um mercador marca
   o jogador como desonesto, fugir de uma batalha baixa a coragem, esmola
-  a mendigos sobe o sacrifício; e "a virtude afeta como os NPCs interagem
+  a mendigos "demonstra compaixão"; e "a virtude afeta como os NPCs interagem
   com o jogador" [Ultima IV].
 - **Fable** (2004) divide em pontos de bem e de mal. Salvar aldeões é bom,
   matar inocentes é mau, e até a comida conta. O alinhamento muda a
@@ -129,7 +129,10 @@ outro. Essa é a linha entre este exemplo e Talk of the Town, e o caso em
   um cumprimento -- o povo de Fable, escrito como dados. Os aldeões
   planejam o dia só a partir dos fatos do mundo (`ValleyVillager`): quando
   a ponte cai, assam o próprio pão porque o mercado ficou fora de
-  alcance, não porque sabem quem a derrubou.
+  alcance, não porque sabem quem a derrubou. O custo de um plano é uma
+  aproximação: cada ação custa a caminhada a partir de onde o aldeão está
+  quando planeja, não a partir do passo anterior, o que mantém fixos os
+  custos do GOAP durante uma busca e basta num mapa deste tamanho.
 - **Um feito que não muda nada não é guardado**, ou o jogador ganharia
   reputação fechando uma porteira já fechada todo dia.
 - **Apagar é um botão.** O registro é a única coisa guardada, então

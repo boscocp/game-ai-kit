@@ -102,16 +102,16 @@ func changes(deed: Dictionary) -> bool:
 ## nothing, or whatever the record or the save refuse.
 func act(verb: String, place: String) -> String:
 	if refused != "":
-		return "the save was refused, so nothing can be kept: %s" % refused  # not shown: the record's own English, quoted where a deed is refused
+		return "the save was refused, so nothing can be kept: %s" % refused  # not shown: reached only through the API; the UI acts on offered deeds
 	if acted_today:
-		return "one deed a day, and today's is done"  # not shown: the record's own English, quoted where a deed is refused
+		return "one deed a day, and today's is done"  # not shown: reached only through the API; the UI acts on offered deeds
 	var deed: Dictionary = DeedLog.make(today, verb, place)
 	var why: String = record.refusal(deed)
 	if why != "":
 		return why
 	var changed: Array[String] = changed_by(deed)
 	if changed.is_empty():
-		return "%s the %s changes nothing today" % [verb, place]  # not shown: the record's own English, quoted where a deed is refused
+		return "%s the %s changes nothing today" % [verb, place]  # not shown: reached only through the API; the UI acts on offered deeds
 	why = save.append(record, deed)
 	if why != "":
 		return why

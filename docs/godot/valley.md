@@ -48,6 +48,21 @@ under the legend does the same.
   (T164's review, finding 4). The check needs the world of that day, which
   the record and the save never see, so it lives in `ValleyGame.offered`
   and `ValleyGame.act`.
+- **The one-deed-a-day rule is the game's, not the record's.**
+  `ValleyGame.act` refuses a second deed today, and a session starts on the
+  last deed's day plus one, so the game never writes two deeds on one day.
+  `DeedLog` itself accepts them -- two deeds on one day from a hand-edited
+  file are read, by T164's design -- because the record keeps what was done,
+  not the rules of the game that did it.
+- **The record's refusals stay English.** `DeedLog`'s and `ValleySave`'s
+  refusals are diagnostics about a file format, like `BoardState`'s about a
+  move: tests and the vectors read their words. Where one reaches the
+  screen it is quoted verbatim inside a translated frame ("Recusado:
+  {why}"). They are marked `# not shown` for `lint-translations-game`,
+  which is imprecise -- they are shown, untranslated by design; a marker for
+  that is a cross-cutting change left for a later wave. The game's own
+  refusals in `ValleyGame.act` are reached only through the API: the screen
+  acts on offered deeds only.
 
 ## How a villager decides
 
@@ -68,6 +83,14 @@ changes the world, it decides in three steps:
    the first is shut.
 3. **`ActionChoice`** (`ai_utility`) scores the goals left: a goal with no
    plan scores 0, a dearer plan less.
+
+A plan's cost is an approximation of its route: each action is priced by
+the walk from where the villager stands when it plans, not from the place
+of the step before. That keeps GOAP's action costs fixed during one search,
+which its A\* over plans needs, and on a map this small it orders the plans
+as the real routes would. A test holds that the walk decides: with the
+footbridge built and the bridge down, Ana bakes and Clara buys, and the
+case turns red when the walk is planted as 0.
 
 **Why GOAP and not the HTN.** The two ways to bread are found by a search
 over action costs that come from A\*'s routes, so the plan changes by
@@ -122,7 +145,8 @@ price is what you are asked, shown, not paid.
   rebuilds, facts and reasons, and the one the file rebuilds; the folder
   holds one file, a header and one `{day, verb, place}` a line, with no
   virtue, villager or plan step in it; erasing returns to day one, in the
-  session and in the next. Not vacuous: each session keeps a deed, and
+  session and in the next; a second load gives every villager the same
+  plans. Not vacuous: each session keeps a deed, and
   session 3's world is not the first day's.
 - `valley_game_test.gd`: shutting the shut gate refused five days running,
   standing unmoved, nothing on disk; every deed offered changes a fact and
@@ -130,7 +154,11 @@ price is what you are asked, shown, not paid.
   argument, `facts`, a Dictionary; a villager decides the same alone or
   among others; the bridge down sends Ana to bake her own bread, with the
   chain the panel shows; a new well draws Elisa from the river; a burnt
-  barn leaves nobody a plan for bread; every manner sets only the
+  barn leaves nobody a plan for bread; the bridge pulled down under an east
+  villager on the west bank strands it there, no route over the gone
+  bridge and no engine error; the walk decides who bakes and who buys; a
+  dearer plan scores less; no day can offer more deeds than there are
+  number keys; every manner sets only the
   consequences `standing.json` lists; fear 5 doubles the ferryman's price,
   naming deeds 1 and 2.
 - `make test-demo-overlays` steps the scene and requires `chain`, `plan`,

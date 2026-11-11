@@ -245,7 +245,7 @@ func _choose(percepts: Dictionary) -> String:
 func _set_off(searches: Dictionary) -> void:
 	heading = place_of(plan[0]) if not plan.is_empty() else HOME
 	search = searches[heading]
-	route = search.path.duplicate() if search.reached else [] as Array[Vector2i]
+	_follow(search)
 
 
 # A new route to `place`, after a step done elsewhere. False when there is
@@ -253,5 +253,13 @@ func _set_off(searches: Dictionary) -> void:
 func _head_for(place: String, facts: Dictionary) -> bool:
 	heading = place
 	search = _search_to(place, ValleyMap.authored().graph_for(facts))
-	route = search.path.duplicate() if search.reached else [] as Array[Vector2i]
+	_follow(search)
 	return search.reached
+
+
+# The route `found` reached, or none: a villager with no way there stays
+# where it stands rather than walking a route the world no longer has.
+func _follow(found: SearchResult) -> void:
+	route.clear()
+	if found.reached:
+		route.assign(found.path)

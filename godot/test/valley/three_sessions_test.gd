@@ -47,6 +47,9 @@ func test_session_three_is_the_world_the_record_rebuilds() -> void:
 		assert_str(ValleySave.read_text(FileAccess.get_file_as_string(SCRATCH), from_disk)).is_empty()
 		assert_dict(_rules.rebuild(from_disk, third.today).facts).is_equal(from_copy.facts)
 		assert_dict(third.standing_now()).is_equal(Standing.new().of(seen))
+		var again := ValleyGame.new(ValleySave.new(SCRATCH))
+		for index: int in range(third.villagers.size()):
+			assert_dict(again.villagers[index].plans).is_equal(third.villagers[index].plans)
 		assert_bool(third.world.facts == _rules.start).override_failure_message(
 			"seed %d: three sessions of deeds left the valley as it began" % seed_used).is_false()
 
