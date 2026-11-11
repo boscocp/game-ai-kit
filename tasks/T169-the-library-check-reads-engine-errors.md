@@ -43,3 +43,8 @@ None.
 - Out of T141's scope on purpose: T141 is about the `Makefile`'s lines,
   and this runner lives inside a Python gate that already has its own
   planted cases.
+- Left open by wave 185 (its review): the two `--import` runs go through
+  `run_blocks`, which reads only the exit code, not engine errors as
+  `check_published.install_findings` does. Measured by the review, a
+  broken script or `.tres` imports today with exit 0 and no `ERROR`
+  line, so reading them would show nothing yet.
