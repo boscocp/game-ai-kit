@@ -127,6 +127,8 @@ BLANK_PROJECT = "config_version=5\n\n[application]\n\nconfig/name=\"A stranger's
 #: The planted runners: one says nothing; one decides, then breaks. The
 #: second asks to quit before the error, so the run still exits 0 with
 #: the marker printed, as a real one would whose later check aborted.
+#: It is planted for `route` alone: `infer` and `kit` reach the same
+#: `run_runner`, and a follow stops at the first step that fails.
 SILENT_RUNNER = "extends SceneTree\n\n\nfunc _initialize() -> void:\n\tquit(0)\n"
 BROKEN_RUNNER = ("extends SceneTree\n\n\nfunc _initialize() -> void:\n"
                  f"\tprint({MARKERS['route']!r})\n\tquit(0)\n"
@@ -401,11 +403,10 @@ def run_runner(step: str, example: str, project: pathlib.Path, planted: Planted)
         return [f"step {step!r}: Godot was still running after {RUN_SECONDS} s -- "
                 "a script error after the frame wait leaves it running"]
     output = ran.stdout + ran.stderr
-    if ran.returncode != 0 or MARKERS[example] not in output:
-        errors = [line for line in output.splitlines() if "ERROR" in line][:5]
-        return [f"step {step!r}: the example did not decide (exit {ran.returncode}, "
-                f"missing {MARKERS[example]!r}): {errors}"]
     errors = engine_errors(output)
+    if ran.returncode != 0 or MARKERS[example] not in output:
+        return [f"step {step!r}: the example did not decide (exit {ran.returncode}, "
+                f"missing {MARKERS[example]!r}): {errors[:5]}"]
     if errors:
         return [f"step {step!r}: the example decided and the engine printed an error: {errors[:5]}"]
     return []
