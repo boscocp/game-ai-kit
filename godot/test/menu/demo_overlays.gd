@@ -51,6 +51,7 @@ const SCENES: Array[String] = [
 	"res://game/maze/maze.tscn",
 	"res://game/talk/talk.tscn",
 	"res://game3d/bossfight/bossfight.tscn",
+	"res://game/valley/valley.tscn",
 ]
 
 ## The field each example's task says its overlay must carry, and whether it
@@ -76,6 +77,8 @@ const REQUIRED: Dictionary = {
 	"res://game/talk/talk.tscn": [["trust", true], ["suspicion", true], ["thinking", false]],
 	"res://game3d/bossfight/bossfight.tscn": [["holders", false], ["queue", false], ["next_in", true], ["factor", true],
 		["claims", false], ["phase", false], ["telegraph", true]],
+	"res://game/valley/valley.tscn": [["chain", false], ["plan", false], ["frontier", false], ["expanded", true],
+		["care", true], ["fear", true], ["deeds", false]],
 }
 
 ## The same, for an example opened in a mode other than its first (T85),

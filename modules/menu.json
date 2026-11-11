@@ -30,7 +30,8 @@
     "stealth",
     "tactical",
     "talk",
-    "tictactoe"
+    "tictactoe",
+    "valley"
   ],
   "tests_depend_on": [
     "ai_rts_core",

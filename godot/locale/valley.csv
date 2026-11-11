@@ -1,0 +1,111 @@
+en,pt_BR
+west village: the market and the square,aldeia oeste: o mercado e a praça
+"east village: the barn, the mill, the orchard","aldeia leste: o celeiro, o moinho, o pomar"
+"the river, crossed at the bridge or the ford","o rio, atravessado pela ponte ou pelo vau"
+planks: a crossing open today,tábuas: uma travessia aberta hoje
+a place as it is today; dark: burnt or gone,um lugar como está hoje; escuro: queimado ou sumido
+the ringed villager is the one followed (Tab),o aldeão com o anel é o seguido (Tab)
+yellow: the cells its A* search expanded,amarelo: as casas que a busca A* dele expandiu
+cyan: the search's frontier when it stopped,ciano: a fronteira da busca quando parou
+"white line and ring: its route, and where to","linha e anel brancos: a rota, e para onde"
+"violet: the ferryman, the merchant, the priestess","violeta: o barqueiro, o mercador, a sacerdotisa"
+"The save was refused, and is left as it is: {why}. E erases it.",O jogo salvo foi recusado e fica como está: {why}. E o apaga.
+"Kept, deed {number} of the record: {deed}","Guardado, feito {number} do registro: {deed}"
+Refused: {why},Recusado: {why}
+Erase everything the valley remembers? Y erases; any other key keeps it.,Apagar tudo o que o vale lembra? Y apaga; qualquer outra tecla mantém.
+Kept: nothing was erased.,Mantido: nada foi apagado.
+Erased: the valley starts again from its first day.,Apagado: o vale recomeça do primeiro dia.
+The save could not be erased: {why},O jogo salvo não pôde ser apagado: {why}
+Erase the valley's memory (E),Apagar a memória do vale (E)
+"Day {day}, turn {turn} of {turns}  ·  deeds kept: {deeds}  ·  care {care}, fear {fear}","Dia {day}, turno {turn} de {turns}  ·  feitos guardados: {deeds}  ·  cuidado {care}, medo {fear}"
+P runs the clock,P solta o relógio
+P pauses,P pausa
+1-9 a deed  ·  space one turn  ·  {clock}  ·  N ends the day  ·  Tab next villager  ·  E erases,1-9 um feito  ·  espaço um turno  ·  {clock}  ·  N encerra o dia  ·  Tab próximo aldeão  ·  E apaga
+"{name}'s day, and why:","O dia de {name}, e por quê:"
+"What the valley thinks of you, and who it shows:","O que o vale pensa de você, e quem o mostra:"
+Today's deed is done: N ends the day.,O feito de hoje já foi feito: N encerra o dia.
+Your deed today (one a day):,Seu feito de hoje (um por dia):
+{fact} is {value}: {why},{fact} é {value}: {why}
+nothing {name} reads has changed since the first day,nada do que {name} lê mudou desde o primeiro dia
+{name} cannot reach: {places},{name} não alcança: {places}
+{name}'s goal {goal}: {plan},"objetivo de {name}, {goal}: {plan}"
+"A* to {place}: {expanded} cells expanded, {frontier} on the frontier","A* até {place}: {expanded} casas expandidas, {frontier} na fronteira"
+A* to {place}: no way there; {expanded} cells searched,A* até {place}: não há caminho; {expanded} casas buscadas
+no virtue at stake,nenhuma virtude em jogo
+{virtue} {value} (deeds {deeds}),{virtue} {value} (feitos {deeds})
+"asks {price} coins, {usual} as a rule","pede {price} moedas, {usual} de costume"
+the door opens,a porta se abre
+the door stays shut,a porta fica fechada
+"day {day}, {deed}: {why}","dia {day}, {deed}: {why}"
+burn the barn,queimar o celeiro
+burn the mill,queimar o moinho
+burn the orchard,queimar o pomar
+repair the barn,consertar o celeiro
+repair the mill,consertar o moinho
+repair the bridge,consertar a ponte
+pull the bridge down,derrubar a ponte
+build a footbridge at the ford,fazer uma passarela no vau
+divert the river onto the field,desviar o rio para o campo
+sow the field,semear o campo
+plant the orchard again,replantar o pomar
+dig a well in the square,cavar um poço na praça
+open the orchard gate,abrir a porteira do pomar
+close the orchard gate,fechar a porteira do pomar
+care,cuidado
+fear,medo
+the ferryman,o barqueiro
+the merchant,o mercador
+the priestess,a sacerdotisa
+the market,o mercado
+the square,a praça
+the barn,o celeiro
+the mill,o moinho
+the river,o rio
+the orchard,o pomar
+the gate,a porteira
+the field,o campo
+the bridge,a ponte
+the ford,o vau
+home,casa
+The barn burns down with the grain inside it.,O celeiro queima com o grão dentro.
+"The mill burns down, wheel and stones.","O moinho queima, roda e mós."
+The trees burn to the stumps.,As árvores queimam até os tocos.
+The barn is rebuilt and can hold grain again.,O celeiro é reconstruído e pode guardar grão de novo.
+"The mill is rebuilt, and its wheel can turn if the water reaches it.","O moinho é reconstruído, e a roda pode girar se a água chegar até ela."
+The bridge is built up again across the river.,A ponte é erguida de novo sobre o rio.
+The bridge is pulled down into the river.,A ponte é derrubada no rio.
+Planks across the ford make a crossing on foot.,Tábuas sobre o vau fazem uma travessia a pé.
+A channel turns the river away from the mill race and onto the low field.,Um canal desvia o rio do canal do moinho para o campo baixo.
+The field is sown.,O campo é semeado.
+"Grown trees from the nursery are set where the orchard was, already old enough to bear.","Árvores crescidas do viveiro são plantadas onde era o pomar, já em idade de dar fruto."
+A well is dug in the square.,Um poço é cavado na praça.
+The gate to the orchard is left open.,A porteira do pomar fica aberta.
+The gate to the orchard is shut.,A porteira do pomar é fechada.
+Water in the race turns a standing mill's wheel.,A água no canal gira a roda de um moinho de pé.
+A burnt mill has no wheel to turn.,Um moinho queimado não tem roda para girar.
+"The diverted water no longer runs past the mill, and its wheel stops.","A água desviada não passa mais pelo moinho, e a roda para."
+"Grain from the barn, ground at the mill, is bread at the market the next day.","O grão do celeiro, moído no moinho, é pão no mercado no dia seguinte."
+A burnt barn leaves the market without bread the next day: the grain burnt with it.,Um celeiro queimado deixa o mercado sem pão no dia seguinte: o grão queimou com ele.
+"Grain nobody can grind is not bread: with the wheel still, the bakers have no flour.","Grão que ninguém pode moer não é pão: com a roda parada, os padeiros não têm farinha."
+The diverted water runs onto the low field.,A água desviada corre para o campo baixo.
+"With a well in the square, the field is watered by the bucket.","Com um poço na praça, o campo é regado a balde."
+"With the river in its bed and no well, the low field stays dry.","Com o rio no leito e sem poço, o campo baixo fica seco."
+A sown field that is watered grows a harvest.,Um campo semeado e regado dá colheita.
+"A dry field grows nothing, sown or not.","Um campo seco não dá nada, semeado ou não."
+A field nobody sowed grows nothing.,Um campo que ninguém semeou não dá nada.
+Travellers cross the bridge and come to the market.,Viajantes atravessam a ponte e vêm ao mercado.
+"A footbridge at the ford lets travellers across, bridge or no bridge.","Uma passarela no vau deixa os viajantes atravessarem, com ponte ou sem ponte."
+"With the bridge down and no footbridge, nobody crosses to the market.","Com a ponte derrubada e sem passarela, ninguém atravessa até o mercado."
+A burnt orchard bears nothing.,Um pomar queimado não dá nada.
+"The shut gate keeps the goats from the trees, and they fruit.","A porteira fechada mantém as cabras longe das árvores, e elas dão fruto."
+Through the open gate the goats come in and strip the trees.,Pela porteira aberta as cabras entram e pelam as árvores.
+"Twice the fare, and pay before you step in.","O dobro da passagem, e pague antes de subir."
+"Half fare for you, while the bridge is down.","Meia passagem para você, enquanto a ponte estiver caída."
+"Four coins across, like anyone.","Quatro moedas a travessia, como para qualquer um."
+"No bread today, for anyone.","Hoje não tem pão, para ninguém."
+Bread is dear today. For you.,O pão está caro hoje. Para você.
+"A loaf for a coin, friend of the valley.","Um pão por uma moeda, amigo do vale."
+Two coins a loaf.,Duas moedas o pão.
+The chapel door stays shut to you.,A porta da capela fica fechada para você.
+Come in; the chapel is open to you.,Entre; a capela está aberta para você.
+The chapel opens to those who look after the valley.,A capela se abre para quem cuida do vale.

@@ -30,7 +30,7 @@ func _init(start: Dictionary = {}, on_day: int = 0) -> void:
 ## the caller: it is reported, then read as false.
 func fact(name: String) -> bool:
 	if not facts.has(name):
-		push_error("the valley has no fact %s" % name)
+		push_error("the valley has no fact %s" % name)  # not shown: an engine error for the developer
 	return bool(facts.get(name, false))
 
 

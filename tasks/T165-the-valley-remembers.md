@@ -61,6 +61,28 @@ _The owner asked for a karma system on 2026-11-10: the player's actions and choi
   remember, and Talk of the Town for the research. Its "when not to use
   it" names a case.
 
+## What wave 182 decided
+
+- **GOAP, not the HTN.** The two ways to bread -- bought at the market, or
+  the wheat taken, ground and baked at home -- are found by GOAP from
+  action costs that are A\*'s walks, so the plan changes by itself when a
+  route closes; an HTN would need each way written as a method, in an
+  order that depends on where the villager lives.
+- **Names kept:** `VillagerManner`, `make demo-valley`. Added:
+  `ValleyGame` (a session, no screen), `ValleyVillager`, `ValleyMap`,
+  `ValleyShown` (the overlay as data), `ValleyPanel`, `ValleyView`.
+- **A session starts the day after the record's last deed.** The days
+  only watched are not kept, since only deeds are.
+- **One deed a day**, and only one that changes a fact of today's world
+  is offered or kept (finding 4 of T164's review).
+- **Six villagers, ten places, 48 turns a day**, in `villagers.json`; the
+  map in `valley_map.json`; the three manners and their thresholds in
+  `manners.json`. The player carries no purse: a price is shown, not paid.
+- **T164's refusals stay English**, like `BoardState`'s, quoted inside a
+  translated sentence; marked `# not shown` for `lint-translations-game`,
+  which the valley now falls under. The rules' reasons and the greetings
+  are translated, held by L10 (`SHOWN_DATA`).
+
 ## Acceptance
 
 ```bash

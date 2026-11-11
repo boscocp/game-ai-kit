@@ -1,0 +1,46 @@
+{
+ "about": "The three people who read the player's standing (T165, ADR 0025), each with a fixed manner a designer wrote. A manner is a list of rules read top to bottom; the first that holds sets the person's consequence and greeting, and the last holds always. A rule holds when the world's facts in `when` have their values and the virtue named is at least `at_least`. `sets` is the value of the person's one consequence -- a price in coins, or whether a door opens -- and `says` the greeting. The consequences are standing.json's and only those. A manner never changes, is never saved, and reads only the standing and the world: no deed names a person, and nothing a person says changes what persists.",
+ "people": {
+  "ferryman": {
+   "where": "ford",
+   "consequence": "price",
+   "usual": 4,
+   "rules": [
+    {"when": {}, "virtue": "fear", "at_least": 5, "sets": 8, "says": "Twice the fare, and pay before you step in.",
+     "why": "He is afraid of you, and fear is the one thing he charges for."},
+    {"when": {"bridge.standing": false}, "virtue": "care", "at_least": 4, "sets": 2, "says": "Half fare for you, while the bridge is down.",
+     "why": "With the bridge down the valley needs his boat, and you have looked after the valley."},
+    {"when": {}, "virtue": "", "at_least": 0, "sets": 4, "says": "Four coins across, like anyone.",
+     "why": "His usual fare."}
+   ]
+  },
+  "merchant": {
+   "where": "market",
+   "consequence": "price",
+   "usual": 2,
+   "rules": [
+    {"when": {"market.bread": false}, "virtue": "", "at_least": 0, "sets": 0, "says": "No bread today, for anyone.",
+     "why": "With no bread at the market there is nothing to price."},
+    {"when": {}, "virtue": "fear", "at_least": 4, "sets": 5, "says": "Bread is dear today. For you.",
+     "why": "He overcharges the one he fears, and dares nobody else."},
+    {"when": {}, "virtue": "care", "at_least": 3, "sets": 1, "says": "A loaf for a coin, friend of the valley.",
+     "why": "He thanks the one who looks after the valley."},
+    {"when": {}, "virtue": "", "at_least": 0, "sets": 2, "says": "Two coins a loaf.",
+     "why": "His usual price."}
+   ]
+  },
+  "priestess": {
+   "where": "square",
+   "consequence": "door",
+   "usual": 0,
+   "rules": [
+    {"when": {}, "virtue": "fear", "at_least": 6, "sets": 0, "says": "The chapel door stays shut to you.",
+     "why": "She keeps the frightened safe from the one who frightens them."},
+    {"when": {}, "virtue": "care", "at_least": 3, "sets": 1, "says": "Come in; the chapel is open to you.",
+     "why": "She opens to the one who has looked after the valley."},
+    {"when": {}, "virtue": "", "at_least": 0, "sets": 0, "says": "The chapel opens to those who look after the valley.",
+     "why": "A stranger has not yet shown what they are."}
+   ]
+  }
+ }
+}

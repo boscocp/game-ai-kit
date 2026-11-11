@@ -55,15 +55,15 @@ func append(deed: Dictionary) -> String:
 func refusal(deed: Dictionary) -> String:
 	for key: Variant in deed.keys():
 		if not str(key) in KEYS:
-			return "a deed has no key %s: a deed is {day, verb, place}, and none has a person as its target" % shown(key)
+			return "a deed has no key %s: a deed is {day, verb, place}, and none has a person as its target" % shown(key)  # not shown: the record's own English, quoted where a deed is refused
 	for key: String in KEYS:
 		if not deed.has(key):
-			return "a deed has no %s" % key
+			return "a deed has no %s" % key  # not shown: the record's own English, quoted where a deed is refused
 	var day: Variant = deed["day"]
 	if not (day is int or (day is float and float(day) == floorf(float(day)))) or int(day) < 1:
-		return "day %s is not a day of the game; days are counted from 1" % shown(day)
+		return "day %s is not a day of the game; days are counted from 1" % shown(day)  # not shown: the record's own English, quoted where a deed is refused
 	if not _deeds.is_empty() and int(day) < int(_deeds[-1]["day"]):
-		return "day %d comes after day %d in the record; deeds are kept in the order they were done" % [
+		return "day %d comes after day %d in the record; deeds are kept in the order they were done" % [  # not shown: the record's own English, quoted where a deed is refused
 			int(day), int(_deeds[-1]["day"])]
 	return _vocabulary_refusal(deed["verb"], deed["place"])
 
@@ -79,11 +79,11 @@ static func shown(value: Variant) -> String:
 
 func _vocabulary_refusal(verb: Variant, place: Variant) -> String:
 	if not (verb is String and _verbs.has(verb)):
-		return "unknown verb %s" % shown(verb)
+		return "unknown verb %s" % shown(verb)  # not shown: the record's own English, quoted where a deed is refused
 	if not (place is String and place in _places):
-		return "%s is not a place in the valley; a deed acts on a place" % shown(place)
+		return "%s is not a place in the valley; a deed acts on a place" % shown(place)  # not shown: the record's own English, quoted where a deed is refused
 	if not place in _verbs[verb]:
-		return "%s does not act on the %s" % [verb, place]
+		return "%s does not act on the %s" % [verb, place]  # not shown: the record's own English, quoted where a deed is refused
 	return ""
 
 
