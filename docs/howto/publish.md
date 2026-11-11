@@ -126,13 +126,17 @@ hand and kept out of the repository; trusted publishing stays off.
    ```
 
    `make release` writes `dist/` from the commit at `HEAD`, never the
-   working tree; `make library-check` installs the wheel, three addons and
-   then the kit zip outside the repository and runs them.
+   working tree; `make library-check` installs the wheel and three addons
+   in one blank project, the kit zip in another, outside the repository,
+   and runs them.
 
    `make release` refuses a version already published (T160): when
    `VERSION` is already a tag, `v<VERSION>`, and `HEAD` differs from that
-   tag under `godot/addons/` or `python/gameaikit/`, it fails before the
-   export and says to bump `VERSION`. The store shows no hash a stranger
+   tag in any file the build reads -- `godot/addons/`, `python/gameaikit/`,
+   `python/pyproject.toml`, `python/README.md`, `modules/`, `LICENSE`,
+   `NOTICE` -- it fails before the export and says to bump `VERSION`. A
+   clone with no `v*` tag cannot see a published version; the build says
+   so in one line and goes on. The store shows no hash a stranger
    could tell two zips of one version apart by, and PyPI refuses a file
    name twice, so new bytes need a new number. A change only to the tests
    or the docs ships nothing and is not refused. The bump is a wave of its

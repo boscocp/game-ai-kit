@@ -35,16 +35,18 @@ Into `OUTPUT/dist/`, from the commit at HEAD and nothing else:
 A version is not reused
 -----------------------
 A version's number names bytes a stranger may already hold. When VERSION
-is already a tag, `v<VERSION>`, and HEAD differs from that tag under
-`godot/addons/` or `python/gameaikit/`, a build into the repository's own
-`dist/` -- the folder `make release` fills and the owner uploads from -- is
+is already a tag, `v<VERSION>`, and HEAD differs from that tag in any
+file the build reads -- `RELEASE_SOURCES`: the addons, the package, its
+pyproject and README, the manifests, LICENSE and NOTICE -- a build into
+the repository's own `dist/` -- the folder `make release` fills and the owner uploads from -- is
 refused, and the refusal says to bump VERSION (T160). A second, different
 zip under 0.1.0 was built once, and the store keeps no hash a person could
 tell the two apart by. A change elsewhere -- the tests, the docs -- ships
 nothing and is not refused. A build with `--output` elsewhere is not held:
 the library page builds that way from any clone, and nothing there is
 uploaded. A clone without the tags cannot see a published version, so the
-release is built from the owner's checkout, which has them.
+release is built from the owner's checkout, which has them; a build that
+finds no `v*` tag at all says so in one line, rather than passing silently.
 
 `OUTPUT` is laid out like the repository -- LICENSE and NOTICE at its root,
 archives in `dist/` -- so `check_license.py --repo OUTPUT` reads a release
@@ -82,7 +84,8 @@ machine and a difference between them is a difference in the source.
 Exit codes
 ----------
 0   built
-1   refused: VERSION malformed or already published with other bytes, an addon or the package has no files, an
+1   refused: VERSION malformed or already published with other bytes,
+    an addon or the package has no files, an
     addon has no manifest or holds a test, pyproject.toml disagrees with
     VERSION or the manifests, or the output would land inside the
     repository's own dist/
@@ -118,9 +121,14 @@ PACKAGE = "gameaikit"
 # The kit's zip: every addon, as one store asset (T149).
 KIT = "game-ai-kit-addons"
 
-# What a version's number promises: the bytes under these folders. The
-# tests beside them, under godot/test/ and python/tests/, ship nothing.
-SHIPPED_SOURCES = ("godot/addons/", "python/gameaikit/")
+# Every path the build reads besides VERSION: what a version's number
+# promises. The addons and the package are the code; the manifests write
+# each zip's README and the wheel's metadata with pyproject.toml; the
+# README is the wheel's description; LICENSE and NOTICE go in every
+# archive. The tests, under godot/test/ and python/tests/, ship nothing.
+# `head_archive` reads the same list, so the self-test and the guard agree.
+RELEASE_SOURCES = ("godot/addons/", f"python/{PACKAGE}/", "python/pyproject.toml",
+                   "python/README.md", "modules/", *ATTRIBUTION)
 
 # Major.minor.patch and nothing else. A suffix such as `-rc1` would need its
 # own normalisation rules for a wheel's filename, and there is no release here
@@ -208,12 +216,17 @@ def read_version(repo: pathlib.Path) -> str:
 def published_changes(repo: pathlib.Path, version: str) -> list[str]:
     """What HEAD ships differently from the tag `v<version>`; empty when there is no such tag."""
     tag = f"v{version}"
+    tags = subprocess.run(["git", "-C", str(repo), "tag", "--list", "v*"],
+                          capture_output=True, check=True, text=True).stdout.split()
+    if not tags:
+        print("release: note: this clone has no v* tag, so no published version can be seen",
+              file=sys.stderr)
     found = subprocess.run(["git", "-C", str(repo), "rev-parse", "-q", "--verify", f"refs/tags/{tag}"],
                            capture_output=True, text=True)
     if found.returncode != 0:
         return []
     listing = subprocess.run(["git", "-C", str(repo), "diff", "-z", "--name-only", tag, "HEAD",
-                              "--", *SHIPPED_SOURCES], capture_output=True, check=True, text=True)
+                              "--", *RELEASE_SOURCES], capture_output=True, check=True, text=True)
     return sorted(path for path in listing.stdout.split("\0") if path)
 
 
@@ -863,7 +876,7 @@ def head_archive(repo: pathlib.Path) -> dict[str, bytes]:
     """Every file HEAD holds that a release reads, by path, through `git archive`."""
     exported = subprocess.run(
         ["git", "-C", str(repo), "archive", "--format=tar", "HEAD", "--",
-         "godot/addons", f"python/{PACKAGE}", "python/pyproject.toml", *ATTRIBUTION, "VERSION"],
+         *RELEASE_SOURCES, "VERSION"],
         capture_output=True, check=True,
     ).stdout
     with tarfile.open(fileobj=io.BytesIO(exported)) as bundle:
@@ -928,7 +941,8 @@ def check_refusals(root: pathlib.Path) -> list[str]:
 def published_fixture(root: pathlib.Path) -> pathlib.Path:
     """A repository published as v0.1.0: VERSION, one addon, the package, and their tests."""
     repo = root / "published"
-    files = {"VERSION": "0.1.0\n", "LICENSE": "licence\n", "NOTICE": "notice\n", "godot/addons/ai_x/x.gd": "extends Node\n",
+    files = {"VERSION": "0.1.0\n", "LICENSE": "licence\n", "NOTICE": "notice\n",
+             "python/README.md": "# x\n", "godot/addons/ai_x/x.gd": "extends Node\n",
              "godot/test/ai_x/x_test.gd": "extends Node\n",
              "python/gameaikit/x.py": "X = 1\n", "python/tests/test_x.py": "X = 1\n"}
     for name, text in files.items():
@@ -948,14 +962,15 @@ def fixture_commit(repo: pathlib.Path, *command: str) -> None:
 
 
 def check_a_version_is_not_reused(root: pathlib.Path) -> list[str]:
-    """A tagged VERSION with a changed addon or module is refused; a test, or a new VERSION, is not.
+    """A tagged VERSION with a changed shipped file is refused; a test, or a new VERSION, is not.
 
     Planted one commit at a time on a fixture tagged v0.1.0, in order: the
     tests changed (shipped nothing: accepted), one addon file changed
     (refused, naming it), that change kept with VERSION at 0.2.0 (accepted),
-    back at 0.1.0 (refused), and a package module changed too (both named).
-    Then the build itself: into the fixture it refuses for the version,
-    with `--output` elsewhere it does not.
+    back at 0.1.0 (refused), then a package module, NOTICE and the
+    package's README changed too (all four named). Then the build itself:
+    into the fixture it refuses for the version, with `--output` elsewhere
+    it does not.
     """
     repo = published_fixture(root)
     steps = (("python/tests/test_x.py", "X = 2\n", None),
@@ -963,20 +978,38 @@ def check_a_version_is_not_reused(root: pathlib.Path) -> list[str]:
              ("godot/addons/ai_x/x.gd", "extends Node2D\n", "godot/addons/ai_x/x.gd"),
              ("VERSION", "0.2.0\n", None),
              ("VERSION", "0.1.0\n", "godot/addons/ai_x/x.gd"),
-             ("python/gameaikit/x.py", "X = 2\n", "godot/addons/ai_x/x.gd"))
+             ("python/gameaikit/x.py", "X = 2\n", "godot/addons/ai_x/x.gd"),
+             ("NOTICE", "notice, changed\n", "NOTICE"),
+             ("python/README.md", "# x, changed\n", "NOTICE"))
     failures = []
     for path, text, named in steps:
         (repo / path).write_text(text)
         fixture_commit(repo, "commit", "-q", "--no-verify", "-am", f"change {path}")
         said = refusal_of(lambda: refuse_a_published_version(repo, read_version(repo)))
-        if (named is None) != (said is None) or (named and (named not in said or "bump VERSION" not in said)):
-            failures.append(f"after {path} changed, {'refused naming ' + named if named else 'accepted'} ({said})")
-    if published_changes(repo, "0.1.0") != ["godot/addons/ai_x/x.gd", "python/gameaikit/x.py"]:
-        failures.append(f"both shipped files are named ({published_changes(repo, '0.1.0')})")
+        wrong_reason = named and (named not in said or "bump VERSION" not in said)
+        if (named is None) != (said is None) or wrong_reason:
+            expected = f"refused naming {named}" if named else "accepted"
+            failures.append(f"after {path} changed, {expected} ({said})")
+    shipped = ["NOTICE", "godot/addons/ai_x/x.gd", "python/README.md", "python/gameaikit/x.py"]
+    if published_changes(repo, "0.1.0") != shipped:
+        failures.append(f"every shipped file changed is named ({published_changes(repo, '0.1.0')})")
     if "bump VERSION" not in str(refusal_of(lambda: build(repo, repo, skip_notice=False))):
         failures.append("a build into the repository's own dist/ is refused for the version")
     if "bump VERSION" in str(refusal_of(lambda: build(repo, root / "elsewhere", skip_notice=False))):
         failures.append("a build with --output elsewhere is not held to the version")
+    return failures
+
+
+def check_no_tag_is_said(root: pathlib.Path) -> list[str]:
+    """A clone with no `v*` tag passes the guard, and says in one line why it could not look."""
+    repo = published_fixture(root)
+    fixture_commit(repo, "tag", "-d", "v0.1.0")
+    said = io.StringIO()
+    with contextlib.redirect_stderr(said):
+        refused = refusal_of(lambda: refuse_a_published_version(repo, "0.1.0"))
+    failures = [] if refused is None else [f"a clone with no tag is not refused ({refused})"]
+    if "no v* tag" not in said.getvalue():
+        failures.append(f"a clone with no tag says so ({said.getvalue()!r})")
     return failures
 
 
@@ -1010,7 +1043,8 @@ def self_test() -> int:
     checks = (check_the_gate_agrees, check_reproducible_and_stamped, check_the_wheel,
               check_only_the_commit_ships, check_contents, check_refusals,
               check_manifest_refusals, check_the_store_installs_into_addons,
-              check_stale_artifacts, check_the_executable, check_a_version_is_not_reused)
+              check_stale_artifacts, check_the_executable, check_a_version_is_not_reused,
+              check_no_tag_is_said)
     failures = []
     with tempfile.TemporaryDirectory() as workspace:
         for check in checks:
@@ -1211,7 +1245,7 @@ def record_problems(bundle: zipfile.ZipFile, record_name: str) -> list[str]:
     return problems
 
 
-def checked_unpublished() -> int:
+def refuse_only_the_version() -> int:
     """`--check-version`: the build's first refusal alone, before `make release` exports."""
     try:
         refuse_a_published_version(REPO, read_version(REPO))
@@ -1250,7 +1284,7 @@ def main(argv: list[str]) -> int:
     if args.self_test:
         return self_test()
     if args.check_version:
-        return checked_unpublished()
+        return refuse_only_the_version()
     if not args.build:
         parser.print_usage(sys.stderr)
         return 2

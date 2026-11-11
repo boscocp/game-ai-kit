@@ -62,8 +62,9 @@ stay here. A technique page that leans on one of those says so.
 
 ## In a Godot project {#godot}
 
-Every command below runs from one folder holding two others: a clone of
-this repository, `game-ai-kit/`, and your Godot project, `my_game/`. Each
+Every command below runs from one folder holding three others: a clone of
+this repository, `game-ai-kit/`, your Godot project, `my_game/`, and a
+second blank one, `my_kit/`, for the kit zip at the end. Each
 block is run as printed, from that folder, by `make library-check`, with
 `godot` standing for the Godot in `.godot-version`. On Windows, unzip with
 the file manager and read `.venv/bin/python` as `.venv\Scripts\python`.
@@ -265,18 +266,19 @@ it.
 The store delivers the whole kit as one asset,
 `game-ai-kit-addons-<version>.zip`: every addon under one `addons/`, so
 each lands in `res://addons/<addon>/` beside the others; the store's
-installer lets you untick what you do not want. Unzipped by hand over the
-same project, it adds the rest beside the three already there (`-o`
-replaces those with the same bytes):
+installer lets you untick what you do not want. By hand, into a second
+blank project, `my_kit/`, so the kit is tried on its own files and not on
+the addons already in `my_game/`:
 
 ```bash
-unzip -q -o library/dist/game-ai-kit-addons-0.1.0.zip -d my_game/
-godot --headless --path my_game --import
+unzip -q library/dist/game-ai-kit-addons-0.1.0.zip -d my_kit/
+godot --headless --path my_kit --import
 ```
 
-The check then looks for every addon in `my_game/addons/<addon>/` and
-nothing else there, and runs the route example again, with all of them
-registered at once.
+The check then wants nothing new in `my_kit/` but `addons/`, every addon
+that has a zip of its own in `my_kit/addons/<addon>/` and no other, no
+`class_name` declared twice, and the route example run there, on the
+kit's own `ai_core` and `ai_search`.
 
 ## Versions and the licence {#versions}
 

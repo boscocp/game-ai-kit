@@ -7,7 +7,7 @@ tier: 2
 source: https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html ; https://docs.godotengine.org/en/stable/tutorials/editor/command_line_tutorial.html ; https://packaging.python.org/en/latest/tutorials/installing-packages/
 invalidated_if: scripts/release.py changes what an archive holds, ADR 0024 changes the prefixed names, .godot-version or python/pyproject.toml's version moves, or scripts/library_check.py stops following one of this page's steps
 teaches: none
-translation_of: e6f240bad24e516d784af5906410db7446f4d2e644df415287b854252c32a0a3
+translation_of: b12946265ab37d9fa14cfc34cf86ad49cb28542c215b0476c26913123a2407ac
 -->
 
 > English: [using-the-library.md](using-the-library.md). Os termos que ficam
@@ -61,8 +61,9 @@ Uma página de técnica que depende de um desses diz isso.
 
 ## Num projeto Godot {#godot}
 
-Todo comando abaixo roda de uma pasta que guarda duas outras: um clone
-deste repositório, `game-ai-kit/`, e o seu projeto Godot, `my_game/`. Cada
+Todo comando abaixo roda de uma pasta que guarda três outras: um clone
+deste repositório, `game-ai-kit/`, o seu projeto Godot, `my_game/`, e um
+segundo em branco, `my_kit/`, para o zip do kit no fim. Cada
 bloco é rodado do jeito que está impresso, dessa pasta, pelo
 `make library-check`, com `godot` no lugar do Godot do `.godot-version`.
 No Windows, descompacte pelo gerenciador de arquivos e leia
@@ -269,18 +270,19 @@ que faz ele ser recusado.
 A loja entrega o kit inteiro como um pacote só, o
 `game-ai-kit-addons-<version>.zip`: todos os addons sob um `addons/`,
 então cada um cai em `res://addons/<addon>/` ao lado dos outros; o
-instalador da loja deixa você desmarcar o que não quer. Descompactado à
-mão sobre o mesmo projeto, ele junta o resto ao lado dos três que já estão
-lá (o `-o` substitui esses pelos mesmos bytes):
+instalador da loja deixa você desmarcar o que não quer. À mão, num
+segundo projeto em branco, `my_kit/`, para o kit ser testado nos próprios
+arquivos e não nos addons que já estão no `my_game/`:
 
 ```bash
-unzip -q -o library/dist/game-ai-kit-addons-0.1.0.zip -d my_game/
-godot --headless --path my_game --import
+unzip -q library/dist/game-ai-kit-addons-0.1.0.zip -d my_kit/
+godot --headless --path my_kit --import
 ```
 
-O `make library-check` então procura cada addon em `my_game/addons/<addon>/` e nada
-mais ali, e roda o exemplo da rota de novo, com todos registrados de uma
-vez.
+O `make library-check` então quer nada de novo no `my_kit/` além de
+`addons/`, cada addon que tem zip próprio em `my_kit/addons/<addon>/` e
+nenhum outro, nenhum `class_name` declarado duas vezes, e o exemplo da
+rota rodando ali, no `ai_core` e no `ai_search` do próprio kit.
 
 ## Versões e a licença {#versions}
 

@@ -1307,7 +1307,7 @@ library-check: ## Follow docs/techniques/using-the-library.md outside the reposi
 	@# Each step the page marks, in a throwaway folder: the wheel installed
 	@# with no index, the page's Python block training a model, a blank Godot
 	@# project with three unzipped addons running the page's two examples,
-	@# then the kit zip over it, every addon at once, as the store installs it.
+	@# then the kit zip alone in a second blank project, as the store installs it.
 	@# Its planted cases -- a zip missing a file, a page step the check does
 	@# not take -- run in lint-selftests.
 	@$(PYTHON) scripts/library_check.py
