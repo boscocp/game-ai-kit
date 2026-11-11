@@ -44,7 +44,9 @@ _The owner asked for this task on 2026-11-10, from a request on Reddit: enemies 
   - a card in `catalogue.json`;
   - `modules/bossfight.json`;
   - `make catalogue` rerun;
-  - English and pt-BR strings.
+  - English and pt-BR strings. T156's `BossPanel` already calls `tr()` on
+    its heading, its states and its refusal line; those keys need
+    `godot/locale/bossfight.csv`, which does not exist yet.
 
 ## Acceptance
 

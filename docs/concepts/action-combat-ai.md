@@ -139,6 +139,44 @@ with attack tokens", and a boss's "second moveset at a health threshold"
 [Erunsal]. That is a product's feature list, not a design account,
 and is cited for no more than that.
 
+## A boss: phases and three windows {#boss}
+
+T156 builds the boss's side of the telegraph, in
+`godot/game3d/bossfight/`. What follows is the kit's own design, not a
+claim about any shipped game.
+
+- **Every attack runs three windows**: a *telegraph*, the wind-up the
+  player sees; an *active* window, the only one that hurts; and a
+  *recovery*, the opening to punish. Their lengths are data, in
+  `boss_attacks.json`, and the table carries a minimum telegraph. An attack
+  shown for less than that in any phase that uses it is refused, and so is
+  a window of zero (`BossTable.why_not_table`).
+- **The phases are the top of a behaviour tree** (`BehaviourTree`): a
+  selector asks "defeated?", then "mid-attack?", then each phase from the
+  last to the first. A phase opens when health is at or below its
+  threshold *and* the phase before it was entered. So a hit that skips two
+  thresholds still enters every phase, in order, once: an attack already
+  under way finishes, and then the skipped phase is passed through on
+  consecutive decisions, choosing no attack. A phase brings its
+  own moveset and faster tells, and its entry is an event the minions'
+  director (T158) reads. The boss spawns nothing itself.
+- **The next attack is a utility choice** (`ActionChoice`) over the
+  phase's moveset. The considerations are the distance, which way the
+  player faces, and the time since the attack was last used. That last one
+  is a penalty that only spaces attacks out. "Never three in a row" is
+  a hard filter instead: the brain adds to every attack a step that scores
+  zero on a third use in a row, so no table can forget it.
+- **The boss strikes with the target's tokens.** A heavy attack costs its
+  kind's whole pool, read from the pool itself (held plus free), so no
+  minion strikes during it and a difficulty table cannot make the two
+  disagree. The boss's priority
+  puts it before the minions already waiting, unless one has been passed
+  over `patience` times (T154's serving order). It keeps the token through
+  recovery, so the opening belongs to the player.
+- **Nothing about the player is counted.** The boss reads distance and
+  facing at each decision and keeps no history of the player. ADR 0016 is
+  not extended, and difficulty is T158's table.
+
 ## When not to use it {#when-not}
 
 - **A fight with one enemy.** There is no one to take turns with; a token
