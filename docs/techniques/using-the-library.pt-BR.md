@@ -282,7 +282,10 @@ godot --headless --path my_kit --import
 O `make library-check` então quer nada de novo no `my_kit/` além de
 `addons/`, cada addon que tem zip próprio em `my_kit/addons/<addon>/` e
 nenhum outro, nenhum `class_name` declarado duas vezes, e o exemplo da
-rota rodando ali, no `ai_core` e no `ai_search` do próprio kit.
+rota rodando ali, no `ai_core` e no `ai_search` do próprio kit. Por fim,
+carrega todo script do kit, e a engine não pode dizer, ao fechar, que algum
+continua vivo ("still in use at exit"): a página
+[exit-leaks](../godot/exit-leaks.md) diz por quê.
 
 ## Versões e a licença {#versions}
 

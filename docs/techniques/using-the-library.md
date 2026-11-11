@@ -278,7 +278,9 @@ godot --headless --path my_kit --import
 The check then wants nothing new in `my_kit/` but `addons/`, every addon
 that has a zip of its own in `my_kit/addons/<addon>/` and no other, no
 `class_name` declared twice, and the route example run there, on the
-kit's own `ai_core` and `ai_search`.
+kit's own `ai_core` and `ai_search`. Last, it loads every script in the
+kit, and the engine must not say, as it closes, that one is still alive
+("still in use at exit"): [exit-leaks](../godot/exit-leaks.md) says why.
 
 ## Versions and the licence {#versions}
 
