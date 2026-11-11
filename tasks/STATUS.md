@@ -20,8 +20,9 @@ branch, and each merged with `--admin` without waiting for its PR's CI:
 | 182 | T165, the valley remembers | #142 | `68cebef` |
 | 186 | T117, the squad's MCTS searches a share of the frame | #144 | `6f89e9b` |
 
-Each review is `docs/reviews/<wave>-*.md`, and every one found something
-the implementer's own gates passed green. Among them: T141's new lint
+Each review is `docs/reviews/<wave>-*.md`, and all but 185 (two nits and
+a note) found something the implementer's own gates passed green. Among
+them: T141's new lint
 missed `--script`, `${GODOT}` and a wrapping variable; T167's self-test
 did not hold its regex's `$` anchor (the lint would have kept 17 of 33
 lines); T158 accepted a malformed difficulty file through a SCRIPT ERROR;
@@ -64,12 +65,29 @@ agent its own prefix for scratch files (`t<N>-wave<W>-`).
   and V on.
 - T168's manual check: read the self-test durations on GitHub's runner.
 - T167's manual check: read the finding for a planted `Foo.new()`.
-- Still open from earlier: T157's, T164's, T162's and T160's manual
-  checks and T160's decision 5 (the store's Godot range), offering this
-  repository on godotengine/godot#125245.
+- Still open from earlier: T157's manual check (and its clip for T153's
+  next cut, and whether a better boss model than `soldier` at 3.2 m);
+  T164's, T162's and T160's manual checks and T160's decision 5 (the
+  store's Godot range); the two exit-leak manual checks; whether to
+  report the engine's use-after-free in `GDScriptLanguage::finish`
+  upstream (`docs/godot/exit-leaks.md`); offering this repository on
+  godotengine/godot#125245.
 
-**Next.** Main's `make check` first (above). Then T166 (needs T165,
-done). Then the squad tasks one at a time, as they share
+**Follow-ups the reviews named, not opened as tasks.** T169: the two
+`--import` runs go through `run_blocks`, which reads only the exit code
+(measured: a broken script imports with exit 0 and no ERROR today). T168:
+`run_one` does not kill a timed-out self-test's process group. T167: a
+default nested two parentheses deep is a known false positive, and a
+`preload` of the script's own path is not looked for. T165: a marker more
+precise than `# not shown` for text quoted on screen. T117 changed a
+decision: `measure-squad-mcts` now runs on the frame share (its task file
+says why).
+
+**Next.** Main's `make check` first (above); if a CI run on main is still
+`in_progress` hours later, look for a hung job. Then T166: its prereq T165
+is built and merged but `wip` until the owner's manual check; T166 builds
+on the merged code, so it can start before that check, but whether to
+wait for it is the owner's call; ask. Then the squad tasks one at a time, as they share
 `godot/game/squad/`: T127, T124, T125. T161 (0.2.0) last; its
 prerequisites are all done, and it needs the owner's word on the store's
 Godot range. T89 only if T85's manual check asks for it.
