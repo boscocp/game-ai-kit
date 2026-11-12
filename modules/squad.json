@@ -29,6 +29,7 @@
     "test-squad-exit",
     "test-squad-match",
     "test-squad-search-vectors",
-    "test-squad-vectors"
+    "test-squad-vectors",
+    "test-squad-floor"
   ]
 }

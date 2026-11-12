@@ -250,7 +250,7 @@
          "controllers": ["rules", "planner", "learned", "easy", "normal", "hard", "state machine", "behaviour tree", "GOAP", "HTN"],
          "roster": "res://game/tactical/tactical_roster.gd"},
         {"mode": "squad", "title": "XCOM", "ruleset": "res://game/squad/squad_ruleset.gd",
-         "controllers": ["weighed", "mcts", "expecti", "random"],
+         "controllers": ["weighed", "mcts", "expecti", "greedy", "random"],
          "roster": "res://game/squad/squad_roster.gd"}
       ],
       "watch": "Each computer decision drawn on the board before it is played, with the reason in the status. In XCOM, V shows what the computer sees: off while you play, so its turn keeps your fog, and on from the start in the teaching view, make demo-tactical MODE=squad VIEW=teach. With V on, the board shows every option it weighed for the piece about to act: its score, and its best hit chance; your own shots show their chance on the target before you click. With MCTS (C), a bar of visits for each of the piece's options grows while it thinks, then the line of play it expects; space plays what it believes so far. With expectiminimax, each option's expected value and the depth it has finished, and a shot's hit and miss with what each is worth. Press B in XCOM and step a map's build: the number on each cell is the tiles it may still be, and the amber cell is the one of least entropy, collapsed next.",

@@ -2,7 +2,7 @@
 
 <!-- doc-meta
 half_life: practice
-verified_on: 2026-11-11
+verified_on: 2026-11-12
 tier: 1
 source: https://ufopaedia.org/Gameplay_Mechanics_(EU2012) ; https://ufopaedia.org/index.php/Cover_(EU2012) ; book:Steve Rabin (ed.), "Game AI Pro 3", CRC Press, 2017 -- ch. 28 (Roelofs, MCTS for strategy and tactical games) ; https://github.com/mxgmn/WaveFunctionCollapse ; https://www.gamewatcher.com/2012-23-08-xcom-enemy-unknown-more-tactically-fair-than-original
 invalidated_if: spec/squad/rules.json or spec/squad/tiles.json changes, the tactical map changes, or a rule below stops being the code's
@@ -99,8 +99,9 @@ The squad roster (`SquadRoster`) is its own table, not rows added to
 `TacticalRoster`: `League.schedule` seats the league's teams by their place
 in that table, and a row added there would re-roll the league's dice. Its
 rows, in the order C cycles them: `weighed` (T85), `mcts` (T87), `expecti`
-(T88) and `random`, a seeded random mover on its side's view -- the floor
-T85's first enemy has to beat.
+(T88), `greedy` (T125), a careless shooter that never weighs cover -- the
+floor that tells one weighing from another -- and `random`, a seeded random
+mover on its side's view, the floor T85's first enemy has to beat.
 
 ## What is left out, and why
 
@@ -206,6 +207,14 @@ Every simplification, so nobody reads the mode as more of XCOM than it is:
   `make test-adversarial-vectors` -- the addon's expectiminimax on the dice
   race, depths 2 and 3, equal to `derive.py`'s exact fractions in both
   languages.
+- T125: `make test-squad-floor`, in `make check` -- the weighed enemy
+  against `GreedySquad`, at least 125 of 200 seeded matches over both
+  seats (measured 137), after a planted cover-blind weighing (112) has
+  failed the same bar; `greedy_squad_test.gd` -- the shot that expects the
+  most damage, none at 0%, a walk that keeps a shot, a walk toward the
+  other squad's start with nobody in sight, a hold after a refused walk,
+  and T85's does-not-cheat check over 40 positions, catching a greedy
+  shooter that sees everything (22 of 40, floor 15).
 
 ## Playing it (T85)
 
@@ -394,7 +403,73 @@ chance against a target in full cover (40), with the defences as they are.
 The shield behind rock is nearly unhittable, as wave 113's review said.
 The recommendation (0-10) is to be measured in the manual check's play;
 the numbers are unchanged here, and the match gate cannot tell the two
-apart -- the weighed enemy wins every game either way.
+apart -- the weighed enemy wins every game either way. The floor gate
+(T125, below) tells weighings apart, not rules: both sides play the same
+table, so the shield's defence stays the manual check's question.
+
+## The second floor: `GreedySquad` (T125)
+
+`make test-squad-match` cannot tell a good weighing from a worse one: the
+weighed enemy beats `RandomSquad` 100 games of 100, and so does every
+weighing tried in wave 192 -- cover weighed at zero, danger weighed at
+zero, and the greedy shooter itself. A floor that everything clears holds
+nothing. T85's review (finding 3) asked for a stronger one, and the owner
+ratified it on 2026-11-05 (STATUS, item B18).
+
+**What it does.** A careless player, written as rules, not weighed: for the
+piece about to act, the walk -- holding included -- that keeps the shot
+expecting the most damage (chance times damage, no more than the target
+has left); with no shot to be had, the walk that ends nearest, by its own
+ground, to the nearest enemy it knows of -- the other squad's starting
+cells while it knows of none; then the shot that expects the most damage,
+never one at 0%. It never asks what the enemy could do to it: no cover
+sought, no flank feared. It perceives what `WeighedSquad` perceives -- its
+side's view, remembering where it last saw each enemy -- and T85's
+does-not-cheat check holds it the same way. A walk the board refuses is
+answered with a hold. It is a row of `SquadRoster`, so a person can play
+against it with C.
+
+**Measured** (wave 192, 100 seeded matches a seat; match `n` on dice seed
+`n`, the weighed enemy built with `1000 + n`):
+
+| red against blue | red won | blue won |
+|---|---|---|
+| greedy against greedy | 26 | 74 |
+| weighed against greedy | 49 | -- |
+| greedy against weighed | -- | 88 |
+| cover weighed at zero against greedy | 42 | -- |
+| greedy against cover weighed at zero | -- | 70 |
+| danger weighed at zero against greedy | 33 | -- |
+| greedy against danger weighed at zero | -- | 86 |
+
+Read by the tested enemy, both seats together, of 200: the mirror 100, the
+weighed enemy 137, cover weighed at zero 112, danger weighed at zero 119.
+Every one of them wins 200 of 200 against `RandomSquad`. No draws.
+
+**The bar counts both seats together.** The seat moves the result more than
+the weighing does -- blue wins 74 of the mirror's 100 -- so one bar a seat
+would have to sit in two places at once, and the red seat's would sit 4
+games from the weighed enemy's 49. Over both seats the mirror is the even
+line, 100 of 200.
+
+**The bar is 125 of 200**: 12 under the weighed enemy's 137, and 13 over
+the planted weighing's 112. A floor, not a target: a change that moves the
+weighed enemy below it has made it no better than a careless player plus a
+little, and a change that moves it up is welcome and moves nothing here.
+
+**The planted weighing.** `make test-squad-floor` plays first the weighed
+enemy with cover weighed at zero (`CoverBlind` in
+`godot/test/squad/squad_floor_runner.gd`: the danger of a cell read as if
+no tree or rock stood in the way), and fails if it reaches the bar. It wins
+200 of 200 against the random mover, so `make test-squad-match` passes it;
+this gate must not. Danger weighed at zero (119) would fail the bar too,
+by less. Both runs, the planted and the real, take about 26 s together, on
+the line of T85's ~30 s, so the gate plays the full 100 a seat.
+
+**MCTS against it** is measured, not gated (`make measure-squad-mcts
+OPPONENT=greedy`), for the reason PR #69 gave: at 1,000 iterations a
+strength gate costs some 40 CPU-minutes a hundred games. Its rows are in
+the next section's table.
 
 ## The enemy that searches: `MctsSquad` (T87)
 

@@ -167,7 +167,7 @@ check: check-no-engine lint-disk-layout test-godot test-vectors \
        test-rts-budget test-mcts-budget test-rts-simulation test-rts-match test-steering-properties \
        test-racing-ladder test-racing-does-not-cheat test-game3d-floor test-botmatch-effects \
        test-racing3d-car test-racing3d-effects test-racing3d-ladder test-racing3d-does-not-cheat test-racing3d-you-drive \
-       test-infiltration-properties test-infiltration test-pad test-squad-match \
+       test-infiltration-properties test-infiltration test-pad test-squad-match test-squad-floor \
        test-locale-screen ## Run every gate
 
 .PHONY: check-no-engine
@@ -629,6 +629,10 @@ measure-director: import ## T90: the director over seeded runs -- seconds in eac
 test-squad-match: import ## The XCOM mode's first enemy against a random mover: at least 80 of 100 seeded matches from each seat (T85, ~30 s)
 	@$(PYTHON) scripts/godot_checked.py --timeout 86400 res://test/squad/squad_match_runner.gd -- $(or $(GAMES),100) $(or $(WINS),80)
 
+.PHONY: test-squad-floor
+test-squad-floor: import ## T125: the XCOM mode's first enemy against a greedy shooter, at least 125 of 200 seeded matches, both seats (measured 137; a planted cover-blind weighing, 112, must fail; ~30 s)
+	@$(PYTHON) scripts/godot_checked.py --timeout 86400 res://test/squad/squad_floor_runner.gd -- $(or $(GAMES),100) $(or $(WINS),125)
+
 .PHONY: test-squad-vectors
 test-vectors: test-squad-vectors
 test-squad-vectors: import ## The XCOM-style shot: cover, flanking, chance and die, both languages against spec/vectors/squad (T84)
@@ -650,6 +654,12 @@ measure-squad-mcts: import ## T87: MCTS against the weighed enemy from each seat
 	@# Printed, not a gate: a line a game, then a summary a seat.
 	@$(PYTHON) scripts/godot_checked.py --timeout 86400 res://test/squad/squad_mcts_measure.gd \
 		-- $(or $(ITERATIONS),1000) $(or $(GAMES),100) $(or $(FIRST),0)
+
+.PHONY: measure-squad-mcts-greedy
+measure-squad-mcts-greedy: import ## T125: the same, against the greedy shooter (ITERATIONS=1000 GAMES=20 FIRST=0; slow)
+	@# Printed, not a gate: a line a game, then a summary a seat.
+	@$(PYTHON) scripts/godot_checked.py --timeout 86400 res://test/squad/squad_mcts_measure.gd \
+		-- $(or $(ITERATIONS),1000) $(or $(GAMES),20) $(or $(FIRST),0) greedy
 
 .PHONY: test-squad-duel
 check: test-squad-duel

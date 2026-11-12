@@ -103,3 +103,9 @@ its walk was refused; the next worth most,a caminhada foi recusada; a próxima q
 "N new map, B a cell at a time","N mapa novo, B uma célula por vez"
 "amber: least entropy, next","âmbar: menor entropia, a seguir"
 red 0: a contradiction,vermelho 0: uma contradição
+greedy,guloso
+"the best shot it has, else straight at the nearest enemy, cover never weighed","o melhor tiro que tem, senão direto ao inimigo mais próximo, sem nunca pesar a cobertura"
+"keeps its best shot: {damage} damage expected","guarda o seu melhor tiro: {damage} de dano esperado"
+no shot to keep: walks straight at the nearest enemy it knows of,nenhum tiro a guardar: anda direto ao inimigo mais próximo que conhece
+"shoots {piece} at {cell}: {chance}%, the most damage it can expect","atira em {piece} em {cell}: {chance}%, o maior dano que pode esperar"
+its way was blocked: it stops,o caminho estava bloqueado: para
