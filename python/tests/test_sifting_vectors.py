@@ -12,6 +12,7 @@ import pathlib
 import unittest
 
 from gameaikit.sifting import StorySifter, bindings_if_matches, problem, same
+from gameaikit.sifting.sifter import _count_between, ready_at
 
 VECTORS = pathlib.Path(__file__).resolve().parents[2] / "spec" / "vectors" / "sifting"
 
@@ -51,7 +52,10 @@ def wrong_claims(vector: dict, sifter=None) -> list[str]:
         return [] if found.startswith(vector["refused"]) else [f"refused by {found!r}, not {vector['refused']}"]
     if problem(vector["pattern"]):
         return [f"the pattern is refused: {problem(vector['pattern'])}"]
-    found = sifter.sift(vector["events"], vector["pattern"])
+    events = json.loads(json.dumps(vector["events"]))
+    found = sifter.sift(events, vector["pattern"])
+    if json.dumps(events) != json.dumps(vector["events"]):
+        return ["the sifter wrote into the record it was handed"]
     if len(found) != len(vector["matches"]):
         return [f"{len(found)} match(es), not {len(vector['matches'])}: {found}"]
     return [f"match {place}: {got}, not {claimed}" for place, (got, claimed) in enumerate(zip(found, vector["matches"]))
@@ -106,11 +110,49 @@ class TestSiftingVectors(unittest.TestCase):
 
         self.assertNotEqual(wrong_claims(_vectors()["two-events-are-two-events"], OneEventTwice()), [])
 
+    def test_a_sifter_that_writes_into_the_record_fails(self) -> None:
+        class Marking(StorySifter):
+            def sift(self, events, pattern):
+                for event in events:
+                    event["seen"] = True
+                return super().sift(events, pattern)
+
+        self.assertNotEqual(wrong_claims(_vectors()["every-later-repair"], Marking()), [])
+
+    def test_a_sifter_whose_unless_takes_a_found_event_fails(self) -> None:
+        class TakesFound(StorySifter):
+            @staticmethod
+            def _absent_found(events, pattern, found, bound):
+                return any(bindings_if_matches(events[index], clause["where"], bound) is not None
+                           for clause in pattern.get("unless", [])
+                           for index in range(found[clause["after"]] + 1 if "after" in clause else 0,
+                                              found[clause["before"]] if "before" in clause else len(events)))
+
+            @staticmethod
+            def _ruled_out(events, pattern, found, bound):
+                return None
+
+        self.assertNotEqual(wrong_claims(_vectors()["unless-never-takes-a-found-event"], TakesFound()), [])
+
+    def test_a_sifter_that_drops_a_match_before_its_finds_are_in_fails(self) -> None:
+        class Guessing(StorySifter):
+            @staticmethod
+            def _ruled_out(events, pattern, found, bound):
+                return next((clause for clause in pattern.get("unless", [])
+                             if ready_at(pattern["find"], clause) == len(found) - 1
+                             and _count_between(events, clause, found, bound, 1) > 0), None)
+
+        self.assertNotEqual(wrong_claims(_vectors()["unless-waits-for-the-finds-still-to-come"], Guessing()), [])
+
     def test_a_sifter_that_forgets_unless_fails(self) -> None:
         class NoUnless(StorySifter):
             @staticmethod
             def _absent_found(events, pattern, found, bound):
                 return False
+
+            @staticmethod
+            def _ruled_out(events, pattern, found, bound):
+                return None
 
         for name in ("unless-between-keeps-the-next-one", "the-third-time", "unless-after-never-again"):
             with self.subTest(name):

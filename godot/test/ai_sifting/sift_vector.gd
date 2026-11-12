@@ -64,7 +64,11 @@ static func wrong_claims(vector: Dictionary, sifter: StorySifter) -> Array[Strin
 	if problem != "":
 		wrong.append("the pattern is refused: " + problem)
 		return wrong
-	var found: Array[Dictionary] = sifter.sift(vector["events"], vector["pattern"])
+	var events: Array = (vector["events"] as Array).duplicate(true)
+	var found: Array[Dictionary] = sifter.sift(events, vector["pattern"])
+	if events != vector["events"]:
+		wrong.append("the sifter wrote into the record it was handed")
+		return wrong
 	var claimed: Array = vector["matches"]
 	if found.size() != claimed.size():
 		wrong.append("%d match(es), not %d: %s" % [found.size(), claimed.size(), found])

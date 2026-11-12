@@ -7,6 +7,14 @@
 ## "deed", verb, place}`). It is rebuilt every time it is asked for, as the
 ## world is, and never saved: ADR 0025 keeps deeds and nothing derived.
 ##
+## A night's change also names the deed behind it, when there is one
+## (`cause_day`, `cause_verb`, `cause_place`): the deed that set a fact the
+## rule read, followed back through the nights between. Burn the mill, and
+## two nights later the market's bread is gone because of it -- not because
+## of the well dug the day between (review 189, finding 3). A pattern joins
+## the two on those fields, so a line names the cause, never merely the
+## deed that came last.
+##
 ## `chronicle.json` holds the patterns a designer wrote -- the third time
 ## the same deed was done to a place, the market losing its bread after a
 ## deed, a burnt place rebuilt -- and `StorySifter` finds every match. A
@@ -49,11 +57,13 @@ func _init(table: Dictionary = {}) -> void:
 static func events(rules: ValleyRules, record: DeedLog, day: int) -> Array[Dictionary]:
 	var happened: Array[Dictionary] = []
 	var world := ValleyWorld.new(rules.start)
+	# For each fact a deed has reached, that deed, as the record keeps it.
+	var causes: Dictionary = {}
 	var done_deeds: Array[Dictionary] = record.deeds()
 	var next: int = 0
 	for today: int in range(1, day + 1):
 		var following: ValleyWorld = rules.overnight(world)
-		happened.append_array(changes(world, following, today))
+		happened.append_array(changes(rules, world, following, causes, today))
 		world = following
 		while next < done_deeds.size() and int(done_deeds[next]["day"]) == today:
 			# An event is the deed as kept, told apart from a night's change by
@@ -61,22 +71,68 @@ static func events(rules: ValleyRules, record: DeedLog, day: int) -> Array[Dicti
 			var event: Dictionary = done_deeds[next].duplicate()
 			event["kind"] = "deed"
 			happened.append(event)
+			_caused_by(rules, done_deeds[next], causes)
 			rules.apply(world, done_deeds[next])
 			next += 1
 	return happened
 
 
-## The facts that differ from `before` to `after`, as night events of `day`.
-static func changes(before: ValleyWorld, after: ValleyWorld, day: int) -> Array[Dictionary]:
+## The facts that differ from `before` to `after`, as night events of `day`,
+## each with the deed behind it when one is; `causes` is brought up to date.
+static func changes(rules: ValleyRules, before: ValleyWorld, after: ValleyWorld, causes: Dictionary,
+		day: int) -> Array[Dictionary]:
 	var changed: Array[Dictionary] = []
+	var known: Dictionary = causes.duplicate()
 	for name: String in after.facts:
 		if bool(before.facts[name]) == bool(after.facts[name]):
 			continue
 		var parts: PackedStringArray = name.split(".")
 		var event: Dictionary = {"day": day, "kind": "night", "place": parts[0], "fact": parts[1]}
 		event["value"] = bool(after.facts[name])
+		var cause: Dictionary = cause_of(rules, before, name, bool(after.facts[name]), known)
+		causes.erase(name)
+		if not cause.is_empty():
+			causes[name] = cause
+			event["cause_day"] = cause["day"]
+			event["cause_verb"] = cause["verb"]
+			event["cause_place"] = cause["place"]
 		changed.append(event)
 	return changed
+
+
+## The deed behind `name` becoming `value` overnight from `world`: of the
+## rules that wrote it, the latest deed behind a fact one of them read; or
+## an empty dictionary when no deed is behind it.
+static func cause_of(rules: ValleyRules, world: ValleyWorld, name: String, value: bool,
+		known: Dictionary) -> Dictionary:
+	var latest: Dictionary = {}
+	for rule: Dictionary in rules.rules:
+		var then: Dictionary = rule["then"]
+		if then.has(name) and bool(then[name]) == value and ValleyRules.holds(rule["when"], world.facts):
+			latest = _later(latest, _latest_cause(rule["when"], known))
+	return latest
+
+
+# The latest deed behind any of the facts `when` reads, or {}.
+static func _latest_cause(when: Dictionary, known: Dictionary) -> Dictionary:
+	var latest: Dictionary = {}
+	for fact: String in when:
+		latest = _later(latest, known.get(fact, {}))
+	return latest
+
+
+# The later of two deeds by day; the first on a tie; {} counts as none.
+static func _later(first: Dictionary, second: Dictionary) -> Dictionary:
+	if second.is_empty() or (not first.is_empty() and int(first["day"]) >= int(second["day"])):
+		return first
+	return second
+
+
+# Every fact `deed` sets is now caused by it.
+static func _caused_by(rules: ValleyRules, deed: Dictionary, causes: Dictionary) -> void:
+	var place: String = str(deed["place"])
+	for fact: String in rules.verbs[str(deed["verb"])][place]["sets"]:
+		causes["%s.%s" % [place, fact]] = deed.duplicate()
 
 
 ## The chronicle up to the end of `day`: the newest `TOLD` lines, oldest

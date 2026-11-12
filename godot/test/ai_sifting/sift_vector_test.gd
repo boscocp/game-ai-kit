@@ -23,10 +23,47 @@ class OneEventTwice extends StorySifter:
 				found.erase(clause["as"])
 
 
-## Never finds an event that must not be there.
+## Never finds an event that must not be there, early or at the end.
 class NoUnless extends StorySifter:
 	func _absent_found(_events: Array, _pattern: Dictionary, _found: Dictionary, _bound: Dictionary) -> bool:
 		return false
+
+	func _ruled_out(_events: Array, _pattern: Dictionary, _found: Dictionary, _bound: Dictionary) -> Dictionary:
+		return {}
+
+
+## Marks every event it is handed before sifting: a sifter that writes.
+class Marking extends StorySifter:
+	func sift(events: Array, pattern: Dictionary) -> Array[Dictionary]:
+		for event: Dictionary in events:
+			event["seen"] = true
+		return super(events, pattern)
+
+
+## Lets an `unless` match one of the events found.
+class TakesFound extends StorySifter:
+	func _absent_found(events: Array, pattern: Dictionary, found: Dictionary, bound: Dictionary) -> bool:
+		for clause: Dictionary in pattern.get("unless", []):
+			var first: int = int(found[clause["after"]]) + 1 if clause.has("after") else 0
+			var last: int = int(found[clause["before"]]) if clause.has("before") else events.size()
+			var inside: Array = range(first, last).filter(func(index: int) -> bool:
+				return StorySifter.bindings_if_matches(events[index], clause["where"], bound) != null)
+			if not inside.is_empty():
+				return true
+		return false
+
+	func _ruled_out(_events: Array, _pattern: Dictionary, _found: Dictionary, _bound: Dictionary) -> Dictionary:
+		return {}
+
+
+## Drops a partial match as soon as an `unless` window holds anything,
+## though a find still to come may take it.
+class Guessing extends StorySifter:
+	func _ruled_out(events: Array, pattern: Dictionary, found: Dictionary, bound: Dictionary) -> Dictionary:
+		for clause: Dictionary in pattern.get("unless", []):
+			if ready_at(pattern["find"], clause) == found.size() - 1 and _count_between(events, clause, found, bound, 1) > 0:
+				return clause
+		return {}
 
 
 func _directory() -> String:
@@ -87,6 +124,19 @@ func test_a_vector_of_the_wrong_types_is_refused_before_it_is_read() -> void:
 
 func test_a_sifter_that_lets_two_names_find_one_event_fails() -> void:
 	assert_array(SiftVector.wrong_claims(_vector("two-events-are-two-events"), OneEventTwice.new())).is_not_empty()
+
+
+func test_a_sifter_that_writes_into_the_record_fails() -> void:
+	assert_array(SiftVector.wrong_claims(_vector("every-later-repair"), Marking.new())).is_not_empty()
+
+
+func test_a_sifter_whose_unless_takes_a_found_event_fails() -> void:
+	assert_array(SiftVector.wrong_claims(_vector("unless-never-takes-a-found-event"), TakesFound.new())).is_not_empty()
+
+
+func test_a_sifter_that_drops_a_match_before_its_finds_are_in_fails() -> void:
+	var vector: Dictionary = _vector("unless-waits-for-the-finds-still-to-come")
+	assert_array(SiftVector.wrong_claims(vector, Guessing.new())).is_not_empty()
 
 
 func test_a_sifter_that_forgets_unless_fails() -> void:

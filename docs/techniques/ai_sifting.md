@@ -34,7 +34,9 @@ chronicle, a villager's gossip -- is the game's.
 
 When the record grows while the game runs and the stories are wanted
 every frame: sifting the whole record again each time repeats all the
-work, and a pattern of k events costs up to n^k tries. Winnow [Kreminski,
+work, and a pattern of k events costs up to n^k tries. The valley sifts
+when a deed is kept or a day ends: 26 ms for its six patterns over 120
+days of deeds (239 events), measured. Winnow [Kreminski,
 Dickinson & Mateas 2021] keeps the partial matches and extends them as
 each event arrives; it is not in the kit. When the world should *act* on
 a story: a match is something to tell, and a villager, a price or a door
@@ -48,8 +50,8 @@ order, and not those"; put the number in the events.
 - `make demo-valley` -- do a deed a day (burn the barn, pull the bridge
   down), end a few days with N, then press **C**. The panel turns to the
   valley's chronicle: each line the patterns found -- the market out of
-  bread after a deed, the barn rebuilt, the third time the same deed was
-  done to a place -- and under it, the events it matched. C again goes
+  bread because of a deed, the barn rebuilt, the third time the same deed
+  was done to a place -- and under it, the events it matched. C again goes
   back to the villagers' reasons.
 - Which demo uses which technique, both ways: the
   [catalogue](catalogue.md).
@@ -59,7 +61,10 @@ order, and not those"; put the number in the events.
 `godot/game/valley/valley_chronicle.gd` derives the valley's events from
 its record of deeds -- each night's changed facts, then that day's deeds
 -- every time it is told, and never saves them (ADR 0025 keeps deeds and
-nothing derived). Its patterns are `godot/game/valley/chronicle.json`, and
+nothing derived). A night's change also carries the deed behind it,
+followed back through the rules, so "the market ran out of bread" joins
+the deed that caused it, not the one that came last. Its patterns are
+`godot/game/valley/chronicle.json`, and
 each pattern's sentence is in `ValleyPanel.CHRONICLE`. The knobs that
 matter:
 
@@ -72,7 +77,11 @@ matter:
 | the record | the first argument to `sift` | an `Array` of `Dictionary`, in the order things happened; an event is its index |
 
 Two values are the same only when they are the same kind: `1` and `1.0`
-are one number, and `false` is never `0`, in GDScript and in Python.
+are one number, and `false` is never `0`, in GDScript and in Python. An
+`unless` never matches one of the match's own found events: three finds
+with an `unless` spanning the middle one are not refused by it. Felt and
+Winnow do not exclude found events by default; this kit always does, and a
+vector holds it.
 `gameaikit.sifting` is the twin, and `spec/vectors/sifting/` holds both to
 the same matches.
 

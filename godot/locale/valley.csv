@@ -111,12 +111,23 @@ The chapel door stays shut to you.,A porta da capela fica fechada para você.
 Come in; the chapel is open to you.,Entre; a capela está aberta para você.
 The chapel opens to those who look after the valley.,A capela se abre para quem cuida do vale.
 On day {third.day} it was done for the third time: {deed}.,No dia {third.day} foi feito pela terceira vez: {deed}.
-"The market ran out of bread on day {lack.day}, after the deed of day {done.day}: {deed}.","O mercado ficou sem pão no dia {lack.day}, depois do feito do dia {done.day}: {deed}."
-"Travellers stopped coming to the market on day {lack.day}, after the deed of day {done.day}: {deed}.","Os viajantes deixaram de vir ao mercado no dia {lack.day}, depois do feito do dia {done.day}: {deed}."
+"The market ran out of bread on day {lack.day}, because of a deed on day {done.day}: {deed}.","O mercado ficou sem pão no dia {lack.day}, por causa de um feito do dia {done.day}: {deed}."
+"Travellers stopped coming to the market on day {lack.day}, because of a deed on day {done.day}: {deed}.","Os viajantes deixaram de vir ao mercado no dia {lack.day}, por causa de um feito do dia {done.day}: {deed}."
 "The market had no bread from day {gone.day}, and had bread again on day {back.day}.","O mercado ficou sem pão a partir do dia {gone.day}, e voltou a ter pão no dia {back.day}."
 "On day {burned.day} {place} burned, and on day {rebuilt.day} it was rebuilt.","No dia {burned.day} {place} queimou, e no dia {rebuilt.day} foi reconstruído."
 "On day {burned.day} {place} burned, and nobody has rebuilt it.","No dia {burned.day} {place} queimou, e ninguém o reconstruiu."
 "The valley's chronicle, from the record (C goes back):","A crônica do vale, a partir do registro (C volta):"
 "Nothing yet worth telling: do a deed, and end the day.","Nada ainda que valha contar: faça um feito, e encerre o dia."
 "day {day}, {deed}","dia {day}, {deed}"
-"day {day}, {fact} became {value}","dia {day}, {fact} passou a {value}"
+the mill's wheel turned again,a roda do moinho voltou a girar
+the mill's wheel stopped,a roda do moinho parou
+the market had bread again,o mercado voltou a ter pão
+the market had no bread,o mercado ficou sem pão
+travellers came to the market again,os viajantes voltaram ao mercado
+no travellers came to the market,nenhum viajante veio ao mercado
+the field was watered,o campo foi regado
+the field went dry,o campo secou
+the field bore a harvest,o campo deu colheita
+the field bore nothing,o campo não deu nada
+the orchard bore fruit,o pomar deu frutos
+the orchard bore no fruit,o pomar não deu frutos

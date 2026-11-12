@@ -21,7 +21,11 @@
 ## * `unless`: events that must *not* be there. Each is a `where` -- its
 ##   variables already bound are the match's, the others match anything --
 ##   looked for strictly between the events named `after` and `before`,
-##   or from the start or to the end when one is left out.
+##   or from the start or to the end when one is left out. An `unless`
+##   never matches one of the match's own found events: a pattern of three
+##   with an `unless` spanning the middle one is not refused by it. Felt
+##   and Winnow do not exclude them by default; here they are always
+##   excluded, and `unless-never-takes-a-found-event` holds it.
 ##
 ## Felt [Kreminski, Dickinson & Wardrip-Fruin 2019] writes the same three
 ## things as a Datalog query: event clauses, shared logic variables, and

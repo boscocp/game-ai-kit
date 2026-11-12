@@ -7,7 +7,7 @@ tier: 1
 source: https://github.com/mkremins/winnow
 invalidated_if: the kit's StorySifter or SiftPattern signature changes, a pattern's keys change, or the valley's chronicle is renamed
 teaches: story-sifting
-translation_of: 94c2c52aa2f745041742290ae40668b803d97766e539ba8fe90c2302b91ebe75
+translation_of: 9234fd070a8e0adb7971d16fb0d487370a9e7f2d9ab0e0acc5022e6cf1a9a8e9
 -->
 
 > English: [ai_sifting.md](ai_sifting.md). Os termos que ficam em inglês
@@ -35,7 +35,9 @@ casamento -- uma linha de uma crônica, a fofoca de um aldeão -- é do jogo.
 
 Quando o registro cresce enquanto o jogo roda e as histórias são pedidas
 a cada quadro: peneirar o registro inteiro de novo a cada vez repete todo
-o trabalho, e um padrão de k eventos custa até n^k tentativas. O Winnow
+o trabalho, e um padrão de k eventos custa até n^k tentativas. O vale
+peneira quando um feito é guardado ou um dia acaba: 26 ms para os seus seis
+padrões sobre 120 dias de feitos (239 eventos), medidos. O Winnow
 [Kreminski, Dickinson & Mateas 2021] guarda os casamentos parciais e os
 estende a cada evento que chega; não está no kit. Quando o mundo deveria
 **agir** sobre uma história: um casamento é algo a contar, e um aldeão, um
@@ -48,7 +50,7 @@ número -- quantos dias entre, quanto se perdeu: um padrão só pergunta
 
 - `make demo-valley` -- faça um feito por dia (queime o celeiro, derrube a
   ponte), encerre alguns dias com N e aperte **C**. O painel vira a crônica
-  do vale: cada linha que os padrões acharam -- o mercado sem pão depois
+  do vale: cada linha que os padrões acharam -- o mercado sem pão por causa
   de um feito, o celeiro reconstruído, a terceira vez que o mesmo feito foi
   feito a um lugar -- e embaixo dela os eventos que casou. C de novo volta
   às razões dos aldeões.
@@ -60,7 +62,10 @@ número -- quantos dias entre, quanto se perdeu: um padrão só pergunta
 `godot/game/valley/valley_chronicle.gd` deriva os eventos do vale do
 registro de feitos -- os fatos que cada noite mudou, depois os feitos
 daquele dia -- toda vez que conta, e nunca os salva (a ADR 0025 guarda
-feitos e nada derivado). Os padrões estão em
+feitos e nada derivado). Uma mudança da noite também carrega o feito por
+trás dela, seguido de volta pelas regras, então "o mercado ficou sem pão"
+se liga ao feito que o causou, não ao último que veio antes. Os padrões
+estão em
 `godot/game/valley/chronicle.json`, e a frase de cada um em
 `ValleyPanel.CHRONICLE`. Os botões que importam:
 
@@ -73,7 +78,11 @@ feitos e nada derivado). Os padrões estão em
 | o registro | o primeiro argumento de `sift` | um `Array` de `Dictionary`, na ordem em que as coisas aconteceram; um evento é o seu índice |
 
 Dois valores só são iguais quando são do mesmo tipo: `1` e `1.0` são um
-número só, e `false` nunca é `0`, em GDScript e em Python.
+número só, e `false` nunca é `0`, em GDScript e em Python. Um `unless`
+nunca casa com um dos eventos achados pelo próprio casamento: três `find`
+com um `unless` em volta do do meio não são recusados por ele. O Felt e o
+Winnow não excluem os eventos achados por padrão; este kit sempre exclui, e
+um vetor garante isso.
 `gameaikit.sifting` é o gêmeo, e `spec/vectors/sifting/` prende os dois
 aos mesmos casamentos.
 

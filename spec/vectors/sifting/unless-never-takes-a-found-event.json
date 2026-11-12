@@ -1,0 +1,76 @@
+{
+ "description": "An `unless` never matches one of the events found: the middle burning is `second`, so it does not count against the window around it.",
+ "events": [
+  {
+   "day": 1,
+   "kind": "deed",
+   "verb": "burn",
+   "place": "barn"
+  },
+  {
+   "day": 2,
+   "kind": "deed",
+   "verb": "burn",
+   "place": "barn"
+  },
+  {
+   "day": 3,
+   "kind": "deed",
+   "verb": "burn",
+   "place": "barn"
+  }
+ ],
+ "pattern": {
+  "name": "three-burnings",
+  "find": [
+   {
+    "as": "first",
+    "where": {
+     "verb": "burn"
+    }
+   },
+   {
+    "as": "second",
+    "where": {
+     "verb": "burn"
+    }
+   },
+   {
+    "as": "third",
+    "where": {
+     "verb": "burn"
+    }
+   }
+  ],
+  "before": [
+   [
+    "first",
+    "second"
+   ],
+   [
+    "second",
+    "third"
+   ]
+  ],
+  "unless": [
+   {
+    "where": {
+     "verb": "burn"
+    },
+    "after": "first",
+    "before": "third"
+   }
+  ]
+ },
+ "refused": "",
+ "matches": [
+  {
+   "events": {
+    "first": 0,
+    "second": 1,
+    "third": 2
+   },
+   "bindings": {}
+  }
+ ]
+}

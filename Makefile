@@ -980,7 +980,7 @@ valley-erase: ## Erase this checkout's valley save, and start again from the fir
 	@$(PYTHON) scripts/valley_erase.py
 
 .PHONY: demo-valley
-demo-valley: import ## The valley that remembers: 1-9 a deed on a place, kept between sessions; Tab follows a villager, space one turn, P pause, N ends the day, E erases
+demo-valley: import ## The valley that remembers: 1-9 a deed on a place, kept between sessions; Tab follows a villager, C the chronicle, space one turn, P pause, N ends the day, E erases
 	@$(GODOT) --path godot res://game/valley/valley.tscn
 
 .PHONY: demo-skirmish

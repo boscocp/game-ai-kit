@@ -2,39 +2,50 @@
 
 The sifter only reads: a record handed to it is the same afterwards, and a
 planted sifter that marks the events it used is caught by the same check.
+Every test builds its own record with `record()`: a record shared between
+tests would carry a writing sifter's marks from one test into the next,
+and the check would compare a marked record with a marked copy (review
+189, finding 1).
 """
 
-import copy
+import json
 import unittest
 
 from gameaikit import techniques
 from gameaikit.sifting import StorySifter, bindings_if_matches, problem, same
-
-RECORD = [
-    {"day": 1, "kind": "deed", "verb": "burn", "place": "barn"},
-    {"day": 2, "kind": "night", "place": "market", "fact": "bread", "value": False},
-    {"day": 3, "kind": "deed", "verb": "repair", "place": "barn"},
-    {"day": 4, "kind": "deed", "verb": "burn", "place": "mill"},
-]
 
 REBUILT = {
     "name": "rebuilt",
     "find": [{"as": "burned", "where": {"verb": "burn", "place": "?place"}},
              {"as": "rebuilt", "where": {"verb": "repair", "place": "?place"}}],
     "before": [["burned", "rebuilt"]],
+    "unless": [{"where": {"verb": "repair", "place": "?place"}, "after": "burned", "before": "rebuilt"}],
 }
+
+#: The record as JSON, the one form no sifter can reach and change.
+RECORD_TEXT = json.dumps([
+    {"day": 1, "kind": "deed", "verb": "burn", "place": "barn"},
+    {"day": 2, "kind": "night", "place": "market", "fact": "bread", "value": False},
+    {"day": 3, "kind": "deed", "verb": "repair", "place": "barn"},
+    {"day": 4, "kind": "deed", "verb": "burn", "place": "mill"},
+])
+
+
+def record() -> list[dict]:
+    """A record of its own, for one test."""
+    return json.loads(RECORD_TEXT)
 
 
 def writes_into_the_record(sifter: StorySifter) -> bool:
-    """Whether sifting changed the record it was handed."""
-    record = copy.deepcopy(RECORD)
-    sifter.sift(record, REBUILT)
-    return record != RECORD
+    """Whether sifting changed the record it was handed, against its JSON text."""
+    events = record()
+    sifter.sift(events, REBUILT)
+    return json.dumps(events) != RECORD_TEXT
 
 
 class TestStorySifter(unittest.TestCase):
     def test_a_match_names_its_events_and_bindings(self) -> None:
-        self.assertEqual(StorySifter().sift(RECORD, REBUILT),
+        self.assertEqual(StorySifter().sift(record(), REBUILT),
                          [{"events": {"burned": 0, "rebuilt": 2}, "bindings": {"place": "barn"}}])
 
     def test_the_sifter_leaves_the_record_as_it_was(self) -> None:
@@ -53,17 +64,19 @@ class TestStorySifter(unittest.TestCase):
 
     def test_sifting_twice_gives_the_same_matches(self) -> None:
         sifter = StorySifter()
-        self.assertEqual(sifter.sift(RECORD, REBUILT), sifter.sift(RECORD, REBUILT))
+        events = record()
+        self.assertEqual(sifter.sift(events, REBUILT), sifter.sift(events, REBUILT))
 
     def test_a_pattern_with_a_problem_matches_nothing(self) -> None:
         broken = dict(REBUILT, before=[["burned", "nobody"]])
         self.assertTrue(problem(broken).startswith("P3"))
-        self.assertEqual(StorySifter().sift(RECORD, broken), [])
+        self.assertEqual(StorySifter().sift(record(), broken), [])
 
     def test_matching_does_not_change_the_bindings_it_is_given(self) -> None:
         bound = {"place": "barn"}
-        self.assertIsNone(bindings_if_matches(RECORD[3], {"place": "?place"}, bound))
-        self.assertEqual(bindings_if_matches(RECORD[3], {"verb": "?verb"}, bound),
+        burned_mill = record()[3]
+        self.assertIsNone(bindings_if_matches(burned_mill, {"place": "?place"}, bound))
+        self.assertEqual(bindings_if_matches(burned_mill, {"verb": "?verb"}, bound),
                          {"place": "barn", "verb": "burn"})
         self.assertEqual(bound, {"place": "barn"})
 

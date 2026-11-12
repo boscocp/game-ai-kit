@@ -163,7 +163,7 @@ CASES = {
                  find("lack", {"kind": "night", "place": "market", "fact": "bread", "value": False})],
         "before": [["done", "lack"]],
         "unless": [{"where": {"kind": "deed"}, "after": "done", "before": "lack"}]}),
-    "nothing-matches-an-empty-list": ("Nobody dug a well: no match at all.", VALLEY, {
+    "no-match-is-an-empty-list": ("Nobody dug a well: no match at all.", VALLEY, {
         "name": "well", "find": [find("dug", {"verb": "dig_well"})]}),
     "a-flag-is-not-a-number": ("`false` in the record is not `0` in the pattern, nor `1` true.", [
         night(1, "market", "bread", False), night(2, "market", "bread", True), {"day": 3, "value": 0},
@@ -179,6 +179,34 @@ CASES = {
     "two-events-are-two-events": ("Two events to find never take the same event.", [
         deed(1, "burn", "barn"), deed(2, "burn", "mill")], {
         "name": "two-burnings", "find": [find("one", {"verb": "burn"}), find("other", {"verb": "burn"})]}),
+    "an-empty-record": ("A record with no event in it: no match, and nothing to read.", [], {
+        "name": "burned", "find": [find("burned", {"verb": "burn"})]}),
+    "a-variable-twice-in-one-event": ("One variable in two fields of one event: both must hold the same value.", [
+        {"day": 1, "from": "west", "to": "east"}, {"day": 2, "from": "east", "to": "east"},
+        {"day": 3, "from": "west", "to": "west"}], {
+        "name": "stayed", "find": [find("stayed", {"from": "?side", "to": "?side"})]}),
+    "unless-with-a-variable-of-its-own": ("An `unless` variable no find binds matches anything: any deed between.",
+                                          VALLEY, {
+        "name": "nothing-between",
+        "find": [find("lost", {"kind": "night", "fact": "bread", "value": False}),
+                 find("back", {"kind": "night", "fact": "bread", "value": True})],
+        "before": [["lost", "back"]],
+        "unless": [{"where": {"kind": "deed", "verb": "?any"}, "after": "lost", "before": "back"}]}),
+    "unless-never-takes-a-found-event": ("An `unless` never matches one of the events found: the middle burning "
+                                         "is `second`, so it does not count against the window around it.", [
+        deed(1, "burn", "barn"), deed(2, "burn", "barn"), deed(3, "burn", "barn")], {
+        "name": "three-burnings",
+        "find": [find("first", {"verb": "burn"}), find("second", {"verb": "burn"}), find("third", {"verb": "burn"})],
+        "before": [["first", "second"], ["second", "third"]],
+        "unless": [{"where": {"verb": "burn"}, "after": "first", "before": "third"}]}),
+    "unless-waits-for-the-finds-still-to-come": ("The window between `first` and `third` is ready before `second` "
+                                                 "is found; the event in it is the one `second` takes later, so "
+                                                 "the match must not be dropped early.", [
+        deed(1, "burn", "barn"), deed(2, "burn", "barn"), deed(3, "burn", "barn")], {
+        "name": "found-out-of-order",
+        "find": [find("first", {"verb": "burn"}), find("third", {"verb": "burn"}), find("second", {"verb": "burn"})],
+        "before": [["first", "second"], ["second", "third"]],
+        "unless": [{"where": {"verb": "burn"}, "after": "first", "before": "third"}]}),
 }
 
 #: Patterns each rule refuses, with the rule from the README.

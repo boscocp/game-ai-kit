@@ -36,7 +36,11 @@ agree:
 5. an `unless` event, matched with the match's bindings (a variable it
    binds alone matches anything), must not lie strictly between the events
    named `after` and `before` -- from the start, or to the end, when one is
-   left out -- unless it is one of the events found;
+   left out -- unless it is one of the events found. This last is the kit's
+   choice: Felt and Winnow do not exclude found events by default, and
+   `unless-never-takes-a-found-event` tells the two readings apart. Whether
+   the bounds are strict cannot be seen apart from it -- the bounds are
+   found events, so they are excluded either way;
 6. matches come in lexicographic order of their events' indices, taken in
    the order the pattern names them.
 
@@ -57,7 +61,8 @@ repository, wrote them. The sifters search depth first, an event at a time;
 `derive.py` tries every ordered choice of distinct events --
 `itertools.permutations` -- and keeps the ones that fit, which come out in
 the same lexicographic order. `python3 derive.py --check` fails when a file
-would change.
+would change. No gate runs it, as for the other families: the claim that
+the files are derived rests on whoever changes them running it.
 
 One by hand, `unless-between-keeps-the-next-one`. The record's bridge comes
 down at events 4, 7, 9 and 11 and is repaired at 5, 8 and 10. The pattern
@@ -71,8 +76,8 @@ and the repair that answered it.
 
 ## The files
 
-- `one-event-every-match`, `nothing-matches-an-empty-list`: one event to
-  find, and none found.
+- `one-event-every-match`, `no-match-is-an-empty-list`, `an-empty-record`:
+  one event to find; none found; a record with no event at all.
 - `a-shared-variable-joins-two-events`, `without-before-both-orders`: a
   variable joins two events; without `before`, the reverse order matches
   too.
@@ -81,6 +86,12 @@ and the repair that answered it.
   `unless` between two events, after one, before the first, and between
   three.
 - `a-flag-is-not-a-number`, `a-whole-number-is-one-number`,
-  `a-missing-field-does-not-match`, `two-events-are-two-events`: rules 1-3
-  at their edges.
+  `a-missing-field-does-not-match`, `two-events-are-two-events`,
+  `a-variable-twice-in-one-event`: rules 1-3 at their edges.
+- `unless-with-a-variable-of-its-own`, `unless-never-takes-a-found-event`,
+  `unless-waits-for-the-finds-still-to-come`: rule 5 at its edges -- a
+  variable only the `unless` names matches anything; a found event is never
+  an `unless` event; and a window ready before every find is in must not
+  drop a match whose later find takes the event in it (the sifters look
+  for an `unless` early, and must not guess).
 - `refused-*`: one pattern for each of P1 to P5.

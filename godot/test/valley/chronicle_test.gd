@@ -38,8 +38,40 @@ func test_the_events_are_the_nights_changes_then_the_days_deeds() -> void:
 	var events: Array[Dictionary] = ValleyChronicle.events(_rules, _record([[1, "burn", "barn"]]), 2)
 	assert_array(events).is_equal([
 		{"day": 1, "kind": "deed", "verb": "burn", "place": "barn"},
-		{"day": 2, "kind": "night", "place": "market", "fact": "bread", "value": false},
+		{"day": 2, "kind": "night", "place": "market", "fact": "bread", "value": false,
+			"cause_day": 1, "cause_verb": "burn", "cause_place": "barn"},
 	])
+
+
+# Review 189, finding 3: the mill burnt on day 1 takes two nights to empty
+# the market, and the well dug on day 2 between them is not the cause.
+func test_a_line_names_the_deed_that_caused_it_not_the_last_one() -> void:
+	var told: Array[Dictionary] = ValleyChronicle.new().tell(_rules,
+		_record([[1, "burn", "mill"], [2, "dig_well", "square"]]), 4)
+	var lost: Array = told.filter(func(line: Dictionary) -> bool: return line["pattern"] == "no-bread")
+	assert_int(lost.size()).is_equal(1)
+	assert_dict(lost[0]["values"]).contains_key_value("verb", "burn").contains_key_value("place", "mill")
+	assert_str(ValleyPanel.chronicle_words(lost[0])).is_equal(
+		"The market ran out of bread on day 3, because of a deed on day 1: burn the mill.")
+
+
+# Review 189, finding 9: a repair answers the burning just before it.
+func test_rebuilt_names_only_the_burning_the_repair_answered() -> void:
+	var told: Array[Dictionary] = ValleyChronicle.new().tell(_rules,
+		_record([[1, "burn", "barn"], [2, "burn", "barn"], [3, "repair", "barn"]]), 3)
+	var rebuilt: Array = told.filter(func(line: Dictionary) -> bool: return line["pattern"] == "rebuilt")
+	assert_int(rebuilt.size()).is_equal(1)
+	assert_int(int(rebuilt[0]["values"]["burned.day"])).is_equal(2)
+
+
+# Review 189, finding 6: every change a night can make has its words.
+func test_every_change_a_night_makes_is_worded() -> void:
+	for rule: Dictionary in _rules.rules:
+		for fact: String in rule["then"]:
+			var change: String = "%s %s" % [fact, "true" if rule["then"][fact] else "false"]
+			assert_bool(ValleyPanel.NIGHT.has(change)).override_failure_message(change).is_true()
+	var night: Dictionary = {"day": 2, "kind": "night", "place": "market", "fact": "bread", "value": false}
+	assert_str(ValleyPanel.event_words(night)).is_equal("day 2, the market had no bread")
 
 
 func test_a_burnt_and_rebuilt_barn_is_told_with_its_events() -> void:

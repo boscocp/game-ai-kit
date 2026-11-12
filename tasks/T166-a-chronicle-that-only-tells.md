@@ -57,9 +57,15 @@ Every other decision above is confirmed as proposed.
   sentences are a constant in `ValleyPanel` marked `# shown through tr()`,
   so `lint-translations-game` holds them without a new data rule.
 - C turns the right-hand panel to the chronicle and back: the panel had no
-  room for both. The `make demo-valley` help line is unchanged, so this
-  wave's Makefile change stays a gate added (rule 5); the menu card and the
-  in-game key line name C.
+  room for both. The `make demo-valley` help line, the menu card and the
+  in-game key line name it.
+- After review 189: a night's change carries the deed behind it, followed
+  back through the rules, and `no-bread` / `no-travellers` join on it, so a
+  line names the cause rather than the last deed; an `unless` is looked for
+  as soon as its bounds and variables are known, and ends the search for an
+  event when no later one could pass (26 ms at 120 days of deeds, from
+  2.8 s); an `unless` never matches a found event, pinned by a vector and
+  stated on the pages.
 
 ## Acceptance
 

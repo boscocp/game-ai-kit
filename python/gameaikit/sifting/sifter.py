@@ -121,9 +121,27 @@ def _where_problem(where: Any) -> str:
     return ""
 
 
+def _known_fields_match(event: dict, where: dict, bound: dict) -> bool:
+    """Every field `where` names is in `event`, each value already known the same: the cheap half."""
+    return all(field in event and same(event[field], bound.get(wanted[len(VARIABLE):], event[field])
+                                       if is_variable(wanted) else wanted)
+               for field, wanted in where.items())
+
+
+def _span(order: list, name: str, found: dict, size: int) -> tuple[int, int]:
+    """The places the next event may take, by the `before` pairs whose other end is found."""
+    first, last = 0, size
+    for earlier, later in order:
+        if later == name and earlier in found:
+            first = max(first, found[earlier] + 1)
+        elif earlier == name and later in found:
+            last = min(last, found[later])
+    return first, last
+
+
 def bindings_if_matches(event: Any, where: dict, bound: dict) -> dict | None:
     """The bindings once `event` matches `where` given `bound`, or None. `bound` is not changed."""
-    if not isinstance(event, dict):
+    if not (isinstance(event, dict) and _known_fields_match(event, where, bound)):
         return None
     binds = dict(bound)
     for field, wanted in where.items():
@@ -156,16 +174,20 @@ class StorySifter:
                 matches.append({"events": dict(found), "bindings": dict(bound)})
             return
         clause = clauses[len(found)]
-        for index, event in enumerate(events):
+        first, last = _span(pattern.get("before", []), clause["as"], found, len(events))
+        for index in range(first, last):
             if index in found.values():
                 continue
-            binds = bindings_if_matches(event, clause["where"], bound)
+            binds = bindings_if_matches(events[index], clause["where"], bound)
             if binds is None:
                 continue
             found[clause["as"]] = index
-            if self._in_order(pattern.get("before", []), found):
+            against = self._ruled_out(events, pattern, found, binds)
+            if against is None and self._in_order(pattern.get("before", []), found):
                 self._extend(events, pattern, found, binds, matches)
             del found[clause["as"]]
+            if against is not None and closes_later(clauses, against, len(found)):
+                break
 
     @staticmethod
     def _in_order(order: list, found: dict) -> bool:
@@ -174,11 +196,51 @@ class StorySifter:
 
     @staticmethod
     def _absent_found(events: list, pattern: dict, found: dict, bound: dict) -> bool:
-        for clause in pattern.get("unless", []):
-            first = found[clause["after"]] + 1 if "after" in clause else 0
-            last = found[clause["before"]] if "before" in clause else len(events)
-            for index in range(first, last):
-                if index not in found.values() and \
-                        bindings_if_matches(events[index], clause["where"], bound) is not None:
-                    return True
+        return any(_count_between(events, clause, found, bound, 1) > 0 for clause in pattern.get("unless", []))
+
+    @staticmethod
+    def _ruled_out(events: list, pattern: dict, found: dict, bound: dict) -> dict | None:
+        """The `unless` ready now with more events in its window than finds left to take them, or None."""
+        left = len(pattern["find"]) - len(found)
+        return next((clause for clause in pattern.get("unless", [])
+                     if ready_at(pattern["find"], clause) == len(found) - 1
+                     and _count_between(events, clause, found, bound, left + 1) > left), None)
+
+
+def closes_later(finds: list, clause: dict, place: int) -> bool:
+    """Whether `clause`, having ruled out the find at `place`, rules out every later event for it too."""
+    if clause.get("before") != finds[place]["as"]:
         return False
+    return all(not is_variable(value) or _first_use(finds, value) < place for value in clause["where"].values())
+
+
+def ready_at(finds: list, clause: dict) -> int:
+    """The place among `finds` after which the `unless` `clause` can be looked for."""
+    ready = 0
+    for place, find in enumerate(finds):
+        if find["as"] in (clause.get("after"), clause.get("before")):
+            ready = place
+    for value in clause["where"].values():
+        if is_variable(value):
+            ready = max(ready, _first_use(finds, value))
+    return ready
+
+
+def _first_use(finds: list, variable: str) -> int:
+    for place, find in enumerate(finds):
+        if variable in find["where"].values():
+            return place
+    return -1
+
+
+def _count_between(events: list, clause: dict, found: dict, bound: dict, enough: int) -> int:
+    """How many `unless` events lie between the bounds, not found -- counted up to `enough`."""
+    first = found[clause["after"]] + 1 if "after" in clause else 0
+    last = found[clause["before"]] if "before" in clause else len(events)
+    counted = 0
+    for index in range(first, last):
+        if index not in found.values() and bindings_if_matches(events[index], clause["where"], bound) is not None:
+            counted += 1
+            if counted >= enough:
+                break
+    return counted

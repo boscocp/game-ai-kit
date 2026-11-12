@@ -39,11 +39,23 @@ const PEOPLE: Dictionary = {  # shown through tr()
 ## the event the pattern names `first`.
 const CHRONICLE: Dictionary = {  # shown through tr()
 	"third-time": "On day {third.day} it was done for the third time: {deed}.",
-	"no-bread": "The market ran out of bread on day {lack.day}, after the deed of day {done.day}: {deed}.",
-	"no-travellers": "Travellers stopped coming to the market on day {lack.day}, after the deed of day {done.day}: {deed}.",
+	"no-bread": "The market ran out of bread on day {lack.day}, because of a deed on day {done.day}: {deed}.",
+	"no-travellers": "Travellers stopped coming to the market on day {lack.day}, because of a deed on day {done.day}: {deed}.",
 	"bread-again": "The market had no bread from day {gone.day}, and had bread again on day {back.day}.",
 	"rebuilt": "On day {burned.day} {place} burned, and on day {rebuilt.day} it was rebuilt.",
 	"still-burnt": "On day {burned.day} {place} burned, and nobody has rebuilt it.",
+}
+## What a night did to a fact, by "place.fact value": the facts the rules
+## change overnight. `chronicle_test.gd` holds that every rule's change has
+## its words here.
+const NIGHT: Dictionary = {  # shown through tr()
+	"mill.turning true": "the mill's wheel turned again", "mill.turning false": "the mill's wheel stopped",
+	"market.bread true": "the market had bread again", "market.bread false": "the market had no bread",
+	"market.travellers true": "travellers came to the market again",
+	"market.travellers false": "no travellers came to the market",
+	"field.watered true": "the field was watered", "field.watered false": "the field went dry",
+	"field.harvest true": "the field bore a harvest", "field.harvest false": "the field bore nothing",
+	"orchard.fruit true": "the orchard bore fruit", "orchard.fruit false": "the orchard bore no fruit",
 }
 ## A deed as the rules word it in a reason: "day 2, burn the barn: ...".
 const DEED_REASON: String = "^day (\\d+), (\\w+) the (\\w+): (.*)$"  # not shown: a pattern
@@ -113,8 +125,9 @@ static func event_words(event: Dictionary) -> String:
 	if event["kind"] == "deed":
 		return TranslationServer.translate("day {day}, {deed}").format({day = int(event["day"]),
 			deed = deed_words("%s %s" % [event["verb"], event["place"]])})
-	return TranslationServer.translate("day {day}, {fact} became {value}").format({
-		day = int(event["day"]), fact = "%s.%s" % [event["place"], event["fact"]], value = event["value"]})
+	var change: String = "%s.%s %s" % [event["place"], event["fact"], "true" if event["value"] else "false"]
+	return TranslationServer.translate("day {day}, {deed}").format({day = int(event["day"]),
+		deed = TranslationServer.translate(NIGHT.get(change, change))})
 
 
 ## The deeds on offer, numbered for the keys; or why there are none.
