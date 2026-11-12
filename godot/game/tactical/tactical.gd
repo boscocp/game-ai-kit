@@ -144,7 +144,7 @@ var _view: TacticalModeView
 func _ready() -> void:
 	var unknown: String = unknown_view(OS.get_cmdline_user_args())
 	if unknown != "":
-		push_error("%s: the only view is %s; opened in play" % [unknown, TEACHING_VIEW])
+		push_error("%s: the only view is %s; opened in play" % [unknown, TEACHING_VIEW])  # not shown: for the log
 	_showing_decision = view().shows_the_computer_at_start(teaching)
 	_set_words()
 	_end_button.pressed.connect(end_turn)
