@@ -56,6 +56,11 @@ the menu and this gate share:
   * a target may open its card's mode instead, when `MODE` is given:
     `$(if $(MODE),-- --open=<itself> --mode=$(MODE),res://<scene>)` -- the
     main scene, the menu, straight into its own card; any other card is a D3.
+    After `--mode=$(MODE)` it may pass `$(if $(VIEW), --view=$(VIEW))`, the
+    view the example opens in -- the tactical card's teaching view, which
+    starts XCOM with the computer's reasoning on the board (T124). A view a
+    person must ask for is one they must be told of: the card's `watch`
+    line then names `VIEW=`, or it is a C10.
 
 Exit codes
 ----------
@@ -91,7 +96,7 @@ GOOD_NAME = re.compile(r"^(run|demo-[a-z0-9-]+)$")
 WINDOW_RECIPE = re.compile(r"^\t@?\$\(GODOT\) --path godot(?: res://(\S+\.tscn))?$")
 #: The same, opening the menu on its own card in a mode when MODE is given.
 MODE_RECIPE = re.compile(r"^\t@?\$\(GODOT\) --path godot \$\(if \$\(MODE\),-- --open=(\S+) "
-                         r"--mode=\$\(MODE\),res://(\S+\.tscn)\)$")
+                         r"--mode=\$\(MODE\)(\$\(if \$\(VIEW\), --view=\$\(VIEW\)\))?,res://(\S+\.tscn)\)$")
 
 MAIN_SCENE = re.compile(r'^run/main_scene\s*=\s*"res://([^"]+)"', re.MULTILINE)
 # The header is the whole line up to its *last* bracket: `groups=["x"]` puts a
@@ -146,7 +151,7 @@ def scene_of(root: pathlib.Path, makefile: str, target: str) -> tuple[str | None
 def mode_scene_of(target: str, found: re.Match) -> tuple[str | None, str]:
     """The scene a MODE recipe opens without MODE; with it, the project's
     main scene -- the menu -- opens, and must open on the target's own card."""
-    card, scene = found.groups()
+    card, _view, scene = found.groups()
     if card != target:
         return None, f"with MODE it opens the menu on {card}'s card, not its own"
     return scene, ""
@@ -490,11 +495,27 @@ def quit_findings(reach: Reach, target: str, scene: str) -> list[str]:
     return findings
 
 
+def offers_a_view(makefile: str, target: str) -> bool:
+    """True when the target's MODE recipe passes `VIEW` on to the example."""
+    recipe = recipe_of(makefile, target)
+    found = MODE_RECIPE.match(recipe[0]) if len(recipe) == 1 else None
+    return bool(found and found.group(2))
+
+
+def view_findings(makefile: str, card: dict) -> list[str]:
+    """A view the target can open, which the card's watch line never names (C10)."""
+    target = card.get("target", "?")
+    if offers_a_view(makefile, target) and "VIEW=" not in str(card.get("watch", "")):
+        return [f"C10 {target}: its make target opens a VIEW the card's watch line does not name (VIEW=)"]
+    return []
+
+
 def catalogue_findings(root: pathlib.Path, scenes: dict[str, str | None]) -> list[str]:
     """Every example has exactly one card, every card an example, each honest."""
     catalogue, why = read_catalogue(root)
     if catalogue is None:
         return [why]
+    makefile = (root / "Makefile").read_text(encoding="utf-8")
     reach, findings, seen = Reach(root), [], set()
     for card in catalogue["examples"]:
         target = card.get("target", "?")
@@ -504,6 +525,7 @@ def catalogue_findings(root: pathlib.Path, scenes: dict[str, str | None]) -> lis
         if target not in scenes:
             findings.append(f"C2 {target}: a card with no make target")
         findings += card_findings(reach, card, catalogue["techniques"], scenes.get(target))
+        findings += view_findings(makefile, card)
     for target in sorted(set(scenes) - seen):
         findings.append(f"C2 {target}: an example with no card in {CATALOGUE}")
     for target, scene in sorted(scenes.items()):
@@ -685,6 +707,10 @@ MODE_MAKEFILE = SOUND_MAKEFILE.replace(
     "\t@$(GODOT) --path godot $(if $(MODE),-- --open=demo-search --mode=$(MODE),res://demos/search.tscn)")
 
 
+#: The same, passing the view it opens in on to the example (T124).
+VIEW_MAKEFILE = MODE_MAKEFILE.replace("--mode=$(MODE),", "--mode=$(MODE)$(if $(VIEW), --view=$(VIEW)),")
+
+
 def moded(**changes: object) -> dict:
     """The search card in two modes, each its own roster, changed where a test says."""
     modes = [{"mode": "one", "title": "One", "ruleset": "res://game/ruleset.gd",
@@ -722,6 +748,11 @@ def mode_cases() -> dict[str, tuple[dict, str | None]]:
             {"makefile": MODE_MAKEFILE.replace("--open=demo-search", "--open=run")}, "D3"),
         "a MODE recipe naming a scene for the menu": (
             {"makefile": MODE_MAKEFILE.replace("$(MODE),-- --open", "$(MODE),res://demos/search.tscn -- --open")}, "D3"),
+        "a VIEW the card's watch line names": ({"makefile": VIEW_MAKEFILE, "catalogue": catalogue_text(
+            (SOUND_CARDS[0], card("demo-search", "demos/search.tscn", watch="VIEW=teach shows the frontier.")))}, None),
+        "a VIEW the card's watch line does not name": ({"makefile": VIEW_MAKEFILE}, "C10"),
+        "a VIEW passed outside the MODE form": (
+            {"makefile": VIEW_MAKEFILE.replace("$(MODE)$(if", "$(MODE) $(if")}, "D3"),
     }
 
 

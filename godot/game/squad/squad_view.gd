@@ -55,6 +55,13 @@ func announcement(winner_side: int, state: BoardState) -> String:
 	return SquadVictory.announcement(winner_side, state)
 
 
+## On in the teaching view, off in play (T124): the computer sees its whole
+## squad, and V on in play showed it to the person once a round, which
+## made the fog a formality. V still lifts it on purpose.
+func shows_the_computer_at_start(teaching: bool) -> bool:
+	return teaching
+
+
 ## Nothing with no cursor: the threat in this mode is a hit chance, and a
 ## chance is against a cell (`tint_at`).
 func tint(_state: BoardState, _side: int) -> Dictionary[Vector2i, int]:

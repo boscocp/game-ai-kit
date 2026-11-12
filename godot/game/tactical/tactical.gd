@@ -119,7 +119,15 @@ var _starting_seed: int = 0
 # What each side sees now, in a mode with fog; null in a mode without (T85).
 var _person_fog: TacticalFog
 var _computer_fog: TacticalFog
-# Whether the computer's turn shows what it sees and what it weighed (V).
+## True when the scene was opened in the teaching view, `--view=teach` after
+## `--`, as `make demo-tactical MODE=squad VIEW=teach` opens it (T124): a
+## mode with fog then starts with V on, the computer's reasoning on the
+## board. In play it starts off, or the computer's turn would show the
+## whole enemy squad once a round. A test sets it before the scene enters
+## the tree.
+var teaching: bool = teaching_asked(OS.get_cmdline_user_args())
+# Whether the computer's turn shows what it sees and what it weighed (V);
+# each mode's view says how it starts (`shows_the_computer_at_start`).
 var _showing_decision: bool = true
 # The cell under the mouse, for T's odds in a mode that tints by cursor.
 var _cursor: Vector2i = Vector2i(-1, -1)
@@ -132,6 +140,7 @@ var _view: TacticalModeView
 
 
 func _ready() -> void:
+	_showing_decision = view().shows_the_computer_at_start(teaching)
 	_set_words()
 	_end_button.pressed.connect(end_turn)
 	_undo_button.pressed.connect(undo)
@@ -199,6 +208,12 @@ func view() -> TacticalModeView:
 	return _view
 
 
+## True when `arguments`, the ones after `--`, ask for the teaching view.
+## A function of its own so a test can ask it without a command line.
+static func teaching_asked(arguments: PackedStringArray) -> bool:
+	return arguments.has("--view=teach")
+
+
 ## Play in each of `rulesets` -- a `TacticalRuleset` each -- starting in the
 ## one at `chosen`, so M can move between them, against that mode's first
 ## controller unless the computer is already one of its roster. Called by
@@ -218,6 +233,7 @@ func swap_mode() -> void:
 		return
 	ruleset = modes[(modes.find(ruleset) + 1) % modes.size()]
 	computer = ruleset.build_controller(ruleset.roster_names()[0], randi())
+	_showing_decision = view().shows_the_computer_at_start(teaching)
 	_set_words()
 	new_game()
 
@@ -462,7 +478,7 @@ func decision_overlay() -> Dictionary:
 	overlay["mode"] = ruleset.mode_name()
 	if not view().building().is_empty():
 		overlay["map build"] = view().building()["overlay"]
-	if _computer_thinking() and not computer.weighed().is_empty():
+	if _computer_thinking() and _weighing_drawn() and not computer.weighed().is_empty():
 		overlay["weighed"] = computer.weighed().map(_weighed_described)
 	return overlay
 
@@ -766,7 +782,7 @@ func _draw_what_is_seen() -> void:
 	var weighed: Array[Dictionary] = []
 	if _computer_thinking():
 		marks = computer.plan_marks(state)
-		if fog == null or fog == _computer_fog:
+		if _weighing_drawn():
 			weighed = computer.weighed()
 	_intent.show_plan(marks)
 	_intent.show_weighed(weighed)
@@ -823,6 +839,14 @@ func _drawn_fog() -> TacticalFog:
 	if _computer_thinking() and _showing_decision and _computer_fog != null:
 		return _computer_fog
 	return _person_fog
+
+
+# True when the board may draw what the computer weighed: it is drawn on
+# the computer's own view, or on a board with no fog, never over the
+# person's fog -- and the overlay holds it only when it is drawn (T124).
+func _weighing_drawn() -> bool:
+	var fog: TacticalFog = _drawn_fog()
+	return fog == null or fog == _computer_fog
 
 
 # The board the person acts on: what their side sees, or the whole board.

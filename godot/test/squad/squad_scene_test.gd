@@ -3,7 +3,8 @@
 # chance before a shot with its reasons, T's chance under the cursor, and
 # the enemy's weighing drawn before it acts (V hides it) -- and, since T87,
 # the enemy that searches drawn growing a frame at a time, stopped by space,
-# each frame of it a share of the wall clock since T117.
+# each frame of it a share of the wall clock since T117. Since T124, V
+# starts off in play and on in the teaching view (`VIEW=teach`).
 extends GdUnitTestSuite
 
 const RED: int = TacticalScenario.RED
@@ -56,7 +57,7 @@ func test_c_cycles_this_modes_roster() -> void:
 
 
 func test_the_search_is_drawn_growing_a_frame_at_a_time_and_space_plays_it_early() -> void:
-	var scene: TacticalGame = _opened(1)
+	var scene: TacticalGame = _opened(1, true)
 	scene._press(KEY_C)  # the enemy that searches (T87)
 	scene._press(KEY_S)  # it plays red, and moves first
 	assert_bool(scene._computer_thinking()).is_true()
@@ -79,7 +80,7 @@ func test_the_search_is_drawn_growing_a_frame_at_a_time_and_space_plays_it_early
 
 
 func test_a_frame_of_the_search_stops_by_its_share_of_the_frame() -> void:
-	var scene: TacticalGame = _opened(1)
+	var scene: TacticalGame = _opened(1, true)
 	scene._press(KEY_C)  # the enemy that searches (T87)
 	scene._press(KEY_S)
 	var searcher: MctsSquad = scene.computer as MctsSquad
@@ -130,7 +131,7 @@ func test_t_shows_each_seen_enemys_chance_against_the_cell_under_the_cursor() ->
 
 
 func test_the_enemys_weighing_is_drawn_before_it_acts_and_v_hides_it() -> void:
-	var scene: TacticalGame = _opened(1)
+	var scene: TacticalGame = _opened(1, true)
 	scene._press(KEY_S)  # the computer plays red, and moves first
 	assert_bool(scene._computer_thinking()).is_true()
 	var overlay: Dictionary = scene.decision_overlay()
@@ -226,10 +227,64 @@ func test_with_v_off_an_unseen_piece_acts_unseen() -> void:
 	scene.end_turn()
 	scene.end_turn()
 	assert_bool(scene._computer_thinking()).is_true()
-	scene._press(KEY_V)
+	assert_bool(scene._showing_decision).is_false()  # in play, V starts off (T124)
 	assert_str(scene._status.text).contains("a piece you cannot see acts")
 	assert_str(scene._status.text).not_contains("unit 2")
 	assert_object(scene._intent._decision).is_null()
+
+
+# T124: in play the computer's turn is drawn on the person's fog, so the
+# enemy squad is not shown once a round; V still lifts it on purpose.
+func test_in_play_the_computers_turn_shows_the_persons_fog_until_v() -> void:
+	var scene: TacticalGame = _opened(1)
+	scene._press(KEY_S)  # the computer plays red, and moves first
+	assert_bool(scene._computer_thinking()).is_true()
+	assert_object(scene._intent._fog).is_same(scene._person_fog)
+	assert_bool(scene._intent._weighed.is_empty()).is_true()
+	assert_bool(scene.decision_overlay().has("weighed")).is_false()
+	assert_str(scene._header.text).contains("V shows or hides what the computer sees and weighs")
+	scene._press(KEY_V)
+	assert_object(scene._intent._fog).is_same(scene._computer_fog)
+	assert_bool(scene._intent._weighed.is_empty()).is_false()
+	assert_bool(scene.decision_overlay().has("weighed")).is_true()
+
+
+# T124: the teaching view opens with the computer's reasoning on the board,
+# nothing pressed -- its view, its fog, what it weighed.
+func test_in_the_teaching_view_the_computers_turn_shows_its_view() -> void:
+	var scene: TacticalGame = _opened(1, true)
+	scene._press(KEY_S)
+	assert_bool(scene._computer_thinking()).is_true()
+	assert_object(scene._intent._fog).is_same(scene._computer_fog)
+	assert_bool(scene._intent._weighed.is_empty()).is_false()
+	assert_bool(scene.decision_overlay().has("weighed")).is_true()
+	scene._press(KEY_V)
+	assert_object(scene._intent._fog).is_same(scene._person_fog)
+
+
+# T124: only XCOM starts with V off. M to Advance Wars, which has no fog to
+# lift, turns it on, and M back to XCOM puts XCOM's default back.
+func test_each_mode_starts_with_its_own_default_for_v() -> void:
+	var played: TacticalGame = _opened(1)
+	assert_bool(played._showing_decision).is_false()
+	played._press(KEY_M)
+	assert_bool(played._showing_decision).is_true()
+	played._press(KEY_M)
+	assert_bool(played._showing_decision).is_false()
+	var taught: TacticalGame = _opened(0, true)
+	assert_bool(taught._showing_decision).is_true()
+	taught._press(KEY_M)
+	assert_bool(taught._showing_decision).is_true()
+	assert_bool(_view.shows_the_computer_at_start(false)).is_false()
+	assert_bool(_view.shows_the_computer_at_start(true)).is_true()
+
+
+# The view is read from the command line, as `make demo-tactical MODE=squad
+# VIEW=teach` passes it, and from nothing else.
+func test_the_teaching_view_is_the_launch_option_view_teach() -> void:
+	assert_bool(TacticalGame.teaching_asked(PackedStringArray(["--open=demo-tactical", "--mode=squad", "--view=teach"]))).is_true()
+	assert_bool(TacticalGame.teaching_asked(PackedStringArray(["--open=demo-tactical", "--mode=squad"]))).is_false()
+	assert_bool(TacticalGame.teaching_asked(PackedStringArray(["--view=play"]))).is_false()
 
 
 # Wave 128's review: the fog's ghosts, the legend and the "shoot" wording
@@ -330,8 +385,11 @@ func test_enter_lets_the_search_finish_each_decision_before_it_is_played() -> vo
 
 # The tactical scene opened as the menu opens it: both modes, the one at
 # `chosen` first.
-func _opened(chosen: int) -> TacticalGame:
+# The scene in both modes, starting in the one at `chosen`: in play, or in
+# the teaching view when `teaching`, as `VIEW=teach` opens it (T124).
+func _opened(chosen: int, teaching: bool = false) -> TacticalGame:
 	var scene: TacticalGame = auto_free((load("res://game/tactical/tactical.tscn") as PackedScene).instantiate())
+	scene.teaching = teaching
 	scene.play_in_modes([AdvanceWarsRuleset.new(), SquadRuleset.new()], chosen)
 	add_child(scene)
 	return scene

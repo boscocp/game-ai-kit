@@ -73,6 +73,15 @@ func fog(_state: BoardState, _side: int, _earlier: TacticalFog) -> TacticalFog:
 	return null
 
 
+## Whether the computer's turn opens with V on -- the board showing what
+## the computer sees and weighs -- in the teaching view (`teaching`) or in
+## play. On in both here: a mode with nothing hidden gives nothing away by
+## showing it. A mode with fog answers `teaching`, or the computer's turn
+## would lift the person's fog once a round (T124).
+func shows_the_computer_at_start(_teaching: bool) -> bool:
+	return true
+
+
 ## The cells of `walks` (cell -> route, as `TacticalReach.walks_for` gives
 ## them) that a walk to would leave `unit` spent -- a dash, drawn in a
 ## second tint. None in a mode where every walk is one action.
