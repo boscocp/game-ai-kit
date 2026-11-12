@@ -48,6 +48,7 @@ KIT_MODULES = (
     "pddl",
     "perception",
     "search",
+    "sifting",
     "steering",
     "teamwork",
     "training.descent",

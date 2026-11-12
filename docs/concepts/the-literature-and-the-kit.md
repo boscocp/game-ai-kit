@@ -94,6 +94,7 @@ last three columns to the repository.
 | Constraint satisfaction (propagation, backtracking) | AIMA ch. 6; GAP2 ch. 26 | placing items and enemies in rooms | AC-3 and backtracking with MRV and LCV, seeded and twinned: `ai_constraints`; the infiltration level declared and solved: `godot/game3d/infiltration/level_constraints.gd` (T95); `docs/concepts/constraint-satisfaction.md` | `demo-infiltration` | 1 |
 | Wave function collapse | mxgmn's README | tile levels (*Bad North*, *Townscaper*, *Caves of Qud*) | not in the kit | -- | 1 |
 | Procedural content generation | GAP2 ch. 40; Y&T ch. 7-9 | replayability (*Elite*, per GAP2 ch. 40) | a seed's arena for tests only: `godot/test/botmatch/random_arena.gd` | -- | 1 |
+| Story sifting (Felt; Winnow, incremental) | Kreminski et al. 2019 and 2021; Ryan 2018 | emergent narrative: the moments of a simulation worth retelling | Felt-style patterns over a plain event list, twinned, read-only: `ai_sifting`; the valley's chronicle: `godot/game/valley/valley_chronicle.gd`; Winnow's incremental matching is not in the kit | `demo-valley` | 1 |
 
 ### Deciding: authored behaviour and planning
 

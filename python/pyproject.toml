@@ -41,6 +41,7 @@ packages = [
     "gameaikit.pddl",
     "gameaikit.perception",
     "gameaikit.search",
+    "gameaikit.sifting",
     "gameaikit.steering",
     "gameaikit.teamwork",
     "gameaikit.training",

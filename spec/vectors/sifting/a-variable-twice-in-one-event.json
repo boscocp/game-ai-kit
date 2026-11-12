@@ -1,0 +1,51 @@
+{
+ "description": "One variable in two fields of one event: both must hold the same value.",
+ "events": [
+  {
+   "day": 1,
+   "from": "west",
+   "to": "east"
+  },
+  {
+   "day": 2,
+   "from": "east",
+   "to": "east"
+  },
+  {
+   "day": 3,
+   "from": "west",
+   "to": "west"
+  }
+ ],
+ "pattern": {
+  "name": "stayed",
+  "find": [
+   {
+    "as": "stayed",
+    "where": {
+     "from": "?side",
+     "to": "?side"
+    }
+   }
+  ]
+ },
+ "refused": "",
+ "matches": [
+  {
+   "events": {
+    "stayed": 1
+   },
+   "bindings": {
+    "side": "east"
+   }
+  },
+  {
+   "events": {
+    "stayed": 2
+   },
+   "bindings": {
+    "side": "west"
+   }
+  }
+ ]
+}

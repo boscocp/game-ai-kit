@@ -1,0 +1,45 @@
+{
+ "description": "An event without the field a pattern names is not a match.",
+ "events": [
+  {
+   "day": 1
+  },
+  {
+   "day": 2,
+   "verb": "burn"
+  },
+  {
+   "verb": "repair"
+  }
+ ],
+ "pattern": {
+  "name": "any-verb",
+  "find": [
+   {
+    "as": "done",
+    "where": {
+     "verb": "?verb"
+    }
+   }
+  ]
+ },
+ "refused": "",
+ "matches": [
+  {
+   "events": {
+    "done": 1
+   },
+   "bindings": {
+    "verb": "burn"
+   }
+  },
+  {
+   "events": {
+    "done": 2
+   },
+   "bindings": {
+    "verb": "repair"
+   }
+  }
+ ]
+}

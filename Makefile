@@ -464,6 +464,14 @@ test-constraints-vectors: import ## The constraint vectors, against ai_constrain
 	@$(PYTHON) scripts/godot_checked.py res://test/ai_constraints/constraint_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/constraints
 
+.PHONY: test-sifting-vectors
+test-vectors: test-sifting-vectors
+test-sifting-vectors: import ## The story sifting vectors, against ai_sifting (T166)
+	@# The same files are read by `make test-python` through gameaikit.sifting;
+	@# the matches came from neither, from spec/vectors/sifting/derive.py.
+	@$(PYTHON) scripts/godot_checked.py res://test/ai_sifting/sift_vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/sifting
+
 .PHONY: test-cloning-vectors
 test-vectors: test-cloning-vectors
 test-cloning-vectors: import ## The cloning vectors, against ai_learning's softmax model and case table
@@ -972,7 +980,7 @@ valley-erase: ## Erase this checkout's valley save, and start again from the fir
 	@$(PYTHON) scripts/valley_erase.py
 
 .PHONY: demo-valley
-demo-valley: import ## The valley that remembers: 1-9 a deed on a place, kept between sessions; Tab follows a villager, space one turn, P pause, N ends the day, E erases
+demo-valley: import ## The valley that remembers: 1-9 a deed on a place, kept between sessions; Tab follows a villager, C the chronicle, space one turn, P pause, N ends the day, E erases
 	@$(GODOT) --path godot res://game/valley/valley.tscn
 
 .PHONY: demo-skirmish

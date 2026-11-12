@@ -59,7 +59,8 @@
     "discourse-acts": {"name": "a language model reads the player's words as one declared act, behind a validator", "evidence": ["LlmValidator", "LlmConversation"]},
     "attack-tokens": {"name": "attack tokens: one or two of a group strike at a time", "evidence": ["AttackTokens"]},
     "engagement-rings": {"name": "engagement rings: where the rest stand while one strikes", "evidence": ["EngagementRings"]},
-    "deed-record": {"name": "a record of deeds: the world rebuilt from what the player did, and a standing summed from it", "evidence": ["ValleyRules", "Standing"]}
+    "deed-record": {"name": "a record of deeds: the world rebuilt from what the player did, and a standing summed from it", "evidence": ["ValleyRules", "Standing"]},
+    "story-sifting": {"name": "story sifting: patterns matched over what happened, the moments worth telling", "evidence": ["StorySifter"]}
   },
   "examples": [
     {
@@ -363,9 +364,10 @@
         {"technique": "deed-record", "part": "each deed you do is kept in the one file the kit saves; every day, in this session and the next, the world is rebuilt from it, and the panel names the deed behind each fact a villager reads"},
         {"technique": "goap", "part": "the followed villager's plan in the panel: bread bought at the market, or the wheat taken, ground and baked when the market is out of reach"},
         {"technique": "a-star", "part": "the followed villager's search on the ground: yellow cells expanded, cyan frontier, the white route; with the bridge down it fills one bank and stops at the water"},
-        {"technique": "weighed-actions", "part": "the goals left scored in the panel: a goal with no plan scores nothing, a dearer plan less"}
+        {"technique": "weighed-actions", "part": "the goals left scored in the panel: a goal with no plan scores nothing, a dearer plan less"},
+        {"technique": "story-sifting", "part": "C turns the panel to the chronicle: the moments its patterns find in what happened -- the third time, the market out of bread after a deed -- each line over the events it matched"}
       ],
-      "controls": "1-9 do a deed on a place, one a day; Tab follows another villager; space one turn, P pauses, N ends the day; E erases the valley's memory, after you confirm",
+      "controls": "1-9 do a deed on a place, one a day; Tab follows another villager; C the chronicle; space one turn, P pauses, N ends the day; E erases the valley's memory, after you confirm",
       "watch": "Pull the bridge down and end the day: the east village's searches stop at the river, and their plans for bread turn from the market to the barn, the mill and their own ovens. Close the game and open it again: the bridge is still down. The ferryman's price follows your fear, and the panel names the deeds that made it.",
       "docs": "docs/godot/valley.md"
     }

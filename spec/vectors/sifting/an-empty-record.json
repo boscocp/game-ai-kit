@@ -1,0 +1,17 @@
+{
+ "description": "A record with no event in it: no match, and nothing to read.",
+ "events": [],
+ "pattern": {
+  "name": "burned",
+  "find": [
+   {
+    "as": "burned",
+    "where": {
+     "verb": "burn"
+    }
+   }
+  ]
+ },
+ "refused": "",
+ "matches": []
+}

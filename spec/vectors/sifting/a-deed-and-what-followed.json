@@ -1,0 +1,129 @@
+{
+ "description": "The market lost its bread, and the last deed before it.",
+ "events": [
+  {
+   "day": 1,
+   "kind": "deed",
+   "verb": "burn",
+   "place": "barn"
+  },
+  {
+   "day": 2,
+   "kind": "night",
+   "place": "market",
+   "fact": "bread",
+   "value": false
+  },
+  {
+   "day": 3,
+   "kind": "deed",
+   "verb": "repair",
+   "place": "barn"
+  },
+  {
+   "day": 4,
+   "kind": "night",
+   "place": "market",
+   "fact": "bread",
+   "value": true
+  },
+  {
+   "day": 5,
+   "kind": "deed",
+   "verb": "pull_down",
+   "place": "bridge"
+  },
+  {
+   "day": 6,
+   "kind": "deed",
+   "verb": "repair",
+   "place": "bridge"
+  },
+  {
+   "day": 7,
+   "kind": "deed",
+   "verb": "burn",
+   "place": "barn"
+  },
+  {
+   "day": 8,
+   "kind": "deed",
+   "verb": "pull_down",
+   "place": "bridge"
+  },
+  {
+   "day": 9,
+   "kind": "deed",
+   "verb": "repair",
+   "place": "bridge"
+  },
+  {
+   "day": 10,
+   "kind": "deed",
+   "verb": "pull_down",
+   "place": "bridge"
+  },
+  {
+   "day": 11,
+   "kind": "deed",
+   "verb": "repair",
+   "place": "bridge"
+  },
+  {
+   "day": 12,
+   "kind": "deed",
+   "verb": "pull_down",
+   "place": "bridge"
+  }
+ ],
+ "pattern": {
+  "name": "no-bread",
+  "find": [
+   {
+    "as": "done",
+    "where": {
+     "kind": "deed",
+     "verb": "?verb",
+     "place": "?place"
+    }
+   },
+   {
+    "as": "lack",
+    "where": {
+     "kind": "night",
+     "place": "market",
+     "fact": "bread",
+     "value": false
+    }
+   }
+  ],
+  "before": [
+   [
+    "done",
+    "lack"
+   ]
+  ],
+  "unless": [
+   {
+    "where": {
+     "kind": "deed"
+    },
+    "after": "done",
+    "before": "lack"
+   }
+  ]
+ },
+ "refused": "",
+ "matches": [
+  {
+   "events": {
+    "done": 0,
+    "lack": 1
+   },
+   "bindings": {
+    "verb": "burn",
+    "place": "barn"
+   }
+  }
+ ]
+}

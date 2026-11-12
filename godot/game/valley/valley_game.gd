@@ -54,6 +54,13 @@ var acted_today: bool = false
 ## until one is.
 var last_deed: Dictionary = {}
 var last_changed: Array[String] = []
+## The chronicle's patterns (T166). It reads the record; nothing here
+## reads the chronicle back.
+var chronicle := ValleyChronicle.new()
+
+# The chronicle last told, and the deeds and day it was told for.
+var _told: Array[Dictionary] = []
+var _told_for: Array[int] = [-1, -1]
 
 
 ## A session on `kept`, the save it reads and appends to.
@@ -145,6 +152,15 @@ func standing_now() -> Dictionary:
 	return standing.of(record)
 
 
+## The valley's chronicle up to now (T166): told again only when a deed is
+## kept or the day changes, since nothing else changes what happened.
+func chronicle_now() -> Array[Dictionary]:
+	if _told_for != [record.size(), today]:
+		_told = chronicle.tell(rules, record, today)
+		_told_for = [record.size(), today]
+	return _told
+
+
 ## Remove the save and start again from the first day, with nothing kept.
 ## Returns the save's answer.
 func forget() -> Error:
@@ -164,6 +180,7 @@ func _load() -> void:
 	today = int(kept[-1]["day"]) + 1 if not kept.is_empty() else 1
 	last_deed = {}
 	last_changed = []
+	_told_for = [-1, -1]
 	_start_day()
 
 

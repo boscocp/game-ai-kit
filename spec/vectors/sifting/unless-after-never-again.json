@@ -1,0 +1,111 @@
+{
+ "description": "A burning nobody repaired afterwards.",
+ "events": [
+  {
+   "day": 1,
+   "kind": "deed",
+   "verb": "burn",
+   "place": "barn"
+  },
+  {
+   "day": 2,
+   "kind": "night",
+   "place": "market",
+   "fact": "bread",
+   "value": false
+  },
+  {
+   "day": 3,
+   "kind": "deed",
+   "verb": "repair",
+   "place": "barn"
+  },
+  {
+   "day": 4,
+   "kind": "night",
+   "place": "market",
+   "fact": "bread",
+   "value": true
+  },
+  {
+   "day": 5,
+   "kind": "deed",
+   "verb": "pull_down",
+   "place": "bridge"
+  },
+  {
+   "day": 6,
+   "kind": "deed",
+   "verb": "repair",
+   "place": "bridge"
+  },
+  {
+   "day": 7,
+   "kind": "deed",
+   "verb": "burn",
+   "place": "barn"
+  },
+  {
+   "day": 8,
+   "kind": "deed",
+   "verb": "pull_down",
+   "place": "bridge"
+  },
+  {
+   "day": 9,
+   "kind": "deed",
+   "verb": "repair",
+   "place": "bridge"
+  },
+  {
+   "day": 10,
+   "kind": "deed",
+   "verb": "pull_down",
+   "place": "bridge"
+  },
+  {
+   "day": 11,
+   "kind": "deed",
+   "verb": "repair",
+   "place": "bridge"
+  },
+  {
+   "day": 12,
+   "kind": "deed",
+   "verb": "pull_down",
+   "place": "bridge"
+  }
+ ],
+ "pattern": {
+  "name": "never-rebuilt",
+  "find": [
+   {
+    "as": "burned",
+    "where": {
+     "verb": "burn",
+     "place": "?place"
+    }
+   }
+  ],
+  "unless": [
+   {
+    "where": {
+     "verb": "repair",
+     "place": "?place"
+    },
+    "after": "burned"
+   }
+  ]
+ },
+ "refused": "",
+ "matches": [
+  {
+   "events": {
+    "burned": 6
+   },
+   "bindings": {
+    "place": "barn"
+   }
+  }
+ ]
+}

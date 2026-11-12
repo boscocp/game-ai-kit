@@ -118,6 +118,46 @@ which ADR 0025 refuses.
   (numbered in the record), and what it sets against the usual -- "fear 5
   (deeds 1, 2) -> asks 8 coins, 4 as a rule".
 
+## The chronicle (T166)
+
+C turns the panel to the valley's chronicle, and back. `ValleyChronicle`
+derives what happened from the record -- each night's changed facts, then
+that day's deeds -- and story sifting (`ai_sifting`, as in Felt) finds the
+moments `chronicle.json`'s patterns describe:
+
+| pattern | tells |
+|---|---|
+| `third-time` | the third time the same deed was done to a place, and only the third |
+| `no-bread`, `no-travellers` | the market out of bread, or of travellers, and the deed that caused it |
+| `bread-again` | the bread gone from the market, and the day it came back |
+| `rebuilt` | a place burnt, and the repair that answered it -- only the burning just before the repair |
+| `still-burnt` | a place burnt that nobody has rebuilt |
+
+The newest six lines are told, each over the events its pattern matched,
+a night's change worded ("day 3, the market had no bread"), not shown as
+the fact's code name.
+
+**A cause, not the last deed** (review 189, finding 3). A night's change
+carries the deed behind it (`cause_day`, `cause_verb`, `cause_place`):
+the deed that set a fact the rule read, followed back through the nights
+between. Burn the mill on day 1 and dig the well on day 2: the bread is
+gone on day 3 "because of a deed on day 1: burn the mill", where the first
+version named the well. `no-bread` and `no-travellers` join the night to
+its deed on those three fields.
+
+**What it costs.** Telling derives every day's events and sifts six
+patterns: 5 ms at 30 days of a deed a day, 26 ms at 120 days (239
+events), 76 ms at 240, measured on the pinned engine. `ValleyGame` tells
+it again only when a deed is kept or a day ends, never every frame.
+
+**It only tells.** The events are derived every time and never saved (ADR
+0025 keeps deeds and nothing derived); nothing in the valley -- a villager,
+a manner, the standing -- reads the chronicle; and telling it leaves the
+record, the save and the world as they were, which a test holds. The
+sentences are templates in `ValleyPanel.CHRONICLE`, translated like every
+other line: no language model writes them (the owner's decision,
+2026-11-11).
+
 ## The three people
 
 `manners.json` gives each a list of rules read top to bottom; the first
@@ -161,8 +201,18 @@ price is what you are asked, shown, not paid.
   number keys; every manner sets only the
   consequences `standing.json` lists; fear 5 doubles the ferryman's price,
   naming deeds 1 and 2.
+- `chronicle_test.gd` (T166): the events are each night's changes, then
+  the day's deeds; a burnt and rebuilt barn tells the bread lost, the barn
+  rebuilt and the bread back, in that order, with their events; the bridge
+  pulled down four times tells the third time once (and the repairs'
+  third time once); the bread lost names the mill burnt two nights before,
+  not the well dug between; a repair answers only the burning just before
+  it; every change a night can make has its words; telling leaves the
+  record, the save and the world as they were, and a planted chronicle that
+  appends a deed is caught by the same comparison; every pattern is sound
+  and has a sentence.
 - `make test-demo-overlays` steps the scene and requires `chain`, `plan`,
-  `frontier`, `expanded`, `care`, `fear` and `deeds` in the overlay.
+  `frontier`, `expanded`, `care`, `fear`, `deeds` and `chronicle` in the overlay.
 
 ## Manual check
 
@@ -170,5 +220,7 @@ price is what you are asked, shown, not paid.
   the villages live with it and the overlay say why.
 - Dig the well and watch the west village draw water at the square the
   next day, where it walked to the river before.
+- Press C after a few days with deeds: the chronicle names moments a
+  person would retell, and each line's events are the ones it is about.
 - Read the panel in pt-BR: the reasons, the deeds and the greetings are
   Portuguese; the facts, goals and plan steps stay as the code names them.

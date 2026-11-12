@@ -1,0 +1,51 @@
+{
+ "description": "Two events to find never take the same event.",
+ "events": [
+  {
+   "day": 1,
+   "kind": "deed",
+   "verb": "burn",
+   "place": "barn"
+  },
+  {
+   "day": 2,
+   "kind": "deed",
+   "verb": "burn",
+   "place": "mill"
+  }
+ ],
+ "pattern": {
+  "name": "two-burnings",
+  "find": [
+   {
+    "as": "one",
+    "where": {
+     "verb": "burn"
+    }
+   },
+   {
+    "as": "other",
+    "where": {
+     "verb": "burn"
+    }
+   }
+  ]
+ },
+ "refused": "",
+ "matches": [
+  {
+   "events": {
+    "one": 0,
+    "other": 1
+   },
+   "bindings": {}
+  },
+  {
+   "events": {
+    "one": 1,
+    "other": 0
+   },
+   "bindings": {}
+  }
+ ]
+}

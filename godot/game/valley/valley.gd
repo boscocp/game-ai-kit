@@ -19,6 +19,11 @@
 ## standing, summed from your deeds by fixed weights, sets the ferryman's
 ## price, the merchant's, and whether the chapel's door opens.
 ##
+## C turns the panel to the valley's chronicle (T166): the moments its
+## story sifting patterns find in what happened -- the bridge down for the
+## third time, the market out of bread after a deed -- each line over the
+## events it matched. It only tells; nothing in the valley reads it.
+##
 ## E erases the valley's memory, after you confirm: the save is removed
 ## and the valley starts again from its first day. This node only runs the
 ## clock, reads the keys and draws; the session is `ValleyGame`'s.
@@ -36,6 +41,8 @@ var game := ValleyGame.new(ValleySave.new())
 var followed: int = 0
 ## Whether the clock is stopped; space still plays one turn.
 var paused: bool = false
+## Whether the panel shows the chronicle (C) instead of the chains.
+var chronicling: bool = false
 ## Whether E was pressed and the erase waits for Y.
 var confirming: bool = false
 ## The last thing said on the message line, as a key and its values.
@@ -112,6 +119,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		game.next_day()
 	elif key.keycode == KEY_TAB:
 		followed = (followed + 1) % game.villagers.size()
+	elif key.keycode == KEY_C:
+		chronicling = not chronicling
 	elif key.keycode == KEY_E:
 		ask_to_erase()
 	_refresh()
@@ -170,7 +179,7 @@ func _refresh() -> void:
 	queue_redraw()
 	var overlay: Dictionary = decision_overlay()
 	_status.text = ValleyPanel.status(overlay, paused)
-	_panel.text = ValleyPanel.describe(overlay)
+	_panel.text = ValleyPanel.chronicle(overlay) if chronicling else ValleyPanel.describe(overlay)
 	_deeds.text = ValleyPanel.deeds_offered(overlay)
 	_message.text = tr(str(message[0])).format(message[1]) if not message.is_empty() else ""
 	_erase.text = tr("Erase the valley's memory (E)")

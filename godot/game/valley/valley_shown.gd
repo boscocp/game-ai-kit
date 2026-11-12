@@ -8,6 +8,9 @@
 ## Ana's bread: take_wheat, grind_wheat, bake_bread -> A\* to the barn".
 ## The manners' chain runs from the deeds to a virtue to what a person
 ## sets: "fear 6 (deeds 1, 3) -> the ferryman asks 8, his fare 4".
+## The chronicle (T166) is a third: each line beside the events its
+## pattern matched, "the bridge came down for the third time <- day 5,
+## day 8, day 10".
 ##
 ## Every list holds something: an empty one is written as "none", so the
 ## screen and `test-demo-overlays` both see that nothing is there rather
@@ -33,7 +36,7 @@ static func overlay(game: ValleyGame, watching: int) -> Dictionary:
 			"deeds": game.record.size(), "standing": sums, "offered": offered_shown(game),
 			"last_deed": last_deed_shown(game), "save": game.refused if game.refused != "" else "kept",
 			"watching": followed.name, "chain": chain(game, followed), "villagers": people,
-			"manners": manners_shown(game, sums)}
+			"manners": manners_shown(game, sums), "chronicle": filled(game.chronicle_now(), [NONE])}
 
 
 ## One villager's decision: its goal, plan, route and A\* search, and the

@@ -505,6 +505,10 @@
     "deed-record": {
       "en": "a record of deeds the world is rebuilt from",
       "pt-BR": "um registro de feitos do qual o mundo é reconstruído"
+    },
+    "story-sifting": {
+      "en": "story sifting, Felt-style patterns",
+      "pt-BR": "*story sifting*, padrões ao modo do Felt"
     }
   }
 }

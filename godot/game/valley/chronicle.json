@@ -1,0 +1,68 @@
+{
+ "about": "The valley's chronicle (T166): the moments worth telling, as story sifting patterns over the valley's events. An event is a deed, {day, kind: deed, verb, place}, or a fact a night changed, {day, kind: night, place, fact, value}; both are derived from the record of deeds by the valley's rules, every time the chronicle is told, and never saved. A night event also names the deed behind it, cause_day, cause_verb and cause_place, when one is: the deed that set a fact the rule read, followed back through the nights between; no-bread and no-travellers join on those, so they name the cause, not merely the deed that came last. They find the night first: a market without bread is rarer than a deed, and each one then only looks for its own cause, which keeps the sift short. Each pattern's line is ValleyPanel.CHRONICLE's, by the pattern's name. A pattern finds; it decides nothing, and the world never reads it.",
+ "patterns": [
+  {
+   "name": "third-time",
+   "find": [
+    {"as": "first", "where": {"kind": "deed", "verb": "?verb", "place": "?place"}},
+    {"as": "second", "where": {"kind": "deed", "verb": "?verb", "place": "?place"}},
+    {"as": "third", "where": {"kind": "deed", "verb": "?verb", "place": "?place"}}
+   ],
+   "before": [["first", "second"], ["second", "third"]],
+   "unless": [
+    {"where": {"kind": "deed", "verb": "?verb", "place": "?place"}, "before": "first"},
+    {"where": {"kind": "deed", "verb": "?verb", "place": "?place"}, "after": "first", "before": "second"},
+    {"where": {"kind": "deed", "verb": "?verb", "place": "?place"}, "after": "second", "before": "third"}
+   ]
+  },
+  {
+   "name": "no-bread",
+   "find": [
+    {"as": "lack", "where": {"kind": "night", "place": "market", "fact": "bread", "value": false,
+                             "cause_day": "?day", "cause_verb": "?verb", "cause_place": "?place"}},
+    {"as": "done", "where": {"kind": "deed", "day": "?day", "verb": "?verb", "place": "?place"}}
+   ],
+   "before": [["done", "lack"]]
+  },
+  {
+   "name": "no-travellers",
+   "find": [
+    {"as": "lack", "where": {"kind": "night", "place": "market", "fact": "travellers", "value": false,
+                             "cause_day": "?day", "cause_verb": "?verb", "cause_place": "?place"}},
+    {"as": "done", "where": {"kind": "deed", "day": "?day", "verb": "?verb", "place": "?place"}}
+   ],
+   "before": [["done", "lack"]]
+  },
+  {
+   "name": "bread-again",
+   "find": [
+    {"as": "gone", "where": {"kind": "night", "place": "market", "fact": "bread", "value": false}},
+    {"as": "back", "where": {"kind": "night", "place": "market", "fact": "bread", "value": true}}
+   ],
+   "before": [["gone", "back"]],
+   "unless": [{"where": {"kind": "night", "place": "market", "fact": "bread"}, "after": "gone", "before": "back"}]
+  },
+  {
+   "name": "rebuilt",
+   "find": [
+    {"as": "burned", "where": {"kind": "deed", "verb": "burn", "place": "?place"}},
+    {"as": "rebuilt", "where": {"kind": "deed", "verb": "repair", "place": "?place"}}
+   ],
+   "before": [["burned", "rebuilt"]],
+   "unless": [
+    {"where": {"kind": "deed", "verb": "repair", "place": "?place"}, "after": "burned", "before": "rebuilt"},
+    {"where": {"kind": "deed", "verb": "burn", "place": "?place"}, "after": "burned", "before": "rebuilt"}
+   ]
+  },
+  {
+   "name": "still-burnt",
+   "find": [
+    {"as": "burned", "where": {"kind": "deed", "verb": "burn", "place": "?place"}}
+   ],
+   "unless": [
+    {"where": {"kind": "deed", "verb": "repair", "place": "?place"}, "after": "burned"},
+    {"where": {"kind": "deed", "verb": "plant", "place": "?place"}, "after": "burned"}
+   ]
+  }
+ ]
+}

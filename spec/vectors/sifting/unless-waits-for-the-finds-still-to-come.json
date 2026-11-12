@@ -1,0 +1,76 @@
+{
+ "description": "The window between `first` and `third` is ready before `second` is found; the event in it is the one `second` takes later, so the match must not be dropped early.",
+ "events": [
+  {
+   "day": 1,
+   "kind": "deed",
+   "verb": "burn",
+   "place": "barn"
+  },
+  {
+   "day": 2,
+   "kind": "deed",
+   "verb": "burn",
+   "place": "barn"
+  },
+  {
+   "day": 3,
+   "kind": "deed",
+   "verb": "burn",
+   "place": "barn"
+  }
+ ],
+ "pattern": {
+  "name": "found-out-of-order",
+  "find": [
+   {
+    "as": "first",
+    "where": {
+     "verb": "burn"
+    }
+   },
+   {
+    "as": "third",
+    "where": {
+     "verb": "burn"
+    }
+   },
+   {
+    "as": "second",
+    "where": {
+     "verb": "burn"
+    }
+   }
+  ],
+  "before": [
+   [
+    "first",
+    "second"
+   ],
+   [
+    "second",
+    "third"
+   ]
+  ],
+  "unless": [
+   {
+    "where": {
+     "verb": "burn"
+    },
+    "after": "first",
+    "before": "third"
+   }
+  ]
+ },
+ "refused": "",
+ "matches": [
+  {
+   "events": {
+    "first": 0,
+    "third": 2,
+    "second": 1
+   },
+   "bindings": {}
+  }
+ ]
+}

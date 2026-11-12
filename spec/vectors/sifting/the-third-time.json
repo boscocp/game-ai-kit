@@ -1,0 +1,168 @@
+{
+ "description": "The third time the same deed was done to the same place, and only the third.",
+ "events": [
+  {
+   "day": 1,
+   "kind": "deed",
+   "verb": "burn",
+   "place": "barn"
+  },
+  {
+   "day": 2,
+   "kind": "night",
+   "place": "market",
+   "fact": "bread",
+   "value": false
+  },
+  {
+   "day": 3,
+   "kind": "deed",
+   "verb": "repair",
+   "place": "barn"
+  },
+  {
+   "day": 4,
+   "kind": "night",
+   "place": "market",
+   "fact": "bread",
+   "value": true
+  },
+  {
+   "day": 5,
+   "kind": "deed",
+   "verb": "pull_down",
+   "place": "bridge"
+  },
+  {
+   "day": 6,
+   "kind": "deed",
+   "verb": "repair",
+   "place": "bridge"
+  },
+  {
+   "day": 7,
+   "kind": "deed",
+   "verb": "burn",
+   "place": "barn"
+  },
+  {
+   "day": 8,
+   "kind": "deed",
+   "verb": "pull_down",
+   "place": "bridge"
+  },
+  {
+   "day": 9,
+   "kind": "deed",
+   "verb": "repair",
+   "place": "bridge"
+  },
+  {
+   "day": 10,
+   "kind": "deed",
+   "verb": "pull_down",
+   "place": "bridge"
+  },
+  {
+   "day": 11,
+   "kind": "deed",
+   "verb": "repair",
+   "place": "bridge"
+  },
+  {
+   "day": 12,
+   "kind": "deed",
+   "verb": "pull_down",
+   "place": "bridge"
+  }
+ ],
+ "pattern": {
+  "name": "third-time",
+  "find": [
+   {
+    "as": "first",
+    "where": {
+     "kind": "deed",
+     "verb": "?verb",
+     "place": "?place"
+    }
+   },
+   {
+    "as": "second",
+    "where": {
+     "kind": "deed",
+     "verb": "?verb",
+     "place": "?place"
+    }
+   },
+   {
+    "as": "third",
+    "where": {
+     "kind": "deed",
+     "verb": "?verb",
+     "place": "?place"
+    }
+   }
+  ],
+  "before": [
+   [
+    "first",
+    "second"
+   ],
+   [
+    "second",
+    "third"
+   ]
+  ],
+  "unless": [
+   {
+    "where": {
+     "verb": "?verb",
+     "place": "?place"
+    },
+    "before": "first"
+   },
+   {
+    "where": {
+     "verb": "?verb",
+     "place": "?place"
+    },
+    "after": "first",
+    "before": "second"
+   },
+   {
+    "where": {
+     "verb": "?verb",
+     "place": "?place"
+    },
+    "after": "second",
+    "before": "third"
+   }
+  ]
+ },
+ "refused": "",
+ "matches": [
+  {
+   "events": {
+    "first": 4,
+    "second": 7,
+    "third": 9
+   },
+   "bindings": {
+    "verb": "pull_down",
+    "place": "bridge"
+   }
+  },
+  {
+   "events": {
+    "first": 5,
+    "second": 8,
+    "third": 10
+   },
+   "bindings": {
+    "verb": "repair",
+    "place": "bridge"
+   }
+  }
+ ]
+}
