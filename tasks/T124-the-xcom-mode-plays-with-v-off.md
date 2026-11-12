@@ -19,6 +19,15 @@ O2).
 
 _The owner ratified only the item quoted above. The decisions below are this session's proposal, written on 2026-11-05; the wave that takes the task confirms them, or brings them back to the owner._
 
+**The owner's decision, 2026-11-11 (wave 191):** "the teaching view" is
+**a launch option**, `make demo-tactical MODE=squad VIEW=teach` -- with
+it the XCOM mode opens with V on; otherwise V starts off. V still
+toggles in play. Only the XCOM mode changes; Advance Wars keeps V on.
+Invariant 13 still holds: `make test-demo-overlays` and `check_demos.py`
+find the squad overlay populated in the teaching view, and the menu
+card's `watch` line says how to get there. The proposals below stand as
+confirmed, the first reading of the three chosen.
+
 - **Only the XCOM mode changes.** The Advance Wars mode has no fog to
   lift, and keeps V on.
 - **What "the teaching view" is, is the task's first decision.** Nothing

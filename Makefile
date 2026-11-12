@@ -1035,12 +1035,14 @@ demo-rts: import ## Real-time strategy against a commander that plans: drag sele
 	@$(GODOT) --path godot res://game/rts/rts.tscn
 
 .PHONY: demo-tactical
-demo-tactical: import ## Advance Wars style tactics against the computer: click to move, W waits, 1-5 build, Z undo, space ends the turn, C changes the computer, S swaps sides; MODE=squad opens the menu on it in XCOM mode (M switches, V the computer's view, N a new map, B its build a cell at a time)
+demo-tactical: import ## Advance Wars style tactics against the computer: click to move, W waits, 1-5 build, Z undo, space ends the turn, C changes the computer, S swaps sides; MODE=squad opens the menu on it in XCOM mode (M switches, V the computer's view, N a new map, B its build a cell at a time); with MODE=squad, VIEW=teach opens XCOM with V on
 	@# Without MODE, the scene on its own, in Advance Wars. With it, the
 	@# project's main scene -- the menu -- straight into this card in that
 	@# mode, since the menu is what hands the scene its modes (T85);
-	@# `check_demos.py` holds both forms.
-	@$(GODOT) --path godot $(if $(MODE),-- --open=demo-tactical --mode=$(MODE),res://game/tactical/tactical.tscn)
+	@# `check_demos.py` holds both forms. VIEW=teach is the teaching view
+	@# (T124): XCOM starts with V on, the computer's reasoning on the board;
+	@# in play it starts off, so its turn does not lift the person's fog.
+	@$(GODOT) --path godot $(if $(MODE),-- --open=demo-tactical --mode=$(MODE)$(if $(VIEW), --view=$(VIEW)),res://game/tactical/tactical.tscn)
 
 .PHONY: tactical-win-rates
 tactical-win-rates: import ## Seeded games between the tactical board's controllers: wins, rounds, stuck pieces (~1 min)

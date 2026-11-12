@@ -219,6 +219,24 @@ scene plays the other, a new game with that mode's first controller.
 that mode. `make demo-tactical` alone still opens the scene in Advance
 Wars, and M does nothing there: the scene names no mode.
 
+**V off in play, on in the teaching view (T124).** On the computer's turn
+the computer's view is all of its own pieces, so V on by default showed a
+person the whole enemy squad once a round, and the fog was a formality
+(T85's review, O2). The owner chose on 2026-11-11 that the teaching view
+is a launch option: `make demo-tactical MODE=squad VIEW=teach` passes
+`--view=teach`, `TacticalGame.teaching` reads it, and the mode view
+answers how V starts (`shows_the_computer_at_start`): XCOM's only in the
+teaching view, Advance Wars' always, since it has no fog to lift. V still
+toggles in play, and M sets each mode's default again. The overlay holds
+what the computer weighed only while the board draws it, so
+`test-demo-overlays` steps the XCOM mode in its teaching view, and
+`check_demos.py` refuses a target that opens a `VIEW` its card's watch
+line does not name (C10). An unknown view, `VIEW=teaching` say, opens in
+play with an error naming the one view there is. The teaching view lasts
+the process: back to the menu and into the card again is still the
+teaching view, and the menu has no way to it; to leave it, or reach it,
+relaunch.
+
 **What the scene asks the mode's view (T126).** T85 added these to the
 ruleset; T126 moved them to a `TacticalModeView` of their own, which the
 ruleset hands the scene (`mode_view`). Each has an answer that leaves
@@ -715,6 +733,11 @@ read as one game with two modes? Is the hit chance shown before every shot,
 and its reason readable? With the decision view on, can you say before the
 enemy acts which option it will take? Does it ever seem to know where an
 unseen piece is? And: is the shield behind rock too hard to hit?
+
+T124: play the XCOM mode on both sides (S) with the defaults: is the
+enemy hidden on the computer's turn? Then open the teaching view, `make
+demo-tactical MODE=squad VIEW=teach`: is the computer's reasoning on the
+board without pressing anything?
 
 T127: play as red until a blue piece you cannot see shoots one of yours
 (a mortar sees 6 and reaches 7). Does the news tell you only what red

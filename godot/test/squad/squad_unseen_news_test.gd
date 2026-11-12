@@ -47,17 +47,17 @@ func test_red_s_news_of_the_shot_names_no_piece_it_cannot_see() -> void:
 
 
 func test_while_blue_plays_on_red_s_view_the_shot_is_unseen_too() -> void:
-	# V off: the person's own view of the computer's turn (T85).
+	# V off, as play opens it (T124): the person's own view of the computer's
+	# turn (T85).
 	for locale: String in LOCALES:
 		var scene: TacticalGame = _shot_by_the_unseen_mortar(locale)
-		scene._press(KEY_V)
 		_assert_names_no_unseen_piece(scene, "%s, blue's turn, V off" % locale)
 
 
 func test_on_blue_s_own_view_and_in_the_kept_line_the_shot_is_whole() -> void:
 	# V on: the computer's own view, which sees its mortar. And the line the
 	# game keeps -- the rules' `told` -- is not the screen's, and stays whole.
-	var scene: TacticalGame = _shot_by_the_unseen_mortar("en")
+	var scene: TacticalGame = _shot_by_the_unseen_mortar("en", true)
 	assert_str(scene._status.text).contains("blue mortar at %s shot" % MORTAR_CELL)
 	assert_str(scene.news_in_english()).contains("blue mortar at %s shot red shield at %s" % [MORTAR_CELL, SHIELD_CELL])
 	scene.play_rest_of_computer_turn()
@@ -120,10 +120,12 @@ func _assert_no_chance_nor_cover(line: String, where: String) -> void:
 # mortar's shot at the shield -- played on screen in `locale`. A blue runner
 # far off in the corner is still to act after it, so the computer is still
 # thinking and V still chooses whose fog is on screen: with blue's turn
-# over, the scene shows the person's.
-func _shot_by_the_unseen_mortar(locale: String) -> TacticalGame:
+# over, the scene shows the person's. Opened in play, V off, unless
+# `teaching` opens it in the teaching view, V on (T124).
+func _shot_by_the_unseen_mortar(locale: String, teaching: bool = false) -> TacticalGame:
 	TranslationServer.set_locale(locale)
 	var scene: TacticalGame = auto_free((load("res://game/tactical/tactical.tscn") as PackedScene).instantiate())
+	scene.teaching = teaching
 	scene.play_in_modes([AdvanceWarsRuleset.new(), SquadRuleset.new()], 1)
 	add_child(scene)
 	scene.state = _facing(RED)

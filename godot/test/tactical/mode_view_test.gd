@@ -27,3 +27,10 @@ func test_the_view_shows_the_ruleset_that_handed_it() -> void:
 	var rules := AdvanceWarsRuleset.new()
 	assert_object(rules.mode_view().rules).is_same(rules)
 	assert_bool(rules.mode_view() is AdvanceWarsView).is_true()
+
+
+# T124: Advance Wars has no fog to lift, so V starts on in play and in the
+# teaching view alike; only a mode with something hidden starts it off.
+func test_v_starts_on_in_play_and_in_the_teaching_view() -> void:
+	assert_bool(_view.shows_the_computer_at_start(false)).is_true()
+	assert_bool(_view.shows_the_computer_at_start(true)).is_true()

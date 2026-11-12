@@ -84,7 +84,10 @@ const REQUIRED: Dictionary = {
 ## The same, for an example opened in a mode other than its first (T85),
 ## by "<scene> <mode>": every such mode a card lists must be named here, so a
 ## mode added to the catalogue cannot go unstepped. The first mode is the
-## scene's own, opened alone above.
+## scene's own, opened alone above. Each is opened in its teaching view
+## (`VIEW=teach`, T124), the one its card's watch line sends a person to:
+## in play the XCOM mode keeps what its computer weighed off the board, and
+## the overlay holds only what the board draws.
 const MODE_REQUIRED: Dictionary = {
 	"res://game/tactical/tactical.tscn squad": [["why", false], ["score", true], ["chance", true]],
 }
@@ -191,13 +194,17 @@ func _check_modes() -> Array[String]:
 	return failures
 
 
-# The card's mode at `index`, opened in it and stepped.
+# The card's mode at `index`, opened in it, in its teaching view, and stepped.
 func _check_mode(card: Dictionary, index: int) -> Array[String]:
 	var modes: Array = card["modes"]
 	var label: String = "%s %s" % [card.get("scene", ""), modes[index].get("mode", "")]
 	if not MODE_REQUIRED.has(label):
 		return ["%s: a mode with no fields named in MODE_REQUIRED" % label]
 	var example: Node = (load(card.get("scene", "")) as PackedScene).instantiate()
+	if not "teaching" in example:
+		example.free()
+		return ["%s: a scene in modes with no teaching view to open it in" % label]
+	example.set("teaching", true)
 	example.call("play_in_modes", modes.map(_ruleset_of), index)
 	_modes_checked += 1
 	return await _check_node(label, example, MODE_REQUIRED[label])
