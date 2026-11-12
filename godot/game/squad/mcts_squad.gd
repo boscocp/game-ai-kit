@@ -119,7 +119,7 @@ func _work_per_frame() -> int:
 func _frame_share_usec() -> int:
 	var share: float = float(search_rules().get("frame_share_ms", 0.0))
 	if share <= 0.0:
-		push_error("rules.json: search.frame_share_ms must be a number of milliseconds above 0")
+		push_error("rules.json: search.frame_share_ms must be a number of milliseconds above 0")  # not shown: for the log
 		return 0
 	return roundi(share * 1000.0)
 

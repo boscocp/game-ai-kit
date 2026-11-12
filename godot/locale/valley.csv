@@ -34,6 +34,7 @@ A* to {place}: no way there; {expanded} cells searched,A* até {place}: não há
 no virtue at stake,nenhuma virtude em jogo
 {virtue} {value} (deeds {deeds}),{virtue} {value} (feitos {deeds})
 "asks {price} coins, {usual} as a rule","pede {price} moedas, {usual} de costume"
+"asks {price} coin, {usual} as a rule","pede {price} moeda, {usual} de costume"
 the door opens,a porta se abre
 the door stays shut,a porta fica fechada
 "day {day}, {deed}: {why}","dia {day}, {deed}: {why}"
