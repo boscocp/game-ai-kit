@@ -7,7 +7,7 @@ tier: 2
 source: https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html ; https://docs.godotengine.org/en/stable/tutorials/editor/command_line_tutorial.html ; https://packaging.python.org/en/latest/tutorials/installing-packages/
 invalidated_if: scripts/release.py changes what an archive holds, ADR 0024 changes the prefixed names, .godot-version or python/pyproject.toml's version moves, or scripts/library_check.py stops following one of this page's steps
 teaches: none
-translation_of: a6b74cc82b1b44a95c621b479b341946ddd83bd611e32ae42791e8cbbb08a624
+translation_of: a0ce27338b8209414ee4277174b1e9586177fe59787e6fc4df98ae22a7ca2330
 -->
 
 > English: [using-the-library.md](using-the-library.md). Os termos que ficam
