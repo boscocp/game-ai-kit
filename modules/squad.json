@@ -27,9 +27,9 @@
   "gates": [
     "test-squad-duel",
     "test-squad-exit",
+    "test-squad-floor",
     "test-squad-match",
     "test-squad-search-vectors",
-    "test-squad-vectors",
-    "test-squad-floor"
+    "test-squad-vectors"
   ]
 }

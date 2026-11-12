@@ -66,8 +66,9 @@ why is under "What wave 192 chose", below the list._
    112 of 200, and the gate fails if it reaches the bar. Danger weighed at
    zero (119) was measured too, and is the nearer miss; the task named
    cover.
-4. **MCTS against it** goes in `make measure-squad-mcts`'s table through a
-   new `OPPONENT=greedy`; not gated.
+4. **MCTS against it** goes in `make measure-squad-mcts`'s table, measured
+   by a new `make measure-squad-mcts-greedy` (the same script, handed the
+   opponent's row); not gated.
 5. **The time**: about 26 s for both runs, the planted and the real, on
    T85's ~30 s line, so the gate keeps 100 matches a seat.
 
@@ -104,3 +105,9 @@ fair stand-in for a careless player?
   and the `Makefile`. It does not run beside any of them.
 - The new gate goes into `check:` by its own line, so `affected.py`'s
   rule 5 can read it as a gate added (`docs/howto/parallel-batch.md`).
+- Wave 192 measured otherwise: `added_gates.py` reads a name put into the
+  `check:` list, not a `check: x` line of its own, so the name went into
+  the list. And rule 5 still selects everything for this gate, because
+  its recipe names `scripts/godot_checked.py`, a global path -- since T141
+  every Godot gate's recipe does, so no new Godot gate can be read as
+  added. A follow-up for the selector, not opened.

@@ -466,8 +466,8 @@ this gate must not. Danger weighed at zero (119) would fail the bar too,
 by less. Both runs, the planted and the real, take about 26 s together, on
 the line of T85's ~30 s, so the gate plays the full 100 a seat.
 
-**MCTS against it** is measured, not gated (`make measure-squad-mcts
-OPPONENT=greedy`), for the reason PR #69 gave: at 1,000 iterations a
+**MCTS against it** is measured, not gated (`make
+measure-squad-mcts-greedy`), for the reason PR #69 gave: at 1,000 iterations a
 strength gate costs some 40 CPU-minutes a hundred games. Its rows are in
 the next section's table.
 
@@ -578,6 +578,20 @@ decision searched as the scene searches it, 4 iterations a frame):
 | 200 | 34 of 100 | 37 of 100 | 0.23 s | 0.45 s | 24 ms |
 | 1,000 | 56 of 100 | 63 of 100 | 1.3 s | 2.7 s | 122 ms |
 | 5,000 | 12 of 20 | 12 of 20 | 6.1 s | 9.8 s | 202 ms |
+
+Against T125's greedy shooter instead (wave 192, `make
+measure-squad-mcts-greedy`, games 0-19 a seat, four runs at once, load
+about 4; a decision on the frame share since T117):
+
+| iterations a decision | won as red | won as blue | a decision, on average | at most | worst frame |
+|---|---|---|---|---|---|
+| 200 | 6 of 20 | 9 of 20 | 0.15 s | 0.23 s | 12 ms |
+| 1,000 | 11 of 20 | 10 of 20 | 0.78 s | 1.1 s | 24 ms |
+
+The weighed enemy, on the same seeds, wins 49 of 100 as red and 88 as
+blue: at 1,000 iterations the search holds its own as red and is well
+behind as blue, where the careless player is at its strongest. Twenty games
+a seat is a small sample -- the gap as blue is the one to read.
 
 No draws, and no action lost to a refused walk in any of them. "A
 decision" here is the search's own time, its frames added up, with ten
