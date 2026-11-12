@@ -39,6 +39,10 @@ var _boss_label: Label3D
 var _minions: Array[Node3D] = []
 var _labels: Array[Label3D] = []
 var _lines := ImmediateMesh.new()
+# This frame's segments, two points and two colours each, gathered before
+# any surface is opened: an empty surface is an engine error.
+var _points := PackedVector3Array()
+var _colours := PackedColorArray()
 
 
 ## Build the arena and the bodies once, for `fight`.
@@ -83,9 +87,12 @@ func refresh(fight: BossFight, thinking: bool) -> void:
 	_draw_lines(fight, thinking)
 
 
+# Gather the segments, then hand them over in one surface -- or none, when
+# the reasoning is hidden and no bolt flies and nothing is locked on: the
+# engine refuses a surface with no vertices, and said so every such frame.
 func _draw_lines(fight: BossFight, thinking: bool) -> void:
-	_lines.clear_surfaces()
-	_lines.surface_begin(Mesh.PRIMITIVE_LINES)
+	_points.clear()
+	_colours.clear()
 	_draw_bolts(fight)
 	_draw_lock(fight)
 	if thinking:
@@ -93,6 +100,13 @@ func _draw_lines(fight: BossFight, thinking: bool) -> void:
 		_draw_tokens(fight)
 		_draw_telegraph(fight)
 		_draw_aims(fight)
+	_lines.clear_surfaces()
+	if _points.is_empty():
+		return
+	_lines.surface_begin(Mesh.PRIMITIVE_LINES)
+	for index: int in range(_points.size()):
+		_lines.surface_set_color(_colours[index])
+		_lines.surface_add_vertex(_points[index])
 	_lines.surface_end()
 
 
@@ -166,10 +180,8 @@ func _circle(centre: Vector2, radius: float, colour: Color, height: float = LIFT
 
 
 func _segment(from: Vector2, to: Vector2, colour: Color, height: float = LIFT) -> void:
-	_lines.surface_set_color(colour)
-	_lines.surface_add_vertex(_ground(from, height))
-	_lines.surface_set_color(colour)
-	_lines.surface_add_vertex(_ground(to, height))
+	_points.append_array([_ground(from, height), _ground(to, height)])
+	_colours.append_array([colour, colour])
 
 
 func _build_arena(fight: BossFight) -> void:
