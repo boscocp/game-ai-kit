@@ -7,7 +7,7 @@ tier: 2
 source: https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html ; https://docs.godotengine.org/en/stable/tutorials/editor/command_line_tutorial.html ; https://packaging.python.org/en/latest/tutorials/installing-packages/
 invalidated_if: scripts/release.py changes what an archive holds, ADR 0024 changes the prefixed names, .godot-version or python/pyproject.toml's version moves, or scripts/library_check.py stops following one of this page's steps
 teaches: none
-translation_of: a6b74cc82b1b44a95c621b479b341946ddd83bd611e32ae42791e8cbbb08a624
+translation_of: a0ce27338b8209414ee4277174b1e9586177fe59787e6fc4df98ae22a7ca2330
 -->
 
 > English: [using-the-library.md](using-the-library.md). Os termos que ficam
@@ -101,8 +101,8 @@ quer e, se o README dele pedir, o `ai_core` ao lado. Para um caminho, os
 dois:
 
 ```bash
-unzip -q library/dist/ai_core-0.1.0.zip -d my_game/
-unzip -q library/dist/ai_search-0.1.0.zip -d my_game/
+unzip -q library/dist/ai_core-0.2.0.zip -d my_game/
+unzip -q library/dist/ai_search-0.2.0.zip -d my_game/
 ```
 
 Não há plugin para ativar. Copiar `godot/addons/ai_core/` e
@@ -171,7 +171,7 @@ dele:
 
 ```bash
 python3 -m venv .venv
-.venv/bin/python -m pip install --quiet --no-index library/dist/gameaikit-0.1.0-py3-none-any.whl
+.venv/bin/python -m pip install --quiet --no-index library/dist/gameaikit-0.2.0-py3-none-any.whl
 ```
 
 `from gameaikit import techniques` passa a listar o que está instalado,
@@ -228,7 +228,7 @@ No Godot, o `ai_learning` ao lado dos outros (ele não precisa do
 `ai_core`), na raiz do projeto como eles, e a importação de novo:
 
 ```bash
-unzip -q library/dist/ai_learning-0.1.0.zip -d my_game/
+unzip -q library/dist/ai_learning-0.2.0.zip -d my_game/
 godot --headless --path my_game --import
 ```
 
@@ -275,7 +275,7 @@ segundo projeto em branco, `my_kit/`, para o kit ser testado nos próprios
 arquivos e não nos addons que já estão no `my_game/`:
 
 ```bash
-unzip -q library/dist/game-ai-kit-addons-0.1.0.zip -d my_kit/
+unzip -q library/dist/game-ai-kit-addons-0.2.0.zip -d my_kit/
 godot --headless --path my_kit --import
 ```
 
@@ -294,7 +294,7 @@ continua vivo ("still in use at exit"): a página
   e é essa que o `make library-check` roda. Um Godot 4 mais antigo não é
   testado.
 - **A versão da biblioteca** está no `VERSION` de cada zip e no nome do
-  *wheel* -- 0.1.0 hoje, o número dos comandos acima. O que ela promete
+  *wheel* -- 0.2.0 hoje, o número dos comandos acima. O que ela promete
   manter é o que o ADR 0024 escreve: os nomes `Gak` acima, os que o seu
   código escreve como tipo, menos o `GakXorshift`, que leva o prefixo para
   que seja improvável colidir com um seu e ainda não é prometido --

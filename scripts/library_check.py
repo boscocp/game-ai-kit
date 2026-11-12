@@ -516,13 +516,13 @@ def page_cases(english: str) -> list[str]:
 
 def planted_faults(english: str) -> tuple[tuple[str, Planted, str], ...]:
     """Each planted case: the page to follow, the fault, and what the finding must name."""
-    misplaced = english.replace("unzip -q library/dist/ai_core-0.1.0.zip", "unzip -q ai_core-0.1.0.zip", 1)
+    misplaced = english.replace("unzip -q library/dist/ai_core-0.2.0.zip", "unzip -q ai_core-0.2.0.zip", 1)
     # The page's command before T149: the zips' `addons/` nests one deeper.
     nested = english.replace("-d my_game/\n", "-d my_game/addons/\n", 1)
     # The page's `infer` before T160, and the kit unzipped the same wrong way.
-    learning = english.replace("ai_learning-0.1.0.zip -d my_game/\n",
-                               "ai_learning-0.1.0.zip -d my_game/addons/\n")
-    kit_nested = english.replace("addons-0.1.0.zip -d my_kit/\n", "addons-0.1.0.zip -d my_kit/addons/\n")
+    learning = english.replace("ai_learning-0.2.0.zip -d my_game/\n",
+                               "ai_learning-0.2.0.zip -d my_game/addons/\n")
+    kit_nested = english.replace("addons-0.2.0.zip -d my_kit/\n", "addons-0.2.0.zip -d my_kit/addons/\n")
     # A page that told the reader to overwrite, and a kit that would.
     kit_over = english.replace("unzip -q library/dist/game-ai-kit", "unzip -q -o library/dist/game-ai-kit")
     project = (("project.godot", b"config_version=5\n"),)
