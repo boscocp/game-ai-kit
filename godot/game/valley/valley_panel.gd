@@ -107,8 +107,10 @@ static func manner_words(met: Dictionary) -> String:
 		because = TranslationServer.translate("{virtue} {value} (deeds {deeds})").format({
 			virtue = TranslationServer.translate(VIRTUES[met["virtue"]]), value = met["value"],
 			deeds = ", ".join((met["deeds"] as Array).map(func(index: Variant) -> String: return str(index)))})
-	var sets: String = TranslationServer.translate("asks {price} coins, {usual} as a rule").format(
-		{price = met["sets"], usual = met["usual"]})
+	var asks: String = "asks {price} coins, {usual} as a rule"  # shown through tr()
+	if int(met["sets"]) == 1:
+		asks = "asks {price} coin, {usual} as a rule"  # shown through tr()
+	var sets: String = TranslationServer.translate(asks).format({price = met["sets"], usual = met["usual"]})
 	if met["consequence"] == "door":
 		sets = TranslationServer.translate("the door opens") if int(met["sets"]) == 1 \
 			else TranslationServer.translate("the door stays shut")

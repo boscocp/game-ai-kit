@@ -216,6 +216,16 @@ func test_fear_doubles_the_ferrymans_price_and_names_its_deeds() -> void:
 	assert_array(ferryman["deeds"]).is_equal([1, 2])
 
 
+# The owner's manual check of T165 read "pede 1 moedas": one coin is
+# worded as one, in either language.
+func test_one_coin_is_worded_as_one() -> void:
+	var met: Dictionary = {"who": "merchant", "virtue": ValleyShown.NONE, "consequence": "price",
+		"sets": 1, "usual": 2}
+	assert_str(ValleyPanel.manner_words(met)).contains("asks 1 coin, 2 as a rule")
+	met["sets"] = 2
+	assert_str(ValleyPanel.manner_words(met)).contains("asks 2 coins, 2 as a rule")
+
+
 # A session on the test's own save, from the first day.
 func _game() -> ValleyGame:
 	return ValleyGame.new(ValleySave.new(SCRATCH))
