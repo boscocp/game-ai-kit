@@ -224,6 +224,14 @@ func test_one_coin_is_worded_as_one() -> void:
 	assert_str(ValleyPanel.manner_words(met)).contains("asks 1 coin, 2 as a rule")
 	met["sets"] = 2
 	assert_str(ValleyPanel.manner_words(met)).contains("asks 2 coins, 2 as a rule")
+	TranslationServer.set_locale("pt_BR")
+	met["sets"] = 1
+	var one: String = ValleyPanel.manner_words(met)
+	met["sets"] = 2
+	var two: String = ValleyPanel.manner_words(met)
+	TranslationServer.set_locale("en")
+	assert_str(one).contains("pede 1 moeda, 2 de costume")
+	assert_str(two).contains("pede 2 moedas, 2 de costume")
 
 
 # A session on the test's own save, from the first day.
