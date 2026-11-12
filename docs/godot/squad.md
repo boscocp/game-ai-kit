@@ -208,9 +208,10 @@ Every simplification, so nobody reads the mode as more of XCOM than it is:
   race, depths 2 and 3, equal to `derive.py`'s exact fractions in both
   languages.
 - T125: `make test-squad-floor`, in `make check` -- the weighed enemy
-  against `GreedySquad`, at least 125 of 200 seeded matches over both
-  seats (measured 137), after a planted cover-blind weighing (112) has
-  failed the same bar; `greedy_squad_test.gd` -- the shot that expects the
+  against `GreedySquad`, at least 122 of 200 seeded matches over both
+  seats (measured 137; 132-141 over five seed sets), after a planted
+  cover-blind weighing (112; 107-112) has failed the same bar and still won
+  more than 100; `greedy_squad_test.gd` -- the shot that expects the
   most damage, none at 0%, a walk that keeps a shot, a walk toward the
   other squad's start with nobody in sight, a hold after a refused walk,
   and T85's does-not-cheat check over 40 positions, catching a greedy
@@ -452,17 +453,26 @@ would have to sit in two places at once, and the red seat's would sit 4
 games from the weighed enemy's 49. Over both seats the mirror is the even
 line, 100 of 200.
 
-**The bar is 125 of 200**: 12 under the weighed enemy's 137, and 13 over
-the planted weighing's 112. A floor, not a target: a change that moves the
+**The bar is 122 of 200.** Seeds 0-99 give the weighed enemy 137 and the
+planted weighing 112. The wave's review played four more seed sets (seeds
+offset by 100, 200, 300 and 400): over the five, the weighed enemy wins 132
+to 141 and the plant 107 to 112. 122 is 10 clear of both worst cases. The
+gate is deterministic, so it does not flake from run to run; but a change
+that reshuffles the dice -- a new rule, a reordered roll -- draws a new
+sample, and a weighed enemy at 124 is to be read as one before it is read
+as a regression. A binomial spread at about 68% over 200 games is some 6.6
+games, so 100 a seat is the least that works, not a comfortable number. A
+floor, not a target: a change that moves the
 weighed enemy below it has made it no better than a careless player plus a
 little, and a change that moves it up is welcome and moves nothing here.
 
 **The planted weighing.** `make test-squad-floor` plays first the weighed
 enemy with cover weighed at zero (`CoverBlind` in
 `godot/test/squad/squad_floor_runner.gd`: the danger of a cell read as if
-no tree or rock stood in the way), and fails if it reaches the bar. It wins
-200 of 200 against the random mover, so `make test-squad-match` passes it;
-this gate must not. Danger weighed at zero (119) would fail the bar too,
+no tree or rock stood in the way), and fails if it reaches the bar -- or if
+it wins no more than the even line, 100 of 200, which would make it broken
+rather than worse. It wins 200 of 200 against the random mover, so
+`make test-squad-match` passes it; this gate must not. Danger weighed at zero (119) would fail the bar too,
 by less. Both runs, the planted and the real, take about 26 s together, on
 the line of T85's ~30 s, so the gate plays the full 100 a seat.
 

@@ -8,7 +8,9 @@
 # good weighing from a worse one. This one must. So before the measurement
 # it is shown a planted weighing known to be worse -- the weighed enemy with
 # cover weighed at zero, `CoverBlind` below, which still beats the random
-# mover -- and the planted weighing must fall short of the bar.
+# mover -- and the planted weighing must fall short of the bar, while still
+# winning more than the even line, 100 of 200: worse than the weighing, not
+# broken into something weaker than a careless player's equal.
 #
 # The bar counts both seats together. The seat moves the result more than
 # the weighing does: the greedy shooter against itself wins 26 of 100 as red
@@ -17,8 +19,12 @@
 # weighing has to clear.
 #
 # Measured in wave 192, 100 matches a seat: the weighed enemy 49 as red and
-# 88 as blue, 137 of 200; the planted weighing 42 and 70, 112. The bar, 125,
-# is 12 under the first and 13 over the second -- a floor, not a target.
+# 88 as blue, 137 of 200; the planted weighing 42 and 70, 112. Its review
+# played four more seed sets (seeds offset by 100 to 400): over the five,
+# the weighed enemy wins 132 to 141, the plant 107 to 112. The bar, 122, is
+# 10 clear of both worst cases -- a floor, not a target. A change that
+# reshuffles the dice draws a new sample: a weighed enemy at 124 is read as
+# one before it is read as a regression.
 # Match `n` of a seat is played on dice seed `n`, the weighed enemy built
 # with `1000 + n` as `make test-squad-match` builds it, so the table is the
 # same every run; the greedy shooter has no dice of its own.
@@ -52,7 +58,7 @@ class CoverBlind extends WeighedSquad:
 func _init() -> void:
 	var arguments: PackedStringArray = OS.get_cmdline_user_args()
 	var games: int = int(arguments[0]) if arguments.size() > 0 else 100
-	var wins: int = int(arguments[1]) if arguments.size() > 1 else 125
+	var wins: int = int(arguments[1]) if arguments.size() > 1 else 122
 	var planted_games: int = int(arguments[2]) if arguments.size() > 2 else games
 	if games <= 0 or wins <= 0 or wins > games * SEATS.size() or planted_games <= 0:
 		printerr("squad_floor_runner: give the games a seat, the wins it needs of both seats' games, and the planted case's games a seat")
@@ -66,9 +72,14 @@ func _run(games: int, wins: int, planted_games: int) -> int:
 	var planted_bar: int = ceili(planted_games * float(wins) / games)
 	var planted: Dictionary = _seats(func(seed_number: int) -> BlueController: return CoverBlind.new(seed_number), planted_games)
 	_print("planted, cover weighed at zero", planted, planted_games)
+	# Load-bearing (invariant 4): without these two the gate passes any
+	# weighing that clears the bar, and nothing else shows its teeth.
 	if _won(planted) >= planted_bar:
 		failures.append("the planted weighing passed: it won %d of %d, the bar is %d" % [
 			_won(planted), planted_games * SEATS.size(), planted_bar])
+	if _won(planted) <= planted_games:
+		failures.append("the planted weighing won %d of %d, no more than the even line: it is broken, not worse" % [
+			_won(planted), planted_games * SEATS.size()])
 	var measured: Dictionary = _seats(func(seed_number: int) -> BlueController: return WeighedSquad.new(seed_number), games)
 	_print("weighed", measured, games)
 	if _won(measured) < wins:

@@ -126,6 +126,7 @@ func _look(state: BoardState) -> SideView:
 # The most damage `unit` could expect from `cell` with one shot at an enemy
 # it sees: chance times damage, no more than the target has left; 0 for no
 # shot. The target's cover is in the chance; the shooter's own is never asked.
+# Its twin is `WeighedSquad._best_shot_from`: a change to one is owed the other.
 func _best_expected_from(seen: SideView, unit: Unit, cell: Vector2i) -> float:
 	var rows: Array[String] = SquadScenario.rows()
 	var best: float = 0.0
@@ -140,7 +141,8 @@ func _best_expected_from(seen: SideView, unit: Unit, cell: Vector2i) -> float:
 
 
 # Of `walks`, the cell whose route to the nearest enemy `seen` knows of is
-# cheapest, on `unit`'s own ground; holding when none is cheaper.
+# cheapest, on `unit`'s own ground; holding when none is cheaper. The routes
+# are `WeighedSquad._routes_to_the_known`'s: a change to one is owed the other.
 func _closest_to_the_known(seen: SideView, unit: Unit, walks: Dictionary) -> Vector2i:
 	var known: Array[Vector2i] = []
 	for enemy_id: int in seen.seen_enemies():

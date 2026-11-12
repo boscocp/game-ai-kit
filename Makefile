@@ -630,8 +630,8 @@ test-squad-match: import ## The XCOM mode's first enemy against a random mover: 
 	@$(PYTHON) scripts/godot_checked.py --timeout 86400 res://test/squad/squad_match_runner.gd -- $(or $(GAMES),100) $(or $(WINS),80)
 
 .PHONY: test-squad-floor
-test-squad-floor: import ## T125: the XCOM mode's first enemy against a greedy shooter, at least 125 of 200 seeded matches, both seats (measured 137; a planted cover-blind weighing, 112, must fail; ~30 s)
-	@$(PYTHON) scripts/godot_checked.py --timeout 86400 res://test/squad/squad_floor_runner.gd -- $(or $(GAMES),100) $(or $(WINS),125)
+test-squad-floor: import ## T125: the XCOM mode's first enemy against a greedy shooter, at least 122 of 200 seeded matches, both seats (measured 132-141 over five seed sets; a planted cover-blind weighing, 107-112, must fail and still win over 100; ~30 s)
+	@$(PYTHON) scripts/godot_checked.py --timeout 86400 res://test/squad/squad_floor_runner.gd -- $(or $(GAMES),100) $(or $(WINS),122)
 
 .PHONY: test-squad-vectors
 test-vectors: test-squad-vectors

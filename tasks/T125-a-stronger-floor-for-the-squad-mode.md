@@ -53,17 +53,19 @@ why is under "What wave 192 chose", below the list._
    `WeighedSquad` with one consideration taken out: a reader can see the
    whole careless player in one file, and a planted weighing is not
    measured against a copy of itself.
-2. **The bar counts both seats together: at least 125 of 200.** Measured,
+2. **The bar counts both seats together: at least 122 of 200.** Measured,
    100 matches a seat: the weighed enemy wins 49 as red and 88 as blue,
    137; the greedy shooter against itself 26 and 74, so the seat moves the
    result more than the weighing does, and a bar a seat would have to sit
-   4 games under red's 49. 125 is 12 under 137 and 13 over the planted
-   weighing's 112.
+   4 games under red's 49. The review's five seed sets give the weighed
+   enemy 132-141 and the plant 107-112; 122 is 10 clear of both worst
+   cases (first set at 125, moved by the review's finding 2).
 3. **The planted weighing: cover weighed at zero** (`CoverBlind` in the
    runner: a cell's danger read as if no tree or rock stood in the way).
    It wins 200 of 200 against `RandomSquad`, so it passes
    `make test-squad-match`; against the greedy shooter it wins 42 and 70,
-   112 of 200, and the gate fails if it reaches the bar. Danger weighed at
+   112 of 200, and the gate fails if it reaches the bar, or if it wins no
+   more than 100 of 200 (broken, not worse). Danger weighed at
    zero (119) was measured too, and is the nearer miss; the task named
    cover.
 4. **MCTS against it** goes in `make measure-squad-mcts`'s table, measured

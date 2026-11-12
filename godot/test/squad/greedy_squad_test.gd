@@ -2,9 +2,10 @@
 # floor (`make test-squad-floor`).
 #
 # It shoots when it can: the shot that expects the most damage, never one at
-# 0%. It walks to keep a shot when one is to be had, and otherwise straight
-# at the nearest enemy it knows of, holding when it can come no closer. A
-# walk the board refuses is answered with a hold, so no action is lost.
+# 0% (a shield at a shield in full cover is one). It walks to keep a shot
+# when one is to be had, and otherwise straight at the nearest enemy it
+# knows of, holding when it can come no closer. A walk the board refuses is
+# answered with a hold, so no action is lost.
 #
 # It does not cheat: T85's check (`SquadUnseenCheck`) holds it as it holds
 # the weighed enemy, and is shown a greedy shooter that reads the whole
@@ -57,6 +58,14 @@ func test_it_takes_the_shot_that_expects_the_most_damage() -> void:
 
 func test_it_shoots_nobody_it_cannot_hit() -> void:
 	var state: BoardState = _board([[RED, TacticalRules.RUNNER, Vector2i(1, 2), 8], [BLUE, TacticalRules.RUNNER, Vector2i(12, 6), 8]])
+	assert_object(GreedySquad.new().decide_attack(state, 1)).is_null()
+
+
+func test_it_never_takes_a_shot_at_zero() -> void:
+	# A shield (aim 60) at a shield (defence 20) in full cover (40): 0%, a legal shot.
+	var state: BoardState = _board([[RED, TacticalRules.SHIELD, Vector2i(2, 0), 10], [BLUE, TacticalRules.SHIELD, Vector2i(1, 3), 10]])
+	assert_str(SquadCombat.why_refused(state, SquadScenario.rows(), Attack.new(1, 2))).is_equal(BoardState.LEGAL)
+	assert_int(SquadCombat.chance_of(SquadScenario.rows(), state.unit_by_id(1), state.unit_by_id(2))).is_equal(0)
 	assert_object(GreedySquad.new().decide_attack(state, 1)).is_null()
 
 
