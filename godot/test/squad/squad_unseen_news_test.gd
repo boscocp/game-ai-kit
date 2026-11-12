@@ -74,6 +74,26 @@ func test_a_shot_by_a_seen_piece_is_worded_whole() -> void:
 	assert_str(_rules.mode_view().news_said(told, fog)).contains("blue mortar at %s shot" % MORTAR_CELL)
 
 
+func test_every_key_a_shot_is_told_by_hides_an_unseen_shooter() -> void:
+	# Wave 190's review: with the flanked key left out of `as_seen`, every
+	# squad test stayed green. So each key `told` may return -- flanked or
+	# not, and any added later to `SHOT_KEYS` -- is run through it here,
+	# with the review's shot's values, in both languages.
+	var state: BoardState = _facing(BLUE)
+	var strike := Attack.new(2, 1)
+	var told: Array = _rules.told(state, strike, _rules.attack(state, strike))
+	assert_array(SquadCombat.SHOT_KEYS).contains([told[0]])
+	var fog: TacticalFog = _rules.mode_view().fog(state, RED, null)
+	for key: String in SquadCombat.SHOT_KEYS:
+		var line: Array = Sentence.of(key, told[1])
+		assert_str(SquadStatus.as_seen(line, fog)[0]).override_failure_message("not hidden: %s" % key).is_equal(SquadStatus.UNSEEN_SHOT)
+		for locale: String in LOCALES:
+			TranslationServer.set_locale(locale)
+			var said: String = _rules.mode_view().news_said(line, fog)
+			assert_str(said).override_failure_message("%s: %s" % [locale, said]).not_contains(str(MORTAR_CELL)).not_contains(TranslationServer.translate(TacticalRules.MORTAR))
+			_assert_no_chance_nor_cover(said, "%s, %s" % [locale, key])
+
+
 # The status on screen says a piece the person cannot see shot, and neither
 # the mortar's kind nor its cell -- in the language on screen.
 func _assert_names_no_unseen_piece(scene: TacticalGame, where: String) -> void:
@@ -84,6 +104,16 @@ func _assert_names_no_unseen_piece(scene: TacticalGame, where: String) -> void:
 	assert_str(status).override_failure_message("%s: the shot is not told\n%s" % [where, status]).contains(opening)
 	assert_str(status).override_failure_message("%s: the unseen mortar is named\n%s" % [where, status]).not_contains(mortar)
 	assert_str(status).override_failure_message("%s: the unseen mortar's cell is told\n%s" % [where, status]).not_contains(str(MORTAR_CELL))
+	for line: String in status.split("\n"):
+		if line.contains(opening):
+			_assert_no_chance_nor_cover(line, where)
+
+
+# A mortar's 10% is its aim, and the cover says which side it faces: an
+# unseen shot's line gives neither, in either language (wave 190's review).
+func _assert_no_chance_nor_cover(line: String, where: String) -> void:
+	for giveaway: String in ["%", "cover", "cobertura"]:
+		assert_str(line).override_failure_message("%s: the unseen shot says \"%s\"\n%s" % [where, giveaway, line]).not_contains(giveaway)
 
 
 # The review's board, mounted: blue's turn, and blue's first decision -- the

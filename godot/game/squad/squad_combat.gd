@@ -27,6 +27,11 @@ extends RefCounted
 ## so the screen can know a shot's line when it words one (T127).
 const SHOT_TOLD: String = "{side} {piece} at {cell} shot {target_side} {target} at {target_cell}: {chance}% (cover {cover}), {outcome}"  # shown through tr()
 const FLANKED_SHOT_TOLD: String = "{side} {piece} at {cell} shot {target_side} {target} at {target_cell}: {chance}% (cover {cover}, flanked), {outcome}"  # shown through tr()
+## Every key `told` may return. `SquadStatus.as_seen` hides the shooter of
+## a line with one of these, and of no other: a new wording of a shot goes
+## in this list, or a shooter in the dark is named by it again. The squad's
+## unseen-news test runs each of them through `as_seen`.
+const SHOT_KEYS: Array[String] = [SHOT_TOLD, FLANKED_SHOT_TOLD]
 
 
 ## Aim less defence less cover, clamped to [0, 100].

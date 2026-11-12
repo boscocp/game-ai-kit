@@ -301,7 +301,12 @@ all six (`docs/reviews/128-the-xcom-mode-has-its-own-view.md`).
   the die did stay: red knows it was shot at. The game keeps the line
   whole -- the rules' `told`, `news_in_english` -- and so does the
   computer's own view (V on, while it thinks); only the person's view
-  leaves things out. The rules do not change, so a shot does not reveal
+  leaves things out. The fog is read when the line is shown, not when
+  the shot was fired: a shooter red saw at the shot, then lost because its
+  target died and that piece's sight went with it, is worded unseen too,
+  which is true from then on. A new wording of a shot must join
+  `SquadCombat.SHOT_KEYS`, or it names the shooter again; the squad's
+  unseen-news test runs every key there. The rules do not change, so a shot does not reveal
   its shooter, and the searches' measured strength stands.
   XCOM (2012) is no help either way: its aliens rarely act unseen at all.
   Its lead designer named shooting "from behind the fog of war", with

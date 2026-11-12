@@ -88,14 +88,20 @@ static func computer_text(state: BoardState, turn: BlueTurn, controller: BlueCon
 ## are what that side cannot see, and its chance and cover would give them
 ## away -- a 10% is a mortar's aim, the cover says which side it faces.
 ## The game keeps the line whole; only these words leave things out.
+## "You" is whoever's fog is drawn: with V on, while the computer thinks,
+## that is the computer's -- which today never hides a shooter, since the
+## news on its turn is its own side's shots.
 static func news_said(sentence: Array, fog: TacticalFog) -> String:
 	return TacticalStatus.said(as_seen(sentence, fog))
 
 
-## `sentence` as `fog`'s side may know it: whole, unless it is a shot by a
-## piece on a cell `fog` hides.
+## `sentence` as `fog`'s side may know it: whole, unless it is a shot -- a
+## key of `SquadCombat.SHOT_KEYS` -- by a piece on a cell `fog` hides. The
+## fog is the one when the line is shown, not when the shot was fired: a
+## shooter seen at the shot and lost when its target died, which took that
+## side's sight with it, is worded unseen, which is true from then on.
 static func as_seen(sentence: Array, fog: TacticalFog) -> Array:
-	if fog == null or sentence.is_empty() or not sentence[0] in [SquadCombat.SHOT_TOLD, SquadCombat.FLANKED_SHOT_TOLD]:
+	if fog == null or sentence.is_empty() or not sentence[0] in SquadCombat.SHOT_KEYS:
 		return sentence
 	var values: Dictionary = sentence[1]
 	if not fog.hides(values["cell"]):
