@@ -180,8 +180,10 @@ func _circle(centre: Vector2, radius: float, colour: Color, height: float = LIFT
 
 
 func _segment(from: Vector2, to: Vector2, colour: Color, height: float = LIFT) -> void:
-	_points.append_array([_ground(from, height), _ground(to, height)])
-	_colours.append_array([colour, colour])
+	_points.append(_ground(from, height))
+	_points.append(_ground(to, height))
+	_colours.append(colour)
+	_colours.append(colour)
 
 
 func _build_arena(fight: BossFight) -> void:

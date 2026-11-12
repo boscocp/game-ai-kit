@@ -29,5 +29,14 @@ func test_nothing_to_draw_draws_no_surface() -> void:
 	assert_int((await _drawn(fight, false)).get_surface_count()).is_equal(0)
 
 
+# One surface of whole segments, a colour on every vertex: a segment that
+# lost a point or a colour would leave the two counts apart, or odd.
 func test_the_reasoning_is_still_drawn() -> void:
-	assert_int((await _drawn(_fresh_fight(), true)).get_surface_count()).is_equal(1)
+	var lines: ImmediateMesh = await _drawn(_fresh_fight(), true)
+	assert_int(lines.get_surface_count()).is_equal(1)
+	var arrays: Array = lines.surface_get_arrays(0)
+	var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var colours: PackedColorArray = arrays[Mesh.ARRAY_COLOR]
+	assert_int(vertices.size()).is_greater(0)
+	assert_int(vertices.size() % 2).is_equal(0)
+	assert_int(colours.size()).is_equal(vertices.size())
