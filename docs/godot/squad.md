@@ -4,7 +4,7 @@
 half_life: practice
 verified_on: 2026-11-11
 tier: 1
-source: https://ufopaedia.org/Gameplay_Mechanics_(EU2012) ; https://ufopaedia.org/index.php/Cover_(EU2012) ; book:Steve Rabin (ed.), "Game AI Pro 3", CRC Press, 2017 -- ch. 28 (Roelofs, MCTS for strategy and tactical games) ; https://github.com/mxgmn/WaveFunctionCollapse
+source: https://ufopaedia.org/Gameplay_Mechanics_(EU2012) ; https://ufopaedia.org/index.php/Cover_(EU2012) ; book:Steve Rabin (ed.), "Game AI Pro 3", CRC Press, 2017 -- ch. 28 (Roelofs, MCTS for strategy and tactical games) ; https://github.com/mxgmn/WaveFunctionCollapse ; https://www.gamewatcher.com/2012-23-08-xcom-enemy-unknown-more-tactically-fair-than-original
 invalidated_if: spec/squad/rules.json or spec/squad/tiles.json changes, the tactical map changes, or a rule below stops being the code's
 teaches: none
 -->
@@ -290,6 +290,32 @@ all six (`docs/reviews/128-the-xcom-mode-has-its-own-view.md`).
   then the person's, a piece the person cannot see acts unseen -- the
   status says only that one does -- and a seen piece walking into the dark
   is drawn as far as the last cell the person sees, its reason left out.
+- The news is worded through the same fog (T127). A blue mortar sees 6
+  and reaches 7; a red shield sees 5. So the mortar on (7, 4) may shoot
+  the shield on (1, 4) unseen, and the news used to say so whole: "blue
+  mortar at (7, 4) shot red shield at (1, 4): 10% (cover 40), missed"
+  (wave 124's review). Now a shooter on a cell the fog on screen hides is
+  "a piece you cannot see shot red shield at (1, 4): missed" -- no kind,
+  no cell, and no chance or cover, which would give both away (a 10% is a
+  mortar's aim, the cover says which side it faces). The target and what
+  the die did stay: red knows it was shot at. The game keeps the line
+  whole -- the rules' `told`, `news_in_english` -- and so does the
+  computer's own view (V on, while it thinks); only the person's view
+  leaves things out. The fog is read when the line is shown, not when
+  the shot was fired: a shooter red saw at the shot, then lost because its
+  target died and that piece's sight went with it, is worded unseen too,
+  which is true from then on. A new wording of a shot must join
+  `SquadCombat.SHOT_KEYS`, or it names the shooter again; the squad's
+  unseen-news test runs every key there. The rules do not change, so a shot does not reveal
+  its shooter, and the searches' measured strength stands.
+  XCOM (2012) is no help either way: its aliens rarely act unseen at all.
+  Its lead designer named shooting "from behind the fog of war", with
+  enemies that see further than you, as a fault of the 1994 original he
+  set out to fix (Jake Solomon to VG247, quoted in
+  <https://www.gamewatcher.com/2012-23-08-xcom-enemy-unknown-more-tactically-fair-than-original>).
+  This mode keeps the original's situation, so it words it honestly
+  rather than pretending the shooter was seen. The owner chose this
+  answer on 2026-11-11, over "a shot reveals its shooter".
 
 ## The first enemy: `WeighedSquad`
 
@@ -689,6 +715,11 @@ read as one game with two modes? Is the hit chance shown before every shot,
 and its reason readable? With the decision view on, can you say before the
 enemy acts which option it will take? Does it ever seem to know where an
 unseen piece is? And: is the shield behind rock too hard to hit?
+
+T127: play as red until a blue piece you cannot see shoots one of yours
+(a mortar sees 6 and reaches 7). Does the news tell you only what red
+could know -- that a piece you cannot see shot, at whom, and what the die
+did -- in both languages, on blue's turn with V off and on yours?
 
 T87: give the enemy to MCTS (C) and keep the decision view on. While it
 thinks, do the bars grow on the piece's options, and is the one it plays

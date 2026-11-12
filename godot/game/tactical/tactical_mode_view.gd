@@ -109,6 +109,13 @@ func reveals(_before: BoardState, _after: BoardState, _side: int) -> bool:
 	return false
 
 
+## A line of news, `sentence` as the game keeps it, in the language on
+## screen and as far as `fog` -- the fog on screen, null for none -- lets
+## the person know it: whole here, in a mode with nothing hidden.
+func news_said(sentence: Array, _fog: TacticalFog) -> String:
+	return TacticalStatus.said(sentence)
+
+
 ## The status on the person's turn: the piece in hand and what to do with
 ## it, the last refusal and what just happened.
 func status(state: BoardState, in_hand: Unit, refusal: String, news: String, can_attack: bool) -> String:

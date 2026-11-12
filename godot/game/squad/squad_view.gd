@@ -140,6 +140,12 @@ func reveals(before: BoardState, after: BoardState, side: int) -> bool:
 	return false
 
 
+## `SquadStatus.news_said`: a shot by a piece the fog on screen hides names
+## neither the piece nor its cell (T127).
+func news_said(sentence: Array, shown_fog: TacticalFog) -> String:
+	return SquadStatus.news_said(sentence, shown_fog)
+
+
 ## `SquadStatus.text`: the piece in hand, its shots with their reasons --
 ## under a line about the map (`SquadMapWords`).
 func status(state: BoardState, in_hand: Unit, refusal: String, news: String, can_attack: bool) -> String:

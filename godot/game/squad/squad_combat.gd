@@ -23,6 +23,16 @@
 class_name SquadCombat
 extends RefCounted
 
+## The keys of a shot's line (`told`), without a flank and with one: named,
+## so the screen can know a shot's line when it words one (T127).
+const SHOT_TOLD: String = "{side} {piece} at {cell} shot {target_side} {target} at {target_cell}: {chance}% (cover {cover}), {outcome}"  # shown through tr()
+const FLANKED_SHOT_TOLD: String = "{side} {piece} at {cell} shot {target_side} {target} at {target_cell}: {chance}% (cover {cover}, flanked), {outcome}"  # shown through tr()
+## Every key `told` may return. `SquadStatus.as_seen` hides the shooter of
+## a line with one of these, and of no other: a new wording of a shot goes
+## in this list, or a shooter in the dark is named by it again. The squad's
+## unseen-news test runs each of them through `as_seen`.
+const SHOT_KEYS: Array[String] = [SHOT_TOLD, FLANKED_SHOT_TOLD]
+
 
 ## Aim less defence less cover, clamped to [0, 100].
 static func hit_chance(aim: int, defence: int, cover: int) -> int:
@@ -147,9 +157,9 @@ static func told(rows: Array[String], before: BoardState, strike: Attack, after:
 		outcome = Sentence.of("hit, {left} health left", {left = left})  # shown through tr()
 	elif left < target.health:
 		outcome = Sentence.of("hit and destroyed it")  # shown through tr()
-	var key: String = "{side} {piece} at {cell} shot {target_side} {target} at {target_cell}: {chance}% (cover {cover}), {outcome}"  # shown through tr()
+	var key: String = SHOT_TOLD
 	if given["flanked"]:
-		key = "{side} {piece} at {cell} shot {target_side} {target} at {target_cell}: {chance}% (cover {cover}, flanked), {outcome}"  # shown through tr()
+		key = FLANKED_SHOT_TOLD
 	return Sentence.of(key, {side = TacticalStatus.side_word(shooter.faction), piece = shooter.type.type_name,
 		cell = shooter.cell, target_side = TacticalStatus.side_word(target.faction), target = target.type.type_name,
 		target_cell = target.cell, chance = hit_chance(given["aim"], given["defence"], given["cover"]), cover = given["cover"],

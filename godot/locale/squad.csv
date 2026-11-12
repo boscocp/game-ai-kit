@@ -32,6 +32,7 @@ missed,errou
 hit and destroyed it,acertou e a destruiu
 "{side} {piece} at {cell} shot {target_side} {target} at {target_cell}: {chance}% (cover {cover}), {outcome}","{piece} das {side} em {cell} atirou em {target} das {target_side} em {target_cell}: {chance}% (cobertura {cover}), {outcome}"
 "{side} {piece} at {cell} shot {target_side} {target} at {target_cell}: {chance}% (cover {cover}, flanked), {outcome}","{piece} das {side} em {cell} atirou em {target} das {target_side} em {target_cell}: {chance}% (cobertura {cover}, flanqueado), {outcome}"
+"a piece you cannot see shot {target_side} {target} at {target_cell}: {outcome}","uma peça que você não vê atirou em {target} das {target_side} em {target_cell}: {outcome}"
 light: a walk that keeps the shot,claro: um passo que guarda o tiro
 "amber: a dash, the piece's whole turn","âmbar: corrida, o turno inteiro"
 greyed: acted this turn,cinza: já agiu neste turno

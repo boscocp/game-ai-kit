@@ -28,6 +28,10 @@ const SHAPES: Array[String] = [  # shown through tr()
 	"unit {id} cannot walk there",
 ]
 
+## A shot's line as a person who cannot see its shooter reads it (T127):
+## the target and what the die did, and nothing of who shot or from where.
+const UNSEEN_SHOT: String = "a piece you cannot see shot {target_side} {target} at {target_cell}: {outcome}"  # shown through tr()
+
 
 ## Everything the status says on the person's turn, line by line: the
 ## round, the piece in hand (or null) and what to do with it, its shots
@@ -76,6 +80,34 @@ static func computer_text(state: BoardState, turn: BlueTurn, controller: BlueCon
 			side = side, other = TacticalStatus.side_name(TacticalScenario.FACTIONS - 1 - state.current_faction)}))
 	lines.append(TranslationServer.translate("{count} decision(s) played this turn").format({count = turn.played.size()}))
 	return "\n".join(lines)
+
+
+## A line of news in the language on screen, as far as `fog` -- the fog
+## on screen, or null -- lets it be known (T127). A shot whose shooter
+## stands where `fog` hides is worded by `UNSEEN_SHOT`: its kind and cell
+## are what that side cannot see, and its chance and cover would give them
+## away -- a 10% is a mortar's aim, the cover says which side it faces.
+## The game keeps the line whole; only these words leave things out.
+## "You" is whoever's fog is drawn: with V on, while the computer thinks,
+## that is the computer's -- which today never hides a shooter, since the
+## news on its turn is its own side's shots.
+static func news_said(sentence: Array, fog: TacticalFog) -> String:
+	return TacticalStatus.said(as_seen(sentence, fog))
+
+
+## `sentence` as `fog`'s side may know it: whole, unless it is a shot -- a
+## key of `SquadCombat.SHOT_KEYS` -- by a piece on a cell `fog` hides. The
+## fog is the one when the line is shown, not when the shot was fired: a
+## shooter seen at the shot and lost when its target died, which took that
+## side's sight with it, is worded unseen, which is true from then on.
+static func as_seen(sentence: Array, fog: TacticalFog) -> Array:
+	if fog == null or sentence.is_empty() or not sentence[0] in SquadCombat.SHOT_KEYS:
+		return sentence
+	var values: Dictionary = sentence[1]
+	if not fog.hides(values["cell"]):
+		return sentence
+	return Sentence.of(UNSEEN_SHOT, {target_side = values["target_side"], target = values["target"],
+		target_cell = values["target_cell"], outcome = values["outcome"]})
 
 
 ## What a person is told on picking up `unit` after it has walked: whether
