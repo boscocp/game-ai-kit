@@ -23,6 +23,11 @@
 class_name SquadCombat
 extends RefCounted
 
+## The keys of a shot's line (`told`), without a flank and with one: named,
+## so the screen can know a shot's line when it words one (T127).
+const SHOT_TOLD: String = "{side} {piece} at {cell} shot {target_side} {target} at {target_cell}: {chance}% (cover {cover}), {outcome}"  # shown through tr()
+const FLANKED_SHOT_TOLD: String = "{side} {piece} at {cell} shot {target_side} {target} at {target_cell}: {chance}% (cover {cover}, flanked), {outcome}"  # shown through tr()
+
 
 ## Aim less defence less cover, clamped to [0, 100].
 static func hit_chance(aim: int, defence: int, cover: int) -> int:
@@ -147,9 +152,9 @@ static func told(rows: Array[String], before: BoardState, strike: Attack, after:
 		outcome = Sentence.of("hit, {left} health left", {left = left})  # shown through tr()
 	elif left < target.health:
 		outcome = Sentence.of("hit and destroyed it")  # shown through tr()
-	var key: String = "{side} {piece} at {cell} shot {target_side} {target} at {target_cell}: {chance}% (cover {cover}), {outcome}"  # shown through tr()
+	var key: String = SHOT_TOLD
 	if given["flanked"]:
-		key = "{side} {piece} at {cell} shot {target_side} {target} at {target_cell}: {chance}% (cover {cover}, flanked), {outcome}"  # shown through tr()
+		key = FLANKED_SHOT_TOLD
 	return Sentence.of(key, {side = TacticalStatus.side_word(shooter.faction), piece = shooter.type.type_name,
 		cell = shooter.cell, target_side = TacticalStatus.side_word(target.faction), target = target.type.type_name,
 		target_cell = target.cell, chance = hit_chance(given["aim"], given["defence"], given["cover"]), cover = given["cover"],

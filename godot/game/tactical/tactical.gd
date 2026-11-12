@@ -708,9 +708,12 @@ func news_in_english() -> String:
 
 
 # The news in the language on screen, worded here, where it is shown, so a
-# language switched mid-turn rewords it with the rest of the status.
+# language switched mid-turn rewords it with the rest of the status -- and
+# through the fog on screen, so a piece the person cannot see is not named
+# by its own news (T127).
 func _news_said() -> String:
-	return "\n".join(_last_event.map(TacticalStatus.said))
+	var fog: TacticalFog = _drawn_fog()
+	return "\n".join(_last_event.map(func(sentence: Array) -> String: return view().news_said(sentence, fog)))
 
 
 # The next of the person's units that can still walk, or nothing when none can.

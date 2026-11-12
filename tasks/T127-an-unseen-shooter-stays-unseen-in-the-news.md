@@ -19,7 +19,19 @@ follows then says what that piece was and where it stood.
 
 ## Decisions written down first
 
-_The owner ratified only the item quoted above. Which of the two answers below is this task's to choose; neither is decided._
+**Decided by the owner, 2026-11-11: word the news from the person's
+fog.** A shooter the person cannot see is worded as "a piece you cannot
+see shot ...", with no type and no cell; the rules and the recording keep
+the full line. The rules do not change, so the squad's measured strength
+(the vectors, the search game, the duel) stays valid. Built in wave 190:
+the chance and the cover are left out too, since a mortar's 10% and the
+side its cover faces would name it and place it. XCOM (2012) does not
+settle it -- its designer called enemies shooting "from behind the fog of
+war" a fault of the 1994 original he set out to remove -- so the mode
+words the situation it has honestly (`docs/godot/squad.md`, "Playing it").
+
+_Before that, the owner had ratified only the item quoted above, and left
+the choice between the two answers below to the task._
 
 The recommendation offered two answers. The task chooses one, with its
 reasons, and brings it back to the owner if the reading of XCOM is
