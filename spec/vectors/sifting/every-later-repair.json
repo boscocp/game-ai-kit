@@ -1,0 +1,161 @@
+{
+ "description": "Each time the bridge came down, every repair after it.",
+ "events": [
+  {
+   "day": 1,
+   "kind": "deed",
+   "verb": "burn",
+   "place": "barn"
+  },
+  {
+   "day": 2,
+   "kind": "night",
+   "place": "market",
+   "fact": "bread",
+   "value": false
+  },
+  {
+   "day": 3,
+   "kind": "deed",
+   "verb": "repair",
+   "place": "barn"
+  },
+  {
+   "day": 4,
+   "kind": "night",
+   "place": "market",
+   "fact": "bread",
+   "value": true
+  },
+  {
+   "day": 5,
+   "kind": "deed",
+   "verb": "pull_down",
+   "place": "bridge"
+  },
+  {
+   "day": 6,
+   "kind": "deed",
+   "verb": "repair",
+   "place": "bridge"
+  },
+  {
+   "day": 7,
+   "kind": "deed",
+   "verb": "burn",
+   "place": "barn"
+  },
+  {
+   "day": 8,
+   "kind": "deed",
+   "verb": "pull_down",
+   "place": "bridge"
+  },
+  {
+   "day": 9,
+   "kind": "deed",
+   "verb": "repair",
+   "place": "bridge"
+  },
+  {
+   "day": 10,
+   "kind": "deed",
+   "verb": "pull_down",
+   "place": "bridge"
+  },
+  {
+   "day": 11,
+   "kind": "deed",
+   "verb": "repair",
+   "place": "bridge"
+  },
+  {
+   "day": 12,
+   "kind": "deed",
+   "verb": "pull_down",
+   "place": "bridge"
+  }
+ ],
+ "pattern": {
+  "name": "repaired",
+  "find": [
+   {
+    "as": "down",
+    "where": {
+     "verb": "pull_down",
+     "place": "?place"
+    }
+   },
+   {
+    "as": "up",
+    "where": {
+     "verb": "repair",
+     "place": "?place"
+    }
+   }
+  ],
+  "before": [
+   [
+    "down",
+    "up"
+   ]
+  ]
+ },
+ "refused": "",
+ "matches": [
+  {
+   "events": {
+    "down": 4,
+    "up": 5
+   },
+   "bindings": {
+    "place": "bridge"
+   }
+  },
+  {
+   "events": {
+    "down": 4,
+    "up": 8
+   },
+   "bindings": {
+    "place": "bridge"
+   }
+  },
+  {
+   "events": {
+    "down": 4,
+    "up": 10
+   },
+   "bindings": {
+    "place": "bridge"
+   }
+  },
+  {
+   "events": {
+    "down": 7,
+    "up": 8
+   },
+   "bindings": {
+    "place": "bridge"
+   }
+  },
+  {
+   "events": {
+    "down": 7,
+    "up": 10
+   },
+   "bindings": {
+    "place": "bridge"
+   }
+  },
+  {
+   "events": {
+    "down": 9,
+    "up": 10
+   },
+   "bindings": {
+    "place": "bridge"
+   }
+  }
+ ]
+}

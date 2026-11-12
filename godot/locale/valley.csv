@@ -20,7 +20,7 @@ Erase the valley's memory (E),Apagar a memória do vale (E)
 "Day {day}, turn {turn} of {turns}  ·  deeds kept: {deeds}  ·  care {care}, fear {fear}","Dia {day}, turno {turn} de {turns}  ·  feitos guardados: {deeds}  ·  cuidado {care}, medo {fear}"
 P runs the clock,P solta o relógio
 P pauses,P pausa
-1-9 a deed  ·  space one turn  ·  {clock}  ·  N ends the day  ·  Tab next villager  ·  E erases,1-9 um feito  ·  espaço um turno  ·  {clock}  ·  N encerra o dia  ·  Tab próximo aldeão  ·  E apaga
+1-9 a deed  ·  space one turn  ·  {clock}  ·  N ends the day  ·  Tab next villager  ·  C the chronicle  ·  E erases,1-9 um feito  ·  espaço um turno  ·  {clock}  ·  N encerra o dia  ·  Tab próximo aldeão  ·  C a crônica  ·  E apaga
 "{name}'s day, and why:","O dia de {name}, e por quê:"
 "What the valley thinks of you, and who it shows:","O que o vale pensa de você, e quem o mostra:"
 Today's deed is done: N ends the day.,O feito de hoje já foi feito: N encerra o dia.
@@ -110,3 +110,13 @@ Two coins a loaf.,Duas moedas o pão.
 The chapel door stays shut to you.,A porta da capela fica fechada para você.
 Come in; the chapel is open to you.,Entre; a capela está aberta para você.
 The chapel opens to those who look after the valley.,A capela se abre para quem cuida do vale.
+On day {third.day} it was done for the third time: {deed}.,No dia {third.day} foi feito pela terceira vez: {deed}.
+"The market ran out of bread on day {lack.day}, after the deed of day {done.day}: {deed}.","O mercado ficou sem pão no dia {lack.day}, depois do feito do dia {done.day}: {deed}."
+"Travellers stopped coming to the market on day {lack.day}, after the deed of day {done.day}: {deed}.","Os viajantes deixaram de vir ao mercado no dia {lack.day}, depois do feito do dia {done.day}: {deed}."
+"The market had no bread from day {gone.day}, and had bread again on day {back.day}.","O mercado ficou sem pão a partir do dia {gone.day}, e voltou a ter pão no dia {back.day}."
+"On day {burned.day} {place} burned, and on day {rebuilt.day} it was rebuilt.","No dia {burned.day} {place} queimou, e no dia {rebuilt.day} foi reconstruído."
+"On day {burned.day} {place} burned, and nobody has rebuilt it.","No dia {burned.day} {place} queimou, e ninguém o reconstruiu."
+"The valley's chronicle, from the record (C goes back):","A crônica do vale, a partir do registro (C volta):"
+"Nothing yet worth telling: do a deed, and end the day.","Nada ainda que valha contar: faça um feito, e encerre o dia."
+"day {day}, {deed}","dia {day}, {deed}"
+"day {day}, {fact} became {value}","dia {day}, {fact} passou a {value}"

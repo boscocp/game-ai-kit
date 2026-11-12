@@ -1,0 +1,47 @@
+{
+ "description": "`false` in the record is not `0` in the pattern, nor `1` true.",
+ "events": [
+  {
+   "day": 1,
+   "kind": "night",
+   "place": "market",
+   "fact": "bread",
+   "value": false
+  },
+  {
+   "day": 2,
+   "kind": "night",
+   "place": "market",
+   "fact": "bread",
+   "value": true
+  },
+  {
+   "day": 3,
+   "value": 0
+  },
+  {
+   "day": 4,
+   "value": 1.0
+  }
+ ],
+ "pattern": {
+  "name": "zero",
+  "find": [
+   {
+    "as": "zero",
+    "where": {
+     "value": 0
+    }
+   }
+  ]
+ },
+ "refused": "",
+ "matches": [
+  {
+   "events": {
+    "zero": 2
+   },
+   "bindings": {}
+  }
+ ]
+}

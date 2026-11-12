@@ -1,0 +1,116 @@
+{
+ "description": "A burning, then a repair of the same place.",
+ "events": [
+  {
+   "day": 1,
+   "kind": "deed",
+   "verb": "burn",
+   "place": "barn"
+  },
+  {
+   "day": 2,
+   "kind": "night",
+   "place": "market",
+   "fact": "bread",
+   "value": false
+  },
+  {
+   "day": 3,
+   "kind": "deed",
+   "verb": "repair",
+   "place": "barn"
+  },
+  {
+   "day": 4,
+   "kind": "night",
+   "place": "market",
+   "fact": "bread",
+   "value": true
+  },
+  {
+   "day": 5,
+   "kind": "deed",
+   "verb": "pull_down",
+   "place": "bridge"
+  },
+  {
+   "day": 6,
+   "kind": "deed",
+   "verb": "repair",
+   "place": "bridge"
+  },
+  {
+   "day": 7,
+   "kind": "deed",
+   "verb": "burn",
+   "place": "barn"
+  },
+  {
+   "day": 8,
+   "kind": "deed",
+   "verb": "pull_down",
+   "place": "bridge"
+  },
+  {
+   "day": 9,
+   "kind": "deed",
+   "verb": "repair",
+   "place": "bridge"
+  },
+  {
+   "day": 10,
+   "kind": "deed",
+   "verb": "pull_down",
+   "place": "bridge"
+  },
+  {
+   "day": 11,
+   "kind": "deed",
+   "verb": "repair",
+   "place": "bridge"
+  },
+  {
+   "day": 12,
+   "kind": "deed",
+   "verb": "pull_down",
+   "place": "bridge"
+  }
+ ],
+ "pattern": {
+  "name": "rebuilt",
+  "find": [
+   {
+    "as": "burned",
+    "where": {
+     "verb": "burn",
+     "place": "?place"
+    }
+   },
+   {
+    "as": "rebuilt",
+    "where": {
+     "verb": "repair",
+     "place": "?place"
+    }
+   }
+  ],
+  "before": [
+   [
+    "burned",
+    "rebuilt"
+   ]
+  ]
+ },
+ "refused": "",
+ "matches": [
+  {
+   "events": {
+    "burned": 0,
+    "rebuilt": 2
+   },
+   "bindings": {
+    "place": "barn"
+   }
+  }
+ ]
+}

@@ -464,6 +464,14 @@ test-constraints-vectors: import ## The constraint vectors, against ai_constrain
 	@$(PYTHON) scripts/godot_checked.py res://test/ai_constraints/constraint_vectors_runner.gd \
 		-- $(CURDIR)/spec/vectors/constraints
 
+.PHONY: test-sifting-vectors
+test-vectors: test-sifting-vectors
+test-sifting-vectors: import ## The story sifting vectors, against ai_sifting (T166)
+	@# The same files are read by `make test-python` through gameaikit.sifting;
+	@# the matches came from neither, from spec/vectors/sifting/derive.py.
+	@$(PYTHON) scripts/godot_checked.py res://test/ai_sifting/sift_vectors_runner.gd \
+		-- $(CURDIR)/spec/vectors/sifting
+
 .PHONY: test-cloning-vectors
 test-vectors: test-cloning-vectors
 test-cloning-vectors: import ## The cloning vectors, against ai_learning's softmax model and case table

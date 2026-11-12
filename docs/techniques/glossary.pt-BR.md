@@ -66,6 +66,8 @@ também em itálico, ficam como foram publicados.
 | *bandit*, *arm* | quem escolhe entre opções fixas pelo que cada uma rendeu até agora, como um apostador entre caça-níqueis (*one-armed bandits*); cada opção é um braço (*arm*) |
 | *epsilon-greedy*, *epsilon* | o *bandit* mais simples: quase sempre a opção de melhor média, e com chance *epsilon* uma qualquer, ao acaso |
 | *exploration*, *exploitation* | tentar as opções que se conhece pouco, e ficar com a que já rendeu mais; o dilema que todo *bandit* equilibra |
+| *story sifting*, *sifter* | achar, num registro do que uma simulação fez, os momentos que valem ser contados -- peneirar (*sift*) a história do que não é; o *sifter* é quem peneira |
+| *pattern*, *match* | um padrão de eventos a achar, ligados por variáveis, numa ordem, e com eventos que não podem estar lá; um casamento (*match*) é um lugar do registro onde o padrão cabe, com os eventos que o formaram |
 | *explaining away* | numa rede bayesiana, uma causa que explica um efeito torna as outras causas desse efeito menos prováveis: o alarme explicado por um terremoto deixa o roubo menos provável que o alarme sozinho |
 | *rush* | a abertura que ataca cedo, com o que tem, antes de o outro se preparar; uma das três do oponente *bandit*, com o nome do código |
 | CSP (problema de satisfação de restrições) | variáveis, os valores que cada uma pode ter e as restrições entre elas; "satisfação de restrições" é traduzido, CSP fica como sigla, a do AIMA |

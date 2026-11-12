@@ -1,0 +1,44 @@
+{
+ "description": "Day 1 written 1 and 1.0 is the same day.",
+ "events": [
+  {
+   "day": 1,
+   "verb": "burn"
+  },
+  {
+   "day": 1.0,
+   "verb": "repair"
+  }
+ ],
+ "pattern": {
+  "name": "same-day",
+  "find": [
+   {
+    "as": "one",
+    "where": {
+     "day": "?day",
+     "verb": "burn"
+    }
+   },
+   {
+    "as": "other",
+    "where": {
+     "day": "?day",
+     "verb": "repair"
+    }
+   }
+  ]
+ },
+ "refused": "",
+ "matches": [
+  {
+   "events": {
+    "one": 0,
+    "other": 1
+   },
+   "bindings": {
+    "day": 1
+   }
+  }
+ ]
+}

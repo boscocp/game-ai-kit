@@ -1,0 +1,18 @@
+{
+  "module": "ai_sifting",
+  "kind": "technique",
+  "about": "Story sifting, Felt-style: a pattern of events to find, joined by shared variables, in an order, with events that must not be there, matched over a record that is a plain array of event dictionaries; every match returned with the events that made it, and the record only read; in GDScript and Python. The valley's chronicle tells the moments its patterns find (T166).",
+  "summary": "Story sifting: which moments of a record of events are worth telling -- patterns with shared variables, an order and events that must not be there, every match returned with the events that made it.",
+  "owns": [
+    "godot/addons/ai_sifting/",
+    "godot/test/ai_sifting/",
+    "spec/vectors/sifting/",
+    "python/gameaikit/sifting/",
+    "python/tests/test_sifting.py",
+    "python/tests/test_sifting_vectors.py"
+  ],
+  "depends_on": [],
+  "gates": [
+    "test-sifting-vectors"
+  ]
+}

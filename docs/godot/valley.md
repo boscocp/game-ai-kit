@@ -118,6 +118,34 @@ which ADR 0025 refuses.
   (numbered in the record), and what it sets against the usual -- "fear 5
   (deeds 1, 2) -> asks 8 coins, 4 as a rule".
 
+## The chronicle (T166)
+
+C turns the panel to the valley's chronicle, and back. `ValleyChronicle`
+derives what happened from the record -- each night's changed facts, then
+that day's deeds -- and story sifting (`ai_sifting`, as in Felt) finds the
+moments `chronicle.json`'s patterns describe:
+
+| pattern | tells |
+|---|---|
+| `third-time` | the third time the same deed was done to a place, and only the third |
+| `no-bread`, `no-travellers` | the market out of bread, or of travellers, and the last deed before it |
+| `bread-again` | the bread gone from the market, and the day it came back |
+| `rebuilt` | a place burnt, and the repair that answered it |
+| `still-burnt` | a place burnt that nobody has rebuilt |
+
+The newest six lines are told, each over the events its pattern matched.
+"After the deed of day 3" is an order, not a cause: the pattern finds the
+last deed before the market lost its bread, and the panel's chain (Tab)
+still says which rule did it.
+
+**It only tells.** The events are derived every time and never saved (ADR
+0025 keeps deeds and nothing derived); nothing in the valley -- a villager,
+a manner, the standing -- reads the chronicle; and telling it leaves the
+record, the save and the world as they were, which a test holds. The
+sentences are templates in `ValleyPanel.CHRONICLE`, translated like every
+other line: no language model writes them (the owner's decision,
+2026-11-11).
+
 ## The three people
 
 `manners.json` gives each a list of rules read top to bottom; the first
@@ -161,8 +189,15 @@ price is what you are asked, shown, not paid.
   number keys; every manner sets only the
   consequences `standing.json` lists; fear 5 doubles the ferryman's price,
   naming deeds 1 and 2.
+- `chronicle_test.gd` (T166): the events are each night's changes, then
+  the day's deeds; a burnt and rebuilt barn tells the bread lost, the barn
+  rebuilt and the bread back, in that order, with their events; the bridge
+  pulled down four times tells the third time once (and the repairs'
+  third time once); telling leaves the record, the save and the world as
+  they were, and a planted chronicle that appends a deed is caught by the
+  same comparison; every pattern is sound and has a sentence.
 - `make test-demo-overlays` steps the scene and requires `chain`, `plan`,
-  `frontier`, `expanded`, `care`, `fear` and `deeds` in the overlay.
+  `frontier`, `expanded`, `care`, `fear`, `deeds` and `chronicle` in the overlay.
 
 ## Manual check
 
@@ -170,5 +205,7 @@ price is what you are asked, shown, not paid.
   the villages live with it and the overlay say why.
 - Dig the well and watch the west village draw water at the square the
   next day, where it walked to the river before.
+- Press C after a few days with deeds: the chronicle names moments a
+  person would retell, and each line's events are the ones it is about.
 - Read the panel in pt-BR: the reasons, the deeds and the greetings are
   Portuguese; the facts, goals and plan steps stay as the code names them.

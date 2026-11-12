@@ -38,6 +38,29 @@ _The owner asked for a karma system on 2026-11-10: the player's actions and choi
   rename it.
 - **Taught:** a technique page in English and pt-BR, and glossary entries.
 
+**The owner's decisions, 2026-11-11.** The addon's name stays
+`ai_sifting`. The chronicle's voice is templates, with no language model.
+Every other decision above is confirmed as proposed.
+
+**What wave 189 decided while building it.**
+
+- The events are derived, never saved: `ValleyChronicle.events` replays
+  the record day by day with `ValleyRules` -- each night's changed facts as
+  `{day, kind: "night", place, fact, value}`, then that day's deeds as
+  `{day, kind: "deed", verb, place}` -- every time the chronicle is told.
+  `ValleyGame` keeps the last answer until a deed is kept or the day
+  changes.
+- A pattern also has `unless`, Felt's negation: an event that must not lie
+  between two found ones, or before or after one. Without it "the third
+  time" and "the repair that answered the burning" cannot be said.
+- The six patterns live in `godot/game/valley/chronicle.json`; their
+  sentences are a constant in `ValleyPanel` marked `# shown through tr()`,
+  so `lint-translations-game` holds them without a new data rule.
+- C turns the right-hand panel to the chronicle and back: the panel had no
+  room for both. The `make demo-valley` help line is unchanged, so this
+  wave's Makefile change stays a gate added (rule 5); the menu card and the
+  in-game key line name C.
+
 ## Acceptance
 
 ```bash

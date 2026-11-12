@@ -34,6 +34,17 @@ const VIRTUES: Dictionary = {"care": "care", "fear": "fear"}  # shown through tr
 const PEOPLE: Dictionary = {  # shown through tr()
 	"ferryman": "the ferryman", "merchant": "the merchant", "priestess": "the priestess",
 }
+## Each line of the chronicle, by its pattern's name in `chronicle.json`
+## (T166). `{place}` and `{deed}` are worded; `{first.day}` is the day of
+## the event the pattern names `first`.
+const CHRONICLE: Dictionary = {  # shown through tr()
+	"third-time": "On day {third.day} it was done for the third time: {deed}.",
+	"no-bread": "The market ran out of bread on day {lack.day}, after the deed of day {done.day}: {deed}.",
+	"no-travellers": "Travellers stopped coming to the market on day {lack.day}, after the deed of day {done.day}: {deed}.",
+	"bread-again": "The market had no bread from day {gone.day}, and had bread again on day {back.day}.",
+	"rebuilt": "On day {burned.day} {place} burned, and on day {rebuilt.day} it was rebuilt.",
+	"still-burnt": "On day {burned.day} {place} burned, and nobody has rebuilt it.",
+}
 ## A deed as the rules word it in a reason: "day 2, burn the barn: ...".
 const DEED_REASON: String = "^day (\\d+), (\\w+) the (\\w+): (.*)$"  # not shown: a pattern
 
@@ -48,7 +59,7 @@ static func status(overlay: Dictionary, paused: bool) -> String:
 	var clock: String = TranslationServer.translate("P runs the clock") if paused \
 		else TranslationServer.translate("P pauses")
 	var keys: String = TranslationServer.translate(
-		"1-9 a deed  ·  space one turn  ·  {clock}  ·  N ends the day  ·  Tab next villager  ·  E erases").format(
+		"1-9 a deed  ·  space one turn  ·  {clock}  ·  N ends the day  ·  Tab next villager  ·  C the chronicle  ·  E erases").format(
 		{clock = clock})
 	return line + "\n" + keys
 
@@ -65,6 +76,45 @@ static func describe(overlay: Dictionary) -> String:
 		lines.append("  " + manner_words(met))
 		lines.append("      \"%s\"" % TranslationServer.translate(str(met["greeting"])))
 	return "\n".join(lines)
+
+
+## The chronicle (C): each line the valley tells, and under it the events
+## its pattern matched -- why that line is there.
+static func chronicle(overlay: Dictionary) -> String:
+	var lines: Array[String] = [TranslationServer.translate("The valley's chronicle, from the record (C goes back):")]
+	if overlay["chronicle"] == [ValleyShown.NONE]:
+		lines.append("  " + TranslationServer.translate("Nothing yet worth telling: do a deed, and end the day."))
+		return "\n".join(lines)
+	for told: Dictionary in overlay["chronicle"]:
+		lines.append("  " + chronicle_words(told))
+		var matched: Array[String] = []
+		for event: Dictionary in told["events"]:
+			matched.append(event_words(event))
+		lines.append("      <- " + "; ".join(matched))
+	return "\n".join(lines)
+
+
+## One line of the chronicle, worded from its pattern's sentence: the
+## place and the deed in the language chosen, the days as they are.
+static func chronicle_words(told: Dictionary) -> String:
+	var values: Dictionary = (told["values"] as Dictionary).duplicate()
+	if values.has("place"):
+		if values.has("verb"):
+			values["deed"] = deed_words("%s %s" % [values["verb"], values["place"]])
+		values["place"] = place_words(str(values["place"]))
+	for name: Variant in values.keys():
+		if values[name] is float:
+			values[name] = int(values[name])
+	return TranslationServer.translate(CHRONICLE[told["pattern"]]).format(values)
+
+
+## One event the chronicle matched: a deed, or a fact a night changed.
+static func event_words(event: Dictionary) -> String:
+	if event["kind"] == "deed":
+		return TranslationServer.translate("day {day}, {deed}").format({day = int(event["day"]),
+			deed = deed_words("%s %s" % [event["verb"], event["place"]])})
+	return TranslationServer.translate("day {day}, {fact} became {value}").format({
+		day = int(event["day"]), fact = "%s.%s" % [event["place"], event["fact"]], value = event["value"]})
 
 
 ## The deeds on offer, numbered for the keys; or why there are none.

@@ -78,7 +78,7 @@ const REQUIRED: Dictionary = {
 	"res://game3d/bossfight/bossfight.tscn": [["holders", false], ["queue", false], ["next_in", true], ["factor", true],
 		["claims", false], ["phase", false], ["telegraph", true]],
 	"res://game/valley/valley.tscn": [["chain", false], ["plan", false], ["frontier", false], ["expanded", true],
-		["care", true], ["fear", true], ["deeds", false]],
+		["care", true], ["fear", true], ["deeds", false], ["chronicle", false]],
 }
 
 ## The same, for an example opened in a mode other than its first (T85),
