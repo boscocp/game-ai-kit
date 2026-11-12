@@ -119,6 +119,8 @@ var _starting_seed: int = 0
 # What each side sees now, in a mode with fog; null in a mode without (T85).
 var _person_fog: TacticalFog
 var _computer_fog: TacticalFog
+## The argument that opens the teaching view (T124).
+const TEACHING_VIEW: String = "--view=teach"
 ## True when the scene was opened in the teaching view, `--view=teach` after
 ## `--`, as `make demo-tactical MODE=squad VIEW=teach` opens it (T124): a
 ## mode with fog then starts with V on, the computer's reasoning on the
@@ -140,6 +142,9 @@ var _view: TacticalModeView
 
 
 func _ready() -> void:
+	var unknown: String = unknown_view(OS.get_cmdline_user_args())
+	if unknown != "":
+		push_error("%s: the only view is %s; opened in play" % [unknown, TEACHING_VIEW])
 	_showing_decision = view().shows_the_computer_at_start(teaching)
 	_set_words()
 	_end_button.pressed.connect(end_turn)
@@ -211,7 +216,17 @@ func view() -> TacticalModeView:
 ## True when `arguments`, the ones after `--`, ask for the teaching view.
 ## A function of its own so a test can ask it without a command line.
 static func teaching_asked(arguments: PackedStringArray) -> bool:
-	return arguments.has("--view=teach")
+	return arguments.has(TEACHING_VIEW)
+
+
+## The `--view=` in `arguments` that names no view this scene has, or "":
+## `VIEW=teaching` would otherwise open in play with no word why (wave
+## 191's review).
+static func unknown_view(arguments: PackedStringArray) -> String:
+	for argument: String in arguments:
+		if argument.begins_with("--view=") and argument != TEACHING_VIEW:
+			return argument
+	return ""
 
 
 ## Play in each of `rulesets` -- a `TacticalRuleset` each -- starting in the

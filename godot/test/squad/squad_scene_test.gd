@@ -249,6 +249,24 @@ func test_in_play_the_computers_turn_shows_the_persons_fog_until_v() -> void:
 	assert_bool(scene.decision_overlay().has("weighed")).is_true()
 
 
+
+# Wave 191's review, finding 1: the status, not only the board, keeps a
+# search to itself in play. Its lines name each option's cells and the
+# pieces' next ones, so in play, V off, they would place hidden pieces as
+# surely as V on did. Held for MCTS and expectiminimax alike; V shows them.
+func test_in_play_the_status_keeps_the_search_to_itself_until_v() -> void:
+	for presses: int in [1, 2]:  # C once: MCTS; twice: expectiminimax
+		var scene: TacticalGame = _opened(1)
+		for _press_index: int in range(presses):
+			scene._press(KEY_C)
+		scene._press(KEY_S)
+		assert_bool(scene._computer_thinking()).is_true()
+		var searcher: String = scene.computer.controller_name()
+		for hidden: String in ["searched", "█", "the line it expects"]:
+			assert_str(scene._status.text).override_failure_message("%s in play shows \"%s\"\n%s" % [searcher, hidden, scene._status.text]).not_contains(hidden)
+		scene._press(KEY_V)
+		assert_str(scene._status.text).override_failure_message("%s with V shows no search\n%s" % [searcher, scene._status.text]).contains("searched")
+
 # T124: the teaching view opens with the computer's reasoning on the board,
 # nothing pressed -- its view, its fog, what it weighed.
 func test_in_the_teaching_view_the_computers_turn_shows_its_view() -> void:
@@ -285,6 +303,9 @@ func test_the_teaching_view_is_the_launch_option_view_teach() -> void:
 	assert_bool(TacticalGame.teaching_asked(PackedStringArray(["--open=demo-tactical", "--mode=squad", "--view=teach"]))).is_true()
 	assert_bool(TacticalGame.teaching_asked(PackedStringArray(["--open=demo-tactical", "--mode=squad"]))).is_false()
 	assert_bool(TacticalGame.teaching_asked(PackedStringArray(["--view=play"]))).is_false()
+	assert_str(TacticalGame.unknown_view(PackedStringArray(["--mode=squad", "--view=teaching"]))).is_equal("--view=teaching")
+	assert_str(TacticalGame.unknown_view(PackedStringArray(["--mode=squad", "--view=teach"]))).is_empty()
+	assert_str(TacticalGame.unknown_view(PackedStringArray(["--mode=squad"]))).is_empty()
 
 
 # Wave 128's review: the fog's ghosts, the legend and the "shoot" wording

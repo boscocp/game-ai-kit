@@ -60,7 +60,10 @@ the menu and this gate share:
     view the example opens in -- the tactical card's teaching view, which
     starts XCOM with the computer's reasoning on the board (T124). A view a
     person must ask for is one they must be told of: the card's `watch`
-    line then names `VIEW=`, or it is a C10.
+    line then names `VIEW=`, or it is a C10. Only that it names one: which
+    values the scene reads is the scene's, which refuses an unknown one
+    aloud at run time (`TacticalGame.unknown_view`), so a watch line saying
+    `VIEW=teaching` passes here (wave 191's review).
 
 Exit codes
 ----------

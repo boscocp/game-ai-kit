@@ -231,7 +231,11 @@ toggles in play, and M sets each mode's default again. The overlay holds
 what the computer weighed only while the board draws it, so
 `test-demo-overlays` steps the XCOM mode in its teaching view, and
 `check_demos.py` refuses a target that opens a `VIEW` its card's watch
-line does not name (C10).
+line does not name (C10). An unknown view, `VIEW=teaching` say, opens in
+play with an error naming the one view there is. The teaching view lasts
+the process: back to the menu and into the card again is still the
+teaching view, and the menu has no way to it; to leave it, or reach it,
+relaunch.
 
 **What the scene asks the mode's view (T126).** T85 added these to the
 ruleset; T126 moved them to a `TacticalModeView` of their own, which the
