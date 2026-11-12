@@ -1,6 +1,7 @@
 # `make measure-squad-mcts` (T87): the enemy that searches, `MctsSquad`,
-# against the first enemy that weighs, `WeighedSquad`, in seeded matches
-# from each seat -- and what the search costs: the time a decision takes,
+# against the first enemy that weighs, `WeighedSquad` -- or, given its row's
+# name, another of `SquadRoster`'s, such as T125's greedy shooter -- in
+# seeded matches from each seat -- and what the search costs: the time a decision takes,
 # and the worst frame.
 #
 # Each decision is searched as the scene searches it: one frame's
@@ -17,7 +18,7 @@
 # Match `n` of a seat is played on dice seed `n`, the searcher seeded
 # `1000 + n`, as `make test-squad-match` seats its own.
 #
-#     ./scripts/godot --headless --path godot -s res://test/squad/squad_mcts_measure.gd -- iterations [games] [first]
+#     ./scripts/godot --headless --path godot -s res://test/squad/squad_mcts_measure.gd -- iterations [games] [first] [opponent]
 #
 # It prints one line a game, and a summary for each seat over the games it
 # played; `first` lets several of it share the games out. Exit codes: 0
@@ -31,6 +32,8 @@ var _frames: Array[int] = []
 var _later_frames: Array[int] = []
 var _decisions: Array[int] = []
 var _last_usec: int = 0
+# The roster row the searcher plays against.
+var _opponent: String = "weighed"
 
 
 func _init() -> void:
@@ -38,8 +41,9 @@ func _init() -> void:
 	var iterations: int = int(arguments[0]) if arguments.size() > 0 else 0
 	var games: int = int(arguments[1]) if arguments.size() > 1 else 100
 	var first: int = int(arguments[2]) if arguments.size() > 2 else 0
-	if iterations <= 0 or games <= 0 or first < 0:
-		printerr("squad_mcts_measure: give the iterations a decision, the games a seat, and the first game's number")
+	_opponent = arguments[3] if arguments.size() > 3 else "weighed"
+	if iterations <= 0 or games <= 0 or first < 0 or SquadRoster.build(_opponent, 0) == null:
+		printerr("squad_mcts_measure: give the iterations a decision, the games a seat, the first game's number, and the opponent's row")
 		quit(2)
 		return
 	for seat: int in SEATS:
@@ -53,7 +57,7 @@ func _seat(seat: int, iterations: int, games: int, first: int) -> Array[Dictiona
 	for game: int in range(first, first + games):
 		var searcher := MctsSquad.new(1000 + game, iterations)
 		searcher.spread_over_frames()
-		var weighing := WeighedSquad.new(game)
+		var weighing: BlueController = SquadRoster.build(_opponent, game)
 		var red: BlueController = searcher if seat == TacticalScenario.RED else weighing
 		var blue: BlueController = weighing if seat == TacticalScenario.RED else searcher
 		_frames.clear()
@@ -103,8 +107,8 @@ func _summarise(seat: int, iterations: int, rows: Array[Dictionary]) -> void:
 		worst_frame = maxi(worst_frame, row["worst frame usec"])
 		worst_later = maxi(worst_later, row["worst later frame usec"])
 		frames += row["frames"]
-	print("mcts %d iterations as %s against weighed: %d won, %d lost, %d drawn of %d; a decision %d ms on average, %d ms at most, %d frames on average; worst frame %d ms, of the later frames %.1f ms" % [
-		iterations, TacticalGame.SIDES[seat], won, rows.size() - won - drawn, drawn, rows.size(), _mean(times) / 1000,
+	print("mcts %d iterations as %s against %s: %d won, %d lost, %d drawn of %d; a decision %d ms on average, %d ms at most, %d frames on average; worst frame %d ms, of the later frames %.1f ms" % [
+		iterations, TacticalGame.SIDES[seat], _opponent, won, rows.size() - won - drawn, drawn, rows.size(), _mean(times) / 1000,
 		_max(times) / 1000, frames / maxi(times.size(), 1), worst_frame / 1000, worst_later / 1000.0])
 
 
