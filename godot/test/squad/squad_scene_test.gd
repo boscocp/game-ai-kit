@@ -51,6 +51,8 @@ func test_c_cycles_this_modes_roster() -> void:
 	scene._press(KEY_C)
 	assert_str(scene.computer.controller_name()).is_equal("expecti")
 	scene._press(KEY_C)
+	assert_str(scene.computer.controller_name()).is_equal("greedy")
+	scene._press(KEY_C)
 	assert_str(scene.computer.controller_name()).is_equal("random")
 	scene._press(KEY_C)
 	assert_str(scene.computer.controller_name()).is_equal("weighed")
