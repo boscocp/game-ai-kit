@@ -3,6 +3,86 @@
 The index. One row per task; the task file holds everything needed to do it.
 The topmost `## Resuming after` section is the next session's prompt.
 
+## Resuming after 2026-11-12, waves 188 to 194, and 0.2.0 built
+
+**Where it stopped -- read first.** Seven waves merged, each reviewed by a
+fresh context with its findings applied on its branch, merged with
+`--admin` without waiting for CI (owner, 2026-11-11):
+
+| wave | task | PR | main |
+|---|---|---|---|
+| 188 | main green again (T117's unmarked log line), T165 `done` | #147 | `672ce4c` |
+| 190 | T127, an unseen shooter stays unseen in the news | #148 | `e12e4cc` |
+| 191 | T124, XCOM plays with V off, teaches with it on | #149 | `b0c660d` |
+| 193 | T124's unknown-view error is a log line | #151 | `5e75860` |
+| 189 | T166, a chronicle that only tells: story sifting | #150 | `ee38b4a` |
+| 192 | T125, a greedy shooter as the squad's second floor | #152 | `f855138` |
+| 194 | T161, release 0.2.0: `VERSION`, changelog, the full `make check` | this wave | |
+
+Every review found something the implementer's gates passed green. Among
+them: T166's Python read-only test held only by test order, its chronicle
+took 2.8 s at 240 events (now 26 ms at 120 days), and "after the deed of
+day N" named an unrelated deed (now the cause, carried through the rules);
+T125's "never a 0% shot" was unheld and its bar sat 7 games from the
+weighed enemy's worst seed set (now 122); T124's search lines were unheld
+off the status in play; T127's flanked shot was unheld.
+
+**#149 broke main's lint again**, as #144 had: a `push_error` added by a
+review fix after the implementer's last lint run. Wave 193 fixed it. From
+then on the coordinator ran `make check-no-engine` on each head before
+merging it. Follow-up, not opened: write that rule into
+`docs/howto/parallel-batch.md` (the rerun after a review's fixes is never a
+hand-picked subset).
+
+**The owner's decisions, 2026-11-11.** T165 passed its manual check; T166
+is named `ai_sifting`, templates only; T127 words the news from the
+person's fog; T124's teaching view is a launch option (`VIEW=teach`); the
+store declares Godot 4.7 and above (T160's decision 5); then 0.2.0, with
+the one full `make check`.
+
+**0.2.0: the owner uploads (tomorrow, 2026-11-12).** Everything is built
+from tag `v0.2.0`; `docs/howto/publish.md` is the full guide. In order:
+
+1. `git switch main && git pull --ff-only && git status --short` (prints
+   nothing), then `git describe --tags` says `v0.2.0`.
+2. `make release` (rebuilds `dist/` from the tag's commit), then
+   `sha256sum dist/game-ai-kit-addons-0.2.0.zip dist/gameaikit-0.2.0-*.whl`.
+3. **Godot Asset Store**, `https://store.godotengine.org`, the asset
+   `boscocp/game-ai-kit`: new version `0.2.0`, upload
+   `dist/game-ai-kit-addons-0.2.0.zip`, changelog from
+   `tools/store/changelog-0.2.0.md`, Godot range minimum `4.7`, maximum the
+   newest offered. Install it from the editor's store tab into a blank
+   project on 4.7.2: every file under `res://addons/ai_<name>/`.
+4. **PyPI**: the uploader in the toolchain (`publish.md`, "PyPI, TestPyPI
+   first"), `twine check dist/gameaikit-0.2.0-*.whl`, then
+   `twine upload dist/gameaikit-0.2.0-*.whl` with the project token.
+5. Once the store serves it: a wave adds the 0.2.0 entry to
+   `tools/store/published.json` (download, sha256, size, `provenance:
+   v0.2.0`) and runs `make check-published`. T161 is `done` then.
+
+**Waiting for the owner:** the upload above; the manual checks of T166
+(do the chronicle lines name moments a person would retell? C in
+`make demo-valley`), T127 (play red until an unseen piece shoots), T124
+(enemies hidden on the computer's turn in play; reasoning on the board
+with `make demo-tactical MODE=squad VIEW=teach`), T125 (play XCOM against
+`greedy`: a fair stand-in for a careless player?). Still open from
+earlier: the manual checks of T158, T117, T168, T167, T157, T164, T162,
+T160, the two exit-leak checks, the upstream use-after-free report, and
+godotengine/godot#125245.
+
+**Follow-ups the reviews named, not opened as tasks.** T166: the chronicle
+is 26 ms at 120 days of deeds, above a frame (it runs per deed and per
+night, not per frame); a hash join or incremental matching would remove
+it. `derive.py --check` runs in no gate (no vector family's does). T125:
+`affected.py`'s rule 5 reads no new Godot gate as added, since every
+recipe names `scripts/godot_checked.py`. T124: C10 checks that a watch
+line names `VIEW=`, not its value. The valley's merchant asks "0 coins"
+with no bread to price. And the earlier list below still stands.
+
+**Next.** The upload and its record (step 5). Then the owner's manual
+checks. Nothing else is `todo` but T89, only if T85's manual check asks
+for it; T25, T40, T44-T46, T48 stay parked `wip` and T43 `blocked`.
+
 ## Resuming after 2026-11-11, T141 alone, batch 181-184, then T169 and T117 (waves 180 to 187)
 
 **Where it stopped -- read first.** Seven waves merged in three steps:
@@ -1884,7 +1964,7 @@ review.
 | T158 | A director for the minions, and three difficulties | done | wave 181: `BossDirector` paces the waves through build-up, peak (until 2 or fewer stand, or 15 s) and relief (6 s) from the boss's phases, who stands and the time since the last wave, a summoning phase bringing one at once, none during a heavy blow; easy/normal/hard in `difficulty.json` set pools, delays, the tells' speed and minimum (never under the table's 0.4 s, every level checked, refused by name), wave and cap per kind, chosen with Tab or `--difficulty=`, shown on the panel; no adaptation, `Difficulty` not reused (page says why); seeded runs per level hold pools, minimum telegraph and cap, the director's turns, each rejecting planted cases; manual check still a person's |
 | T159 | The published archive is tested | done | wave 168: `tools/store/published.json` records download 8161; `make check-published` downloads it into the toolchain, checks hash, paths and licences, loads every script in a blank project (`godot_checked.py --project`) and rebuilds the tag; the store file is byte for byte `v0.1.0`'s build (314,853 bytes, sha256 `8538106a…bbd1db`), and the page's 322.41 KB is bytes x 1.024 / 1000 |
 | T160 | A version is not reused | done | wave 172: a build into the repository's `dist/` (and `make release-version`, before the export) refuses a `VERSION` already tagged when any file the build reads (addons, package, pyproject, its README, manifests, LICENSE, NOTICE) changed since, naming the file and saying to bump it; tests and docs are not refused; a clone with no `v*` tag says so; planted on a tagged fixture. `library-check` gains a step `kit` (the kit zip alone in a second blank project `my_kit/`: nothing new in its root, exactly the addons with zips of their own, no `class_name` twice, the route run on the kit's own files) and checks `ai_learning`'s path, fixing the page's `-d my_game/addons/`; READMEs link the store; publish.md: Godot range 4.7 to the newest offered, sha256 in the release notes |
-| T161 | Release 0.2.0 | todo | after T154-T158, T162 and the follow-ups (owner): `VERSION` bumped, built from tag `v0.2.0`, sha256 in `published.json`, release notes name the new addons; the owner uploads |
+| T161 | Release 0.2.0 | wip | wave 194: `VERSION` 0.2.0, `tools/store/changelog-0.2.0.md`, the full `make check`, tag `v0.2.0`; the owner uploads, then the store entry and `make check-published`. Before:  after T154-T158, T162 and the follow-ups (owner): `VERSION` bumped, built from tag `v0.2.0`, sha256 in `published.json`, release notes name the new addons; the owner uploads |
 | T162 | Loading every addon closes clean | done | wave 176: named on 4.7.2 (0.1.0: 7 resources, HEAD: 10); a script that names its own class as a value (`Foo.new()`, an inner class calling `Outer.said`) holds itself, and a later self-naming script that extends an earlier one ends `GDScriptLanguage::finish`'s walk, so every older one leaks; 16 addon scripts now say `new()`, each with a one-line why, and the two instance copies (`duplicate_graph`, `after`) go through a static factory so a subclass still gets the addon's class (tested); `BehaviourTree.SAID` added; the kit closes clean in 5 load orders; `check_published.py` and `library-check`'s `kit` step fail on the two exit lines, planted with `LEAKING`; the kit step also fails on a load count other than the kit's `.gd` files, or 0; 0.1.0's entry in `published.json` records its leak as `known_at_exit` (7 in use, 14 leaked, why), and any other leak or a changed count fails, so `make check-published` passes today (review 176; `docs/godot/exit-leaks.md`) |
 | T163 | A save is a record of deeds, not a model of the player | done | wave 171: ADR 0025 (accepted by the owner 2026-11-11, no longer gates T164-T166) amends 0016 and 0022: only an append-only record of `{day, verb, place}` deeds persists, the world and the standing are rebuilt from it, the standing sets consequences and never difficulty; N20 in `check_no_training.py`, 25 planted cases refused and 9 good ones passed, tests allowed a save of their own under `user://tmp/` (review 171); `user://` measured in the checkout and for an export (`docs/godot/user-data.md`), invariant 8 does not reach a player's export; `make valley-erase` |
 | T164 | The deed log and the valley's rules | done | wave 178: `DeedLog`, `ValleySave`, `ValleyRules`, `ValleyWorld`, `Standing` in `godot/game/valley/`, names as proposed; a deed `{day, verb, place}` on 10 places, 9 verbs, a person refused by name; 18 overnight rules with a `why`, all read from the day that ended; virtues care and fear, integer weights with a `why`; the save `user://valley/deeds.json`, header `{"version": 1}`, appended through `READ_WRITE` after reading the file (out of order, another version, torn or empty refused, nothing written), another version or none refused on load; Python twin, 21 vectors (`make test-valley-vectors`); N20 counts `READ_WRITE` and a handle's `resize` as writes; a deed that changes nothing is T165's to refuse (review 178) |
