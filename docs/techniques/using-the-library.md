@@ -99,8 +99,8 @@ which is also where Godot's asset store installs it. The addon you want
 and, if its README says so, `ai_core` beside it. For a route, both:
 
 ```bash
-unzip -q library/dist/ai_core-0.1.0.zip -d my_game/
-unzip -q library/dist/ai_search-0.1.0.zip -d my_game/
+unzip -q library/dist/ai_core-0.2.0.zip -d my_game/
+unzip -q library/dist/ai_search-0.2.0.zip -d my_game/
 ```
 
 There is no plugin to enable. Copying `godot/addons/ai_core/` and
@@ -168,7 +168,7 @@ environment of its own:
 
 ```bash
 python3 -m venv .venv
-.venv/bin/python -m pip install --quiet --no-index library/dist/gameaikit-0.1.0-py3-none-any.whl
+.venv/bin/python -m pip install --quiet --no-index library/dist/gameaikit-0.2.0-py3-none-any.whl
 ```
 
 `from gameaikit import techniques` then lists what is installed,
@@ -224,7 +224,7 @@ In Godot, `ai_learning` beside the others (it needs no `ai_core`), into
 the project's root like them, and the import again:
 
 ```bash
-unzip -q library/dist/ai_learning-0.1.0.zip -d my_game/
+unzip -q library/dist/ai_learning-0.2.0.zip -d my_game/
 godot --headless --path my_game --import
 ```
 
@@ -271,7 +271,7 @@ blank project, `my_kit/`, so the kit is tried on its own files and not on
 the addons already in `my_game/`:
 
 ```bash
-unzip -q library/dist/game-ai-kit-addons-0.1.0.zip -d my_kit/
+unzip -q library/dist/game-ai-kit-addons-0.2.0.zip -d my_kit/
 godot --headless --path my_kit --import
 ```
 
@@ -289,7 +289,7 @@ kit, and the engine must not say, as it closes, that one is still alive
   4.7.2, and `make library-check` runs that one. An older Godot 4 is not
   tested.
 - **The library's version** is in each zip's `VERSION` and the wheel's
-  name -- 0.1.0 today, the number in the commands above. What it promises
+  name -- 0.2.0 today, the number in the commands above. What it promises
   to keep is what ADR 0024 writes down: the `Gak` names above, the ones
   your code names as a type, except `GakXorshift`, which is prefixed so it
   is unlikely to collide with yours and is not promised yet -- renaming
